@@ -1,0 +1,43 @@
+﻿name: Frontend CI
+
+on:
+  pull_request:
+    paths:
+      - "src/frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+  push:
+    branches:
+      - main
+      - Chavez
+    paths:
+      - "src/frontend/**"
+
+jobs:
+  frontend-ci:
+    name: Frontend Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check frontend structure
+        run: |
+          echo "Checking frontend directory..."
+
+          if [ ! -d "src/frontend" ]; then
+            echo "Frontend directory not found."
+            exit 1
+          fi
+
+          echo "Frontend directory exists."
+
+      - name: Check package.json
+        run: |
+          if [ -f "src/frontend/package.json" ]; then
+            echo "package.json found."
+          else
+            echo "package.json not found."
+            echo "Frontend implementation is not available yet."
+          fi

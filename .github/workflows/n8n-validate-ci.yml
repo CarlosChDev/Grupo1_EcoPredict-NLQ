@@ -1,0 +1,47 @@
+﻿name: Validate n8n Workflows
+
+on:
+  pull_request:
+    paths:
+      - "src/n8n-workflows/**/*.json"
+      - ".github/workflows/n8n-validate-ci.yml"
+
+  push:
+    branches:
+      - main
+      - Chavez
+    paths:
+      - "src/n8n-workflows/**/*.json"
+
+jobs:
+  validate-json:
+    name: Validate n8n JSON
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate JSON files
+        shell: bash
+        run: |
+          set -e
+
+          files=
+
+          if [ -z "" ]; then
+            echo "No n8n JSON files found."
+            exit 0
+          fi
+
+          for file in ; do
+            echo "Validating: "
+            node -e "JSON.parse(require('fs').readFileSync('', 'utf8'))"
+          done
+
+          echo "All n8n JSON files are valid."

@@ -1,0 +1,43 @@
+﻿name: AI Testing CI
+
+on:
+  pull_request:
+    paths:
+      - "src/ia-ops/**"
+      - ".github/workflows/ai-testing-ci.yml"
+
+  push:
+    branches:
+      - main
+      - Chavez
+    paths:
+      - "src/ia-ops/**"
+
+jobs:
+  ai-testing:
+    name: AI Ops Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check IA Ops structure
+        run: |
+          echo "Checking IA Ops directories..."
+
+          test -d "src/ia-ops/prompts"
+          test -d "src/ia-ops/tests"
+          test -d "src/ia-ops/config-observability"
+
+          echo "IA Ops structure is valid."
+
+      - name: Check Python tests
+        run: |
+          if find src/ia-ops/tests -type f -name "*.py" | grep -q .; then
+            echo "Python tests found."
+            echo "IA test execution will be configured when tests are implemented."
+          else
+            echo "No Python IA tests found yet."
+            echo "IA testing implementation is not available yet."
+          fi
