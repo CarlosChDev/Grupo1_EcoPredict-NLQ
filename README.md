@@ -1,180 +1,78 @@
-\# EcoPredict \& NLQ
+# EcoPredict & NLQ
 
+**Sistema de Alerta e Investigación Ambiental Ciudadana**
 
+EcoPredict & NLQ es un sistema orientado al análisis de información ambiental mediante **Open Data, automatización, Inteligencia Artificial y consultas en lenguaje natural (NLQ)**.
 
-\*\*Sistema de Alerta e Investigación Ambiental Ciudadana\*\*
+## Objetivo
 
+* Integrar fuentes de datos ambientales.
+* Automatizar la ingesta y procesamiento de información.
+* Utilizar IA para detectar patrones y anomalías.
+* Permitir consultas mediante lenguaje natural.
+* Aplicar buenas prácticas de **DevSecOps**.
 
+---
 
-EcoPredict \& NLQ es un sistema orientado al análisis de información ambiental mediante \*\*Open Data, automatización, Inteligencia Artificial y consultas en lenguaje natural (NLQ)\*\*.
-
-
-
-\## Objetivo
-
-
-
-\-   Integrar fuentes de datos ambientales.
-
-&#x20;   
-
-\-   Automatizar la ingesta y procesamiento de información.
-
-&#x20;   
-
-\-   Utilizar IA para detectar patrones y anomalías.
-
-&#x20;   
-
-\-   Permitir consultas mediante lenguaje natural.
-
-&#x20;   
-
-\-   Aplicar buenas prácticas de \*\*DevSecOps\*\*.
-
-&#x20;   
-
-
-
-\----------
-
-
-
-\## 📁 Estructura principal
-
-
+## 📁 Estructura principal
 
 ```text
-
 ├── .github/
-
-│   ├── PULL\_REQUEST\_TEMPLATE.md
-
+│   ├── PULL_REQUEST_TEMPLATE.md
 │   └── workflows/
-
 │
-
 ├── src/
-
 │   ├── frontend/
-
 │   ├── n8n-workflows/
-
 │   ├── database/
-
 │   └── ia-ops/
-
 │
-
 ├── infrastructure/
-
-│
-
 ├── .gitignore
-
 ├── LICENSE
-
 └── README.md
-
-
-
 ```
 
-\-   `.github/`  - Plantillas y workflows de CI/CD.
+* `.github/` — Plantillas y workflows de CI/CD.
+* `src/frontend/` — Código del frontend.
+* `src/n8n-workflows/` — Workflows de n8n.
+* `src/database/` — Migraciones y seeders.
+* `src/ia-ops/` — Prompts, pruebas y configuración de IA.
+* `infrastructure/` — Configuración de infraestructura local.
 
-\-   `src/frontend/`  - Código del microfrontend.
+---
 
-\-   `src/n8n-workflows/production/`  - Workflows n8n de producción.
+## Uso local
 
-\-   `src/n8n-workflows/templates/`  - Plantillas de workflows n8n.
+El proyecto se encuentra actualmente en fase de **estructuración y configuración**.
 
-\-   `database/migrations/`  - Migraciones de base de datos.
+Los requisitos y pasos de ejecución de cada componente se documentarán conforme avance la integración.
 
-\-   `database/seeders/`  - Seeders de datos.
-
-\-   `ia-ops/prompts/`  - Prompts y definiciones para IA.
-
-\-   `ia-ops/tests/`  - Pruebas enfocadas en IA y prompts.
-
-\-   `infrastructure/`  - Infraestructura local y despliegue.
-
-\----------
-
-
-
-\## Uso local
-
-
-
-El proyecto se encuentra actualmente en fase de \*\*estructuración y configuración\*\*.
-
-
-
-La configuración y requisitos para ejecutar cada componente serán documentados conforme se integren al proyecto.
-
-
-
-Las variables de entorno deberán utilizar:
-
-
+Las variables de entorno deberán basarse en:
 
 ```text
-
 infrastructure/.env.example
-
-
-
 ```
-
-
 
 No se deben subir archivos `.env` reales.
 
+---
 
+## Gobernanza y seguridad
 
-\----------
+* `main` será la rama principal y estará protegida.
+* Los cambios deberán realizarse mediante **Pull Requests**.
+* Todo PR deberá pasar las validaciones automáticas.
+* Los desarrolladores trabajarán en ramas independientes.
+* No se deben incluir credenciales, tokens ni secretos en el repositorio.
+* Los workflows de n8n deberán revisarse antes de incorporarse.
+* Las validaciones de calidad y seguridad se automatizarán mediante **GitHub Actions**.
 
+---
 
+## Estado
 
-\## Gobernanza
+**Fase actual:** Estructuración y gobernanza DevSecOps.
 
-
-
-\-   `main` será la rama principal y estará protegida.
-
-&#x20;   
-
-\-   Los cambios deberán realizarse mediante \*\*Pull Requests\*\*.
-
-&#x20;   
-
-\-   Todo PR deberá pasar las validaciones automáticas correspondientes.
-
-&#x20;   
-
-\-   Los cambios deberán realizarse en ramas de trabajo.
-
-
-
-
-
-Los workflows de n8n deberán exportarse como `.json` y revisarse antes de incorporarlos al repositorio.
-
-
-
-Las validaciones de seguridad y calidad se automatizarán mediante \*\*GitHub Actions\*\*.
-
-
-
-\----------
-
-
-
-\## Estado
-
-
-
-\*\*Fase actual:\*\* Estructuración y gobernanza DevSecOps.
-
-Próximamente se integrarán los componentes de frontend, backend, n8n, base de datos e IA.
+La integración de frontend, backend, n8n, base de datos e IA se realizará progresivamente.
 
