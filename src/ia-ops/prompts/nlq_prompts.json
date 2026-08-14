@@ -1,0 +1,92 @@
+[
+  {
+    "id": "NLQ-001",
+    "category": "calidad_aire",
+    "prompt_template": "Analiza la calidad del aire en {ubicacion} durante {periodo_tiempo}. Incluye los niveles de {contaminante} y compara con los estándares de la OMS.",
+    "expected_output_format": "json",
+    "variables": ["ubicacion", "periodo_tiempo", "contaminante"],
+    "priority": "critical",
+    "description": "Consulta principal para análisis de calidad del aire con comparación normativa."
+  },
+  {
+    "id": "NLQ-002",
+    "category": "calidad_agua",
+    "prompt_template": "Evalúa los parámetros de calidad del agua en {cuerpo_agua} para la fecha {fecha}. Reporta los niveles de {parametro} y determina si son aptos para {uso_previsto}.",
+    "expected_output_format": "json",
+    "variables": ["cuerpo_agua", "fecha", "parametro", "uso_previsto"],
+    "priority": "critical",
+    "description": "Evaluación de calidad de agua con clasificación de aptitud de uso."
+  },
+  {
+    "id": "NLQ-003",
+    "category": "biodiversidad",
+    "prompt_template": "Genera un inventario de especies en {area_protegida} para el grupo taxonómico {grupo_taxonomico}. Incluye estado de conservación según {marco_normativo}.",
+    "expected_output_format": "tabla",
+    "variables": ["area_protegida", "grupo_taxonomico", "marco_normativo"],
+    "priority": "high",
+    "description": "Inventario de biodiversidad con clasificación de estado de conservación."
+  },
+  {
+    "id": "NLQ-004",
+    "category": "alertas_ambientales",
+    "prompt_template": "Identifica alertas ambientales activas en {region} del tipo {tipo_alerta}. Clasifica por nivel de riesgo y proporciona recomendaciones para {audiencia}.",
+    "expected_output_format": "json",
+    "variables": ["region", "tipo_alerta", "audiencia"],
+    "priority": "critical",
+    "description": "Sistema de alertas ambientales con clasificación de riesgo."
+  },
+  {
+    "id": "NLQ-005",
+    "category": "deforestacion",
+    "prompt_template": "Calcula la tasa de deforestación en {zona_geografica} entre {fecha_inicio} y {fecha_fin}. Compara con la línea base de {anio_referencia}.",
+    "expected_output_format": "json",
+    "variables": ["zona_geografica", "fecha_inicio", "fecha_fin", "anio_referencia"],
+    "priority": "high",
+    "description": "Análisis de deforestación con comparación temporal."
+  },
+  {
+    "id": "NLQ-006",
+    "category": "residuos",
+    "prompt_template": "Analiza la gestión de residuos en {municipio} para el periodo {periodo}. Incluye tasas de reciclaje, disposición final y generación per cápita de {tipo_residuo}.",
+    "expected_output_format": "json",
+    "variables": ["municipio", "periodo", "tipo_residuo"],
+    "priority": "medium",
+    "description": "Análisis integral de gestión de residuos sólidos municipales."
+  },
+  {
+    "id": "NLQ-007",
+    "category": "cambio_climatico",
+    "prompt_template": "Proyecta los escenarios de cambio climático para {region} bajo el escenario {escenario_rcp}. Incluye variables de {variable_climatica} para el horizonte {horizonte_temporal}.",
+    "expected_output_format": "json",
+    "variables": ["region", "escenario_rcp", "variable_climatica", "horizonte_temporal"],
+    "priority": "high",
+    "description": "Proyecciones climáticas bajo escenarios RCP del IPCC."
+  },
+  {
+    "id": "NLQ-008",
+    "category": "ruido_ambiental",
+    "prompt_template": "Evalúa los niveles de ruido ambiental en {zona_urbana} durante {horario}. Compara con los límites permitidos para zona tipo {tipo_zona}.",
+    "expected_output_format": "tabla",
+    "variables": ["zona_urbana", "horario", "tipo_zona"],
+    "priority": "medium",
+    "description": "Evaluación de contaminación acústica en zonas urbanas."
+  },
+  {
+    "id": "NLQ-009",
+    "category": "calidad_aire",
+    "prompt_template": "Resume el índice de calidad del aire (ICA) en {ciudad} para los últimos {num_dias} días. Desglosa por {contaminante_principal} y genera tendencia.",
+    "expected_output_format": "json",
+    "variables": ["ciudad", "num_dias", "contaminante_principal"],
+    "priority": "high",
+    "description": "Resumen temporal del ICA con análisis de tendencia."
+  },
+  {
+    "id": "NLQ-010",
+    "category": "reportes_ciudadanos",
+    "prompt_template": "Clasifica el reporte ciudadano: '{descripcion_reporte}' en la categoría ambiental correspondiente. Asigna prioridad basada en {criterio_priorizacion} y sugiere {tipo_accion}.",
+    "expected_output_format": "json",
+    "variables": ["descripcion_reporte", "criterio_priorizacion", "tipo_accion"],
+    "priority": "critical",
+    "description": "Clasificación automática de reportes ciudadanos ambientales."
+  }
+]
