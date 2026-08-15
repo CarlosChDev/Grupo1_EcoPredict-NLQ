@@ -1,0 +1,75 @@
+{
+  "name": "HU-04 · Flujo base NLQ",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nlq",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "aaaa1111-0001-4000-8000-000000000001",
+      "name": "Webhook POST /nlq",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "aaaa1111-0001-4000-8000-0000000000wb",
+      "notes": "Endpoint de entrada. Prueba: /webhook-test/nlq · Produccion: /webhook/nlq"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================================================================\n// HU-04 · Validar y parsear la consulta en lenguaje natural\n// Entrada : salida del Webhook (headers, params, query, body)\n// Salida  : objeto normalizado o lista de errores de validacion\n// ==========================================================================\n\nconst entrada = $input.first().json;\nconst body = entrada.body ?? {};\n\nconst PARAMETROS_VALIDOS = ['pm25', 'pm10', 'no2', 'so2', 'o3', 'co'];\n\nconst pregunta = String(body.pregunta ?? '').trim();\nconst ciudad = String(body.ciudad ?? 'Lima').trim();\nconst parametro = String(body.parametro ?? 'pm25').trim().toLowerCase();\n\nconst errores = [];\n\nif (!pregunta) {\n  errores.push('El campo \"pregunta\" es obligatorio.');\n} else if (pregunta.length < 5) {\n  errores.push('La pregunta es demasiado corta (minimo 5 caracteres).');\n} else if (pregunta.length > 500) {\n  errores.push('La pregunta excede los 500 caracteres permitidos.');\n}\n\nif (!PARAMETROS_VALIDOS.includes(parametro)) {\n  errores.push('Parametro no soportado: ' + parametro + '. Validos: ' + PARAMETROS_VALIDOS.join(', ') + '.');\n}\n\nif (errores.length > 0) {\n  return [{\n    json: {\n      ok: false,\n      codigo_http: 400,\n      errores,\n      procesado_en: new Date().toISOString()\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    ok: true,\n    codigo_http: 200,\n    consulta: { pregunta, ciudad, parametro },\n    // Sprint 1: aqui se conectaran PostgreSQL (historico) y el AI Agent\n    etapa: 'sprint-0-esqueleto',\n    procesado_en: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "aaaa1111-0002-4000-8000-000000000002",
+      "name": "Validar y parsear consulta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "notes": "Sprint 1: enchufar aqui PostgreSQL y el AI Agent."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": "={{ $json.codigo_http }}"
+        }
+      },
+      "id": "aaaa1111-0003-4000-8000-000000000003",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0]
+    }
+  ],
+  "connections": {
+    "Webhook POST /nlq": {
+      "main": [
+        [
+          {
+            "node": "Validar y parsear consulta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar y parsear consulta": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Lima"
+  },
+  "pinData": {},
+  "tags": []
+}

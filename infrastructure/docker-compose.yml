@@ -1,0 +1,89 @@
+
+# ============================================================================
+name: calidad-aire
+ 
+services:
+  # ---------------------------------------------------------------------------
+  # Base de datos: guarda (a) el estado interno de n8n y (b) el histórico del proyecto
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: aire_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      APP_DB: ${APP_DB}
+      TZ: ${GENERIC_TIMEZONE}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Volumen nombrado = los datos sobreviven a `docker compose down`
+      - postgres_data:/var/lib/postgresql/data
+      # Los .sql de esta carpeta se ejecutan SOLO la primera vez que se crea el volumen
+      - ../src/database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+ 
+  # ---------------------------------------------------------------------------
+  # n8n: motor de automatización
+  # ---------------------------------------------------------------------------
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:${N8N_VERSION}
+    container_name: aire_n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5678:5678"
+    environment:
+      # --- Persistencia en PostgreSQL en lugar de SQLite -----------------------
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+ 
+      # --- Clave de cifrado de credenciales -----------------------------------
+      # OBLIGATORIA y fija: si cambia, n8n ya no puede descifrar las credenciales
+      # guardadas. Debe ser la MISMA para todo el equipo si comparten exports.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+ 
+      # --- Red / webhooks ------------------------------------------------------
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      N8N_SECURE_COOKIE: "false"        # permite entrar por http://localhost
+ 
+      # --- Zona horaria (los Schedule Trigger dependen de esto) ----------------
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE}
+      TZ: ${GENERIC_TIMEZONE}
+ 
+      # --- Ejecución de Code Nodes en proceso aislado --------------------------
+      N8N_RUNNERS_ENABLED: "true"
+ 
+      # --- Higiene del entorno local ------------------------------------------
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: 168       # conserva 7 días de ejecuciones
+    volumes:
+      - n8n_data:/home/node/.n8n
+      # Carpeta del repo montada dentro del contenedor: sirve para
+      # importar/exportar workflows por CLI sin salir de Docker
+      - ../src/n8n-workflows:/workflows
+ 
+volumes:
+  n8n_data:
+    name: aire_n8n_data
+  postgres_data:
+    name: aire_postgres_data
