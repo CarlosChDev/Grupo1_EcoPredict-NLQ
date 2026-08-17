@@ -27,7 +27,7 @@ jobs:
         env:
           PROJECT_TOKEN: ${{ secrets.PROJECT_PAT }}
           USER_NAME: ${{ github.repository_owner }}
-          PROJECT_NUMBER: 1              # El número de tu proyecto v2
+          PROJECT_NUMBER: 4              # El número de tu proyecto v2
           TARGET_ITERATION: 'sprint 0' # Nombre exacto de tu Iteración
         run: |
           python - << 'EOF'
@@ -36,7 +36,7 @@ jobs:
 
           token = os.getenv("PROJECT_TOKEN")
           user = os.getenv("USER_NAME")
-          proj_num = int(os.getenv("PROJECT_NUMBER", "1"))
+          proj_num = int(os.getenv("PROJECT_NUMBER", "4"))
           target_iter = os.getenv("TARGET_ITERATION", "sprint 0")
 
           headers = {
