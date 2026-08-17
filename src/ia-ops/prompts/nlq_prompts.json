@@ -88,5 +88,23 @@
     "variables": ["descripcion_reporte", "criterio_priorizacion", "tipo_accion"],
     "priority": "critical",
     "description": "Clasificación automática de reportes ciudadanos ambientales."
+  },
+  {
+    "id": "NLQ-011",
+    "category": "deteccion_anomalias",
+    "prompt_template": "Detecta anomalías en las lecturas de {tipo_sensor} en la estación {estacion_monitoreo} durante {periodo_tiempo}. Identifica picos inusuales, valores atípicos y desviaciones superiores a {umbral_desviacion} desviaciones estándar respecto a la media histórica.",
+    "expected_output_format": "json",
+    "variables": ["tipo_sensor", "estacion_monitoreo", "periodo_tiempo", "umbral_desviacion"],
+    "priority": "critical",
+    "description": "Detección de valores atípicos y picos súbitos en sensores ambientales mediante análisis estadístico."
+  },
+  {
+    "id": "NLQ-012",
+    "category": "deteccion_anomalias",
+    "prompt_template": "Analiza los datos de {parametro_ambiental} en {ubicacion} y compara el comportamiento actual con el patrón estacional esperado. Reporta cualquier desviación significativa, clasifica la severidad como {nivel_severidad} y sugiere posibles causas de la anomalía.",
+    "expected_output_format": "json",
+    "variables": ["parametro_ambiental", "ubicacion", "nivel_severidad"],
+    "priority": "critical",
+    "description": "Análisis de anomalías estacionales con clasificación de severidad y diagnóstico causal."
   }
 ]

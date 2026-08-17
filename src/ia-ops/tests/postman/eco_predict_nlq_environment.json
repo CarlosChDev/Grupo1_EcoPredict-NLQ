@@ -4,7 +4,7 @@
 	"values": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:3000/api",
+			"value": "http://localhost:5678",
 			"type": "default",
 			"enabled": true
 		},
@@ -16,7 +16,7 @@
 		},
 		{
 			"key": "nlq_endpoint",
-			"value": "/v1/nlq/query",
+			"value": "/webhook/nlq",
 			"type": "default",
 			"enabled": true
 		},

@@ -96,7 +96,7 @@ flowchart LR
 
 | Entorno | URL Base | Propósito |
 |---------|----------|-----------|
-| Local | `http://localhost:3000/api` | Desarrollo y pruebas locales |
+| Local | `http://localhost:5678/webhook/nlq` | Desarrollo y pruebas locales |
 | Staging | `https://staging-api.ecopredict.dev` | Pruebas de integración pre-producción |
 | Producción | `https://api.ecopredict.dev` | Monitoreo y smoke tests |
 
