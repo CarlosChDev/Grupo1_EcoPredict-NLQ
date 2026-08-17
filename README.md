@@ -1,78 +1,88 @@
-# EcoPredict & NLQ
+# Arquitectura del Sistema - EcoPredict & NLQ
 
-**Sistema de Alerta e Investigación Ambiental Ciudadana**
-
-EcoPredict & NLQ es un sistema orientado al análisis de información ambiental mediante **Open Data, automatización, Inteligencia Artificial y consultas en lenguaje natural (NLQ)**.
-
-## Objetivo
-
-* Integrar fuentes de datos ambientales.
-* Automatizar la ingesta y procesamiento de información.
-* Utilizar IA para detectar patrones y anomalías.
-* Permitir consultas mediante lenguaje natural.
-* Aplicar buenas prácticas de **DevSecOps**.
+Este documento muestra la arquitectura general en 5 capas y la secuencia detallada de los dos flujos principales del proyecto EcoPredict & NLQ.
 
 ---
 
-## 📁 Estructura principal
+## 1. Arquitectura General del Sistema
 
-```text
-├── .github/
-│   ├── PULL_REQUEST_TEMPLATE.md
-│   └── workflows/
-│
-├── src/
-│   ├── frontend/
-│   ├── n8n-workflows/
-│   ├── database/
-│   └── ia-ops/
-│
-├── infrastructure/
-├── .gitignore
-├── LICENSE
-└── README.md
+```mermaid
+flowchart TD
+    U["Usuario<br/>[Persona]"]
+
+    subgraph EcoPredict ["EcoPredict & NLQ"]
+        FE["Frontend<br/>[Container: React/Vue]"]
+        N8N["n8n — Orquestador<br/>[Container: Self-hosted]"]
+        DB[("PostgreSQL<br/>BD vectorial (RAG)")]
+        LLM["LLM multi-modelo<br/>Multimodelo (failover)"]
+        IAOPS["IA Ops / MLOps<br/>[Container: LangSmith/Langfuse]"]
+    end
+
+    EXT_API["APIs externas<br/>OpenAQ, SENAMHI"]
+    TG["Telegram<br/>Canal externo"]
+
+    U --> FE
+    FE --> N8N
+    EXT_API --> N8N
+    N8N --> DB
+    N8N --> LLM
+    DB <--->|RAG| LLM
+    LLM --> TG
+    DB --> IAOPS
+    LLM --> IAOPS
+
 ```
+## 2. Diagrama de Flujos  
+```mermaid
+flowchart TD
+    A1["n8n<br/>Cron 06:00 a.m."]
+    A2["APIs externas<br/>OpenAQ, SENAMHI"]
+    A3[("PostgreSQL<br/>Guarda datos limpios")]
+    A4["LLM multi-modelo<br/>Detecta anomalías"]
+    A5["Telegram<br/>Alerta si hay anomalía"]
 
-* `.github/` — Plantillas y workflows de CI/CD.
-* `src/frontend/` — Código del frontend.
-* `src/n8n-workflows/` — Workflows de n8n.
-* `src/database/` — Migraciones y seeders.
-* `src/ia-ops/` — Prompts, pruebas y configuración de IA.
-* `infrastructure/` — Configuración de infraestructura local.
+    A1 -->|1| A2
+    A2 -->|2| A3
+    A3 -->|3| A4
+    A4 -->|4| A5 
 
----
 
-## Uso local
+    B1["Frontend<br/>Usuario escribe pregunta"]
+    B2["n8n<br/>Webhook POST /nlq"]
+    B3[("PostgreSQL<br/>RAG: recupera contexto")]
+    B4["LLM multi-modelo<br/>Responde con contexto"]
+    B5["n8n<br/>Formatea respuesta JSON"]
+    B6["Frontend<br/>Chart.js renderiza gráfico"]
 
-El proyecto se encuentra actualmente en fase de **estructuración y configuración**.
+    B1 -->|1| B2
+    B2 -->|2| B3
+    B3 -->|3| B4
+    B4 -->|4| B5
+    B5 -->|5| B6 
+```    
+## 3. Secuencia de Flujo A
 
-Los requisitos y pasos de ejecución de cada componente se documentarán conforme avance la integración.
+Ejecución Programada: Un temporizador interno en n8n activa el flujo de manera automática todos los días a las 06:00 a.m.
 
-Las variables de entorno deberán basarse en:
+Consulta a Fuentes Externas: n8n realiza peticiones HTTP a las APIs externas de OpenAQ y SENAMHI para extraer las lecturas más recientes.
 
-```text
-infrastructure/.env.example
-```
+Procesamiento y Persistencia: El orquestador estandariza las mediciones y las guarda estructuradamente dentro de PostgreSQL.
 
-No se deben subir archivos `.env` reales.
+Análisis de Anomalías: La información registrada se evalúa mediante el LLM multi-modelo para determinar picos inusuales de contaminación.
 
----
+Emisión de Alertas: En caso de confirmarse un patrón anómalo, n8n despacha una notificación de alerta hacia el canal de Telegram.
 
-## Gobernanza y seguridad
+## 4. Secuencia de Flujo B
 
-* `main` será la rama principal y estará protegida.
-* Los cambios deberán realizarse mediante **Pull Requests**.
-* Todo PR deberá pasar las validaciones automáticas.
-* Los desarrolladores trabajarán en ramas independientes.
-* No se deben incluir credenciales, tokens ni secretos en el repositorio.
-* Los workflows de n8n deberán revisarse antes de incorporarse.
-* Las validaciones de calidad y seguridad se automatizarán mediante **GitHub Actions**.
+Entrada de Consulta: El usuario escribe una pregunta en lenguaje natural a través de la interfaz del Frontend.
 
----
+Recepción Webhook: El Frontend envía una petición HTTP POST /nlq hacia el punto de entrada de n8n.
 
-## Estado
+Búsqueda Semántica (RAG): n8n ejecuta una consulta vectorial en PostgreSQL (pgvector) para extraer el contexto histórico más relevante.
 
-**Fase actual:** Estructuración y gobernanza DevSecOps.
+Generación de Respuesta: La consulta enriquecida con el contexto recuperado se transfiere al LLM multi-modelo, el cual construye una respuesta precisa.
 
-La integración de frontend, backend, n8n, base de datos e IA se realizará progresivamente.
+Formateo de Salida: n8n convierte la respuesta recibida en una estructura de datos JSON estandarizada.
+
+Renderizado Visual: El Frontend procesa el archivo JSON y genera gráficos dinámicos interactivos mediante Chart.js.
 
