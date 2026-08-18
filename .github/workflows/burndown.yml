@@ -1,4 +1,4 @@
-name: Generate Burndown Chart
+name: Generate Burndown Chart (Jira Style)
 
 on:
   schedule:
@@ -15,6 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Descargar historial previo desde gh-pages
+        run: |
+          mkdir -p out
+          git fetch origin gh-pages || true
+          git checkout origin/gh-pages -- history.json || true
+          if [ -f history.json ]; then
+            mv history.json out/history.json
+            echo "Historial previo recuperado desde gh-pages."
+          else
+            echo "No se encontró historial previo en gh-pages, iniciando uno nuevo."
+          fi
+
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
@@ -27,17 +39,20 @@ jobs:
         env:
           PROJECT_TOKEN: ${{ secrets.PROJECT_PAT }}
           USER_NAME: ${{ github.repository_owner }}
-          PROJECT_NUMBER: 4              # El número de tu proyecto v2
-          TARGET_ITERATION: 'sprint 0' # Nombre exacto de tu Iteración
+          PROJECT_NUMBER: 2
+          TARGET_ITERATION: 'sprint 1'
         run: |
           python - << 'EOF'
           import os, json, requests
           from datetime import datetime, timedelta, timezone
 
+          # Ajuste de zona horaria local (UTC-5)
+          local_tz = timezone(timedelta(hours=-5))
+
           token = os.getenv("PROJECT_TOKEN")
           user = os.getenv("USER_NAME")
-          proj_num = int(os.getenv("PROJECT_NUMBER", "4"))
-          target_iter = os.getenv("TARGET_ITERATION", "sprint 0")
+          proj_num = int(os.getenv("PROJECT_NUMBER", "2"))
+          target_iter = os.getenv("TARGET_ITERATION", "sprint 1").strip().lower()
 
           headers = {
               "Authorization": f"Bearer {token}",
@@ -50,7 +65,7 @@ jobs:
               projectV2(number: $number) {
                 items(first: 100) {
                   nodes {
-                    fieldValues(first: 15) {
+                    fieldValues(first: 20) {
                       nodes {
                         ... on ProjectV2ItemFieldSingleSelectValue {
                           name
@@ -86,38 +101,40 @@ jobs:
           sprint_duration = 14
 
           for item in items:
-              status = "Todo"
+              status = "todo"
               stimate = 0
               item_iteration = None
 
               for field in item.get("fieldValues", {}).get("nodes", []):
-                  if not field:
+                  if not field or "field" not in field:
                       continue
-                  fname = field.get("field", {}).get("name", "")
+                  
+                  fname = field.get("field", {}).get("name", "").strip().lower()
 
-                  if fname == "Status":
-                      status = field.get("name", "Todo")
-                  elif fname.lower() == "stimate" or "estimate" in fname.lower():
+                  if fname == "status":
+                      status = str(field.get("name", "todo")).strip().lower()
+                  elif "estimate" in fname or "stimate" in fname:
                       if field.get("number") is not None:
                           stimate = int(field.get("number"))
-                  elif "title" in field:
-                      item_iteration = field.get("title")
+                  elif "title" in field or fname == "sprint":
+                      item_iteration = str(field.get("title", "")).strip().lower()
                       if item_iteration == target_iter and not sprint_start_date:
-                          sprint_start_date = datetime.strptime(field.get("startDate"), "%Y-%m-%d").date()
+                          if field.get("startDate"):
+                              sprint_start_date = datetime.strptime(field.get("startDate"), "%Y-%m-%d").date()
                           sprint_duration = field.get("duration", 14)
 
               if item_iteration == target_iter:
                   total_points += stimate
-                  if status in ["Done", "Completed"]:
+                  if status in ["done", "completed", "completado"]:
                       closed_points += stimate
 
           remaining_points = total_points - closed_points
+          today = datetime.now(local_tz).date()
 
           if not sprint_start_date:
-              sprint_start_date = datetime.now(timezone.utc).date()
+              sprint_start_date = today
 
           end_date = sprint_start_date + timedelta(days=sprint_duration - 1)
-          today = datetime.now(timezone.utc).date()
 
           sprint_days = []
           curr = sprint_start_date
@@ -138,13 +155,34 @@ jobs:
               except Exception:
                   history = {}
 
+          # Eliminar registros futuros generados por UTC
           today_label = today.strftime("%b %d")
+          history = {k: v for k, v in history.items() if datetime.strptime(f"{k} {today.year}", "%b %d %Y").date() <= today}
+
+          # Registrar inicio de sprint si no existía
+          first_day_label = sprint_start_date.strftime("%b %d")
+          if first_day_label not in history:
+              history[first_day_label] = total_points
+
+          # Registrar el valor actual de hoy
           history[today_label] = remaining_points
 
           with open(history_file, "w") as f:
               json.dump(history, f, indent=2)
 
-          real_data = [history[day] if day in history else (remaining_points if day == today_label else "null") for day in sprint_days]
+          # Rellenar la gráfica respetando días previos y usando spanGaps
+          real_data = []
+          last_val = None
+          for day in sprint_days:
+              day_date = datetime.strptime(f"{day} {today.year}", "%b %d %Y").date()
+              if day in history:
+                  last_val = history[day]
+                  real_data.append(last_val)
+              elif day_date <= today and last_val is not None:
+                  real_data.append(last_val)
+              else:
+                  real_data.append("null")
+
           real_js = "[" + ", ".join(["null" if x == "null" else str(x) for x in real_data]) + "]"
 
           html_content = f"""<!DOCTYPE html>
@@ -156,7 +194,7 @@ jobs:
               <style>
                   body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; padding: 40px; background: #f4f5f7; }}
                   .card {{ background: white; padding: 28px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); width: 100%; max-width: 900px; }}
-                  h2 {{ margin-top: 0; color: #172b4d; font-size: 22px; }}
+                  h2 {{ margin-top: 0; color: #172b4d; font-size: 22px; text-transform: capitalize; }}
                   .metrics {{ display: flex; gap: 16px; margin: 16px 0 24px 0; }}
                   .metric-box {{ background: #f4f5f7; border: 1px solid #dfe1e6; padding: 12px 16px; border-radius: 4px; flex: 1; }}
                   .metric-box label {{ display: block; font-size: 11px; text-transform: uppercase; color: #5e6c84; font-weight: bold; }}
@@ -198,7 +236,7 @@ jobs:
                                   pointRadius: 4,
                                   pointBackgroundColor: '#de350b',
                                   fill: true,
-                                  stepped: 'before'
+                                  spanGaps: true
                               }}
                           ]
                       }},
