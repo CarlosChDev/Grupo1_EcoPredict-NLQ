@@ -39,7 +39,7 @@ jobs:
         env:
           PROJECT_TOKEN: ${{ secrets.PROJECT_PAT }}
           USER_NAME: ${{ github.repository_owner }}
-          PROJECT_NUMBER: 2
+          PROJECT_NUMBER: 4
           TARGET_ITERATION: 'sprint 0'
         run: |
           python - << 'EOF'
