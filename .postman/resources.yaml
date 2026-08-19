@@ -1,0 +1,9 @@
+# Use this workspace to collaborate
+workspace:
+  id: 6a886e46-0703-4dba-a30f-cdb6f4d72921
+
+localResources:
+  collections:
+    - ../src/ia-ops/tests/postman/eco_predict_nlq_collection.json
+  environments:
+    - ../src/ia-ops/tests/postman/eco_predict_nlq_environment.json
