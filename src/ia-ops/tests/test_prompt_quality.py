@@ -50,6 +50,7 @@ CATEGORIAS_PERMITIDAS: set[str] = {
     "biodiversidad",
     "alertas_ambientales",
     "deforestacion",
+    "deteccion_anomalias",
     "residuos",
     "cambio_climatico",
     "ruido_ambiental",

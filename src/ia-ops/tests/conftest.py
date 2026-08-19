@@ -201,3 +201,64 @@ def sample_injection_payloads() -> list[dict[str, str]]:
             "descripcion": "Intento de inyección indirecta usando delimitadores de instrucción.",
         },
     ]
+
+
+# =============================================================================
+# Fixtures del Webhook de n8n
+# =============================================================================
+
+
+# Configuración del webhook real de n8n
+WEBHOOK_URL = "http://localhost:5678/webhook/nlq"
+PARAMETROS_VALIDOS = ["pm25", "pm10", "no2", "so2", "o3", "co"]
+
+
+@pytest.fixture(scope="session")
+def webhook_config() -> dict[str, str]:
+    """
+    Retorna la configuración del webhook de n8n para pruebas de integración.
+
+    Returns:
+        dict[str, str]: Diccionario con url, parametros_validos y payload de ejemplo.
+    """
+    return {
+        "url": WEBHOOK_URL,
+        "parametros_validos": PARAMETROS_VALIDOS,
+        "payload_valido": {
+            "pregunta": "¿Cuál es el nivel de PM2.5 en Lima?",
+            "ciudad": "Lima",
+            "parametro": "pm25",
+        },
+        "payload_minimo": {
+            "pregunta": "¿Cómo está la calidad del aire?",
+        },
+    }
+
+
+@pytest.fixture(scope="session")
+def injection_payloads_as_webhook(
+    sample_injection_payloads,
+) -> list[dict[str, Any]]:
+    """
+    Transforma los payloads de inyección al formato real del webhook de n8n.
+
+    Cada payload malicioso se inyecta dentro del campo 'pregunta' del webhook,
+    que es el formato real que usa el sistema EcoPredict-NLQ.
+
+    Returns:
+        list[dict[str, Any]]: Lista de payloads formateados como requests al webhook.
+    """
+    webhook_payloads = []
+    for injection in sample_injection_payloads:
+        webhook_payloads.append({
+            "id": injection["id"],
+            "categoria": injection["categoria"],
+            "descripcion": injection["descripcion"],
+            "webhook_body": {
+                "pregunta": injection["payload"],
+                "ciudad": "Lima",
+                "parametro": "pm25",
+            },
+        })
+    return webhook_payloads
+
