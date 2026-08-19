@@ -1,0 +1,314 @@
+{
+  "name": "FLUJO A",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "38bd31fa-dfba-46a1-8cf5-c3f0396e863e",
+      "name": "Schedule Trigger 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        -80
+      ],
+      "notes": "Para probar sin esperar al cron, usa el boton 'Execute workflow'; el trigger se ignora en ejecucion manual."
+    },
+    {
+      "parameters": {
+        "url": "https://api.openaq.org/v3/locations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "bbox",
+              "value": "-77.20,-12.40,-76.75,-11.75"
+            },
+            {
+              "name": "limit",
+              "value": "3"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "901b2782-29ae-4664-a70f-0d5a7741d11a",
+      "name": "OpenAQ: listar estaciones PE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        -80
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "fEmW03EJFDbLnv0k",
+          "name": "Header Auth account 4"
+        }
+      },
+      "notes": "Credencial httpHeaderAuth: header 'X-API-Key', valor = tu API key de explore.openaq.org"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// ============================================================\n// Convierte la respuesta de OpenAQ v3 (results[]) en un item\n// por estacion, con los campos que necesita la tabla `estaciones`.\n// ============================================================\nconst body = $input.first().json;\nconst results = body.results || [];\n\nif (results.length === 0) {\n  throw new Error('OpenAQ no devolvio estaciones para iso=pe. Revisa la API key o el filtro.');\n}\n\nreturn results.map((loc) => ({\n  json: {\n    codigo_externo: String(loc.id),\n    nombre: (loc.name || 'SIN NOMBRE').toUpperCase(),\n    tipo: 'calidad_aire',\n    zona: null,\n    latitud: loc.coordinates ? loc.coordinates.latitude : null,\n    longitud: loc.coordinates ? loc.coordinates.longitude : null,\n    proveedor: 'OpenAQ',\n  },\n}));\n"
+      },
+      "id": "d44e3b13-1793-4b74-8259-5eed7f72cc0d",
+      "name": "Preparar estaciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO estaciones (codigo_externo, nombre, tipo, zona, latitud, longitud, proveedor)\nVALUES ($1, $2, $3, $4, $5, $6, $7)\nON CONFLICT (codigo_externo, proveedor)\nDO UPDATE SET nombre = EXCLUDED.nombre, latitud = EXCLUDED.latitud, longitud = EXCLUDED.longitud\nRETURNING id, codigo_externo;",
+        "options": {
+          "queryReplacement": "={{ [$json.codigo_externo, $json.nombre, $json.tipo, $json.zona, $json.latitud, $json.longitud, $json.proveedor] }}"
+        }
+      },
+      "id": "5dea253e-b3c6-40cf-9f30-2100871a9b80",
+      "name": "Upsert estaciones",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        816,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "J5SF5vJXy3sDkUNJ",
+          "name": "Postgres account 2"
+        }
+      },
+      "notes": "Credencial: PostgreSQL - Calidad Aire (host=postgres, db=calidad_aire)"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.openaq.org/v3/locations/{{ $json.codigo_externo }}/latest",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "95f70170-bafb-40e5-8628-c99fe2e0611e",
+      "name": "OpenAQ: ultimas mediciones",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        -80
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "fEmW03EJFDbLnv0k",
+          "name": "Header Auth account 4"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Se ejecuta una vez por cada estacion recibida (comportamiento por defecto de n8n). onError=continue para que una estacion con fallo no tumbe a las demas."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// El nombre del parametro NO viene en /latest (solo trae\n// sensorsId). Hay que construir un mapa sensorId -> parametro\n// a partir de la respuesta original de /locations, que es\n// donde OpenAQ SI expone esa relacion (loc.sensors[]).\n// ============================================================\nconst locsResponse = $('OpenAQ: listar estaciones PE').first().json;\nconst ubicaciones = locsResponse.results || [];\n\nconst sensorInfo = {};\nfor (const loc of ubicaciones) {\n  const sensores = loc.sensors || [];\n  for (const s of sensores) {\n    sensorInfo[s.id] = {\n      parametro: ((s.parameter && (s.parameter.name || s.parameter.id)) || 'desconocido').toLowerCase(),\n      unidad: (s.parameter && s.parameter.units) || 'ug/m3',\n    };\n  }\n}\n\nconst estaciones = $('Upsert estaciones').all();\nconst respuestas = $input.all();\n\nconst filas = [];\n\nfor (let i = 0; i < respuestas.length; i++) {\n  const resp = respuestas[i].json;\n  const estacionId = estaciones[i] ? estaciones[i].json.id : null;\n  if (!estacionId) continue;\n\n  const resultados = resp.results || [];\n  for (const r of resultados) {\n    const info = sensorInfo[r.sensorsId] || {};\n    const parametro = info.parametro || 'desconocido';\n    const valor = typeof r.value === 'number' ? r.value : null;\n    const unidad = info.unidad || 'ug/m3';\n    const medidoEn = (r.datetime && (r.datetime.utc || r.datetime.local)) || r.datetime || null;\n\n    // Descarta si falta el valor, la fecha, o no se pudo mapear el parametro\n    if (valor === null || !medidoEn || parametro === 'desconocido') continue;\n\n    filas.push({\n      json: {\n        estacion_id: estacionId,\n        parametro,\n        valor,\n        unidad,\n        medido_en: medidoEn,\n        payload_crudo: JSON.stringify(r),\n      },\n    });\n  }\n}\n\nreturn filas;"
+      },
+      "id": "fb9e43c0-a279-4052-9d31-69493a94ddb9",
+      "name": "Normalizar mediciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// ============================================================\n// Descarta lecturas de sensor evidentemente erroneas:\n// negativas, o fuera de rango fisico razonable.\n// ============================================================\nconst RANGOS = {\n  pm25: [0, 1000], pm10: [0, 1500], no2: [0, 2000],\n  so2: [0, 2000], o3: [0, 1000], co: [0, 50000],\n};\n\nreturn $input.all().filter((item) => {\n  const { parametro, valor } = item.json;\n  const rango = RANGOS[parametro];\n  if (!rango) return true; // parametro no mapeado: se deja pasar, se revisa aparte\n  return valor >= rango[0] && valor <= rango[1];\n});\n"
+      },
+      "id": "e6bd6c18-0547-4f30-ab7d-425806748327",
+      "name": "Filtrar lecturas invalidas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO mediciones_aire (estacion_id, parametro, valor, unidad, medido_en, payload_crudo)\nVALUES ($1, $2, $3, $4, $5, $6::jsonb)\nON CONFLICT (estacion_id, parametro, medido_en)\nDO UPDATE SET valor = EXCLUDED.valor, ingerido_en = now()\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [$json.estacion_id, $json.parametro, $json.valor, $json.unidad, $json.medido_en, $json.payload_crudo] }}"
+        }
+      },
+      "id": "4089eaeb-9c77-4401-83f4-b3178b95f039",
+      "name": "Upsert mediciones_aire",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1696,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "J5SF5vJXy3sDkUNJ",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO ingesta_estado (fuente, ultimo_medido_en, ultima_ejecucion, filas_insertadas)\nVALUES ('openaq', now(), now(), $1)\nON CONFLICT (fuente)\nDO UPDATE SET ultimo_medido_en = now(), ultima_ejecucion = now(), filas_insertadas = $1;",
+        "options": {
+          "queryReplacement": "={{ [ $items('Upsert mediciones_aire').length ] }}"
+        }
+      },
+      "id": "ed9ba68f-2af2-494b-b24b-f9ffbee1a755",
+      "name": "Actualizar ingesta_estado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1904,
+        -80
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "J5SF5vJXy3sDkUNJ",
+          "name": "Postgres account 2"
+        }
+      },
+      "notes": "executeOnce=true: corre UNA sola vez aunque le lleguen muchos items. Fin del Flujo A: solo ingesta, sin deteccion ni IA."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger 06:00": {
+      "main": [
+        [
+          {
+            "node": "OpenAQ: listar estaciones PE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAQ: listar estaciones PE": {
+      "main": [
+        [
+          {
+            "node": "Preparar estaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar estaciones": {
+      "main": [
+        [
+          {
+            "node": "Upsert estaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert estaciones": {
+      "main": [
+        [
+          {
+            "node": "OpenAQ: ultimas mediciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAQ: ultimas mediciones": {
+      "main": [
+        [
+          {
+            "node": "Normalizar mediciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar mediciones": {
+      "main": [
+        [
+          {
+            "node": "Filtrar lecturas invalidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar lecturas invalidas": {
+      "main": [
+        [
+          {
+            "node": "Upsert mediciones_aire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert mediciones_aire": {
+      "main": [
+        [
+          {
+            "node": "Actualizar ingesta_estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6521914d-e94d-484c-8474-b2be2c70d8d6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c0234eee8f2b76c2aaa0bab3761be2c63f7354d495ee30540a7b1f1e4dcce1d"
+  },
+  "id": "guu4ypD4MaRfJDcM",
+  "tags": []
+}

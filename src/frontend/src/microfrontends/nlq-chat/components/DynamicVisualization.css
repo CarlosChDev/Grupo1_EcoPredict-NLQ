@@ -1,0 +1,26 @@
+.dynamic-visualization {
+  margin-top: 10px;
+  background: #0e1b2e;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.dv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.dv-header strong {
+  color: var(--primary-teal);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.dv-chart {
+  height: 220px;
+}
