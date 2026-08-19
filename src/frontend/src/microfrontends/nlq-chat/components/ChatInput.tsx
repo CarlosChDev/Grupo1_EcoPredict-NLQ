@@ -2,9 +2,9 @@ import { FormEvent, useState } from "react";
 import "./ChatInput.css";
 
 const EJEMPLOS = [
-  "¿Cuál fue el nivel de PM2.5 en Lima la semana pasada?",
-  "Compara el NO2 entre Lima y Callao este mes",
-  "¿Cuándo se superó el límite de PM10 en Ate?",
+  "¿Cómo estuvo el PM2.5 esta semana?",
+  "¿Cual fue el nivel de monoxido de carbono esta semana?",
+  "Muéstrame el ozono del último mes",
 ];
 
 interface ChatInputProps {
