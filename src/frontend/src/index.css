@@ -1,0 +1,316 @@
+/* ==========================================================================
+   EcoPredict NLQ — Global Design System (index.css)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS VARIABLES & THEME TOKENS
+   -------------------------------------------------------------------------- */
+:root {
+  /* Backgrounds */
+  --bg-app: #0c1428;
+  --bg-sidebar: #0b1428;
+  --bg-card: #142236;
+  --bg-card-alt: #122238;
+  --bg-card-gradient: linear-gradient(145deg, #102a3a, #102237);
+  --bg-surface-active: #0d2638;
+  --bg-input: #0e1b2e;
+
+  /* Borders */
+  --border-subtle: #18253b;
+  --border-card: #21415a;
+  --border-highlight: #07516a;
+  --border-focus: #00d4a8;
+
+  /* Brand & Accents */
+  --primary-teal: #00d69d;
+  --primary-cyan: #00c9dd;
+  --accent-gradient: linear-gradient(135deg, #08b99b, #08a9c5);
+  
+  /* Status Colors */
+  --status-good: #00d3a3;
+  --status-good-bg: rgba(0, 211, 163, 0.12);
+  --status-moderate: #ffc000;
+  --status-moderate-bg: rgba(255, 192, 0, 0.14);
+  --status-bad: #ff4d55;
+  --status-bad-bg: rgba(255, 77, 85, 0.16);
+  --status-purple: #9860ed;
+
+  /* Typography */
+  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Fira Code", "Consolas", "Courier New", monospace;
+  
+  --text-main: #e7edf5;
+  --text-muted: #8996aa;
+  --text-dim: #57697f;
+  --text-dimmer: #e7edf5;
+  
+  /* Radius & Shadows */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+  --glow-teal: 0 0 15px rgba(0, 220, 180, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET & BASE ELEMENTS
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --------------------------------------------------------------------------
+   3. TYPOGRAPHY HELPERS
+   -------------------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-main);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+p {
+  color: var(--text-muted);
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+/* --------------------------------------------------------------------------
+   4. CORE LAYOUT UTILITIES (React View Shell)
+   -------------------------------------------------------------------------- */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.sidebar {
+  width: 225px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-subtle);
+  padding: 14px 10px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.main-content {
+  margin-left: 225px;
+  width: calc(100% - 225px);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 62px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: rgba(11, 20, 40, 0.7);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.content-container {
+  padding: 20px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   5. CARDS & CONTAINERS
+   -------------------------------------------------------------------------- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: #2e5575;
+}
+
+.card-gradient {
+  background: var(--bg-card-gradient);
+}
+
+/* --------------------------------------------------------------------------
+   6. UI INTERACTIVE CONTROLS (Inputs, Buttons, Badges)
+   -------------------------------------------------------------------------- */
+button,
+.btn {
+  font-family: var(--font-sans);
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-card);
+  background: #152338;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover,
+.btn:hover {
+  background: #1d314d;
+  border-color: var(--primary-teal);
+  color: #fff;
+}
+
+button:active,
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent-gradient);
+  border: none;
+  color: #03141f;
+  box-shadow: var(--glow-teal);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  color: #000;
+}
+
+/* Inputs / Search / NLQ Bar */
+input[type="text"],
+input[type="search"],
+textarea,
+select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-teal);
+  box-shadow: 0 0 0 2px rgba(0, 214, 157, 0.15);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-dim);
+}
+
+/* Badges & Indicators */
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.badge-teal {
+  background: #08394b;
+  color: var(--primary-teal);
+}
+
+.live-pulse {
+  width: 7px;
+  height: 7px;
+  background: var(--primary-teal);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--primary-teal);
+}
+
+/* --------------------------------------------------------------------------
+   7. SCROLLBAR STYLING
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e3148;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4566;
+}
+
+/* --------------------------------------------------------------------------
+   8. RESPONSIVE BREAKPOINTS
+   -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .topbar {
+    padding: 0 16px;
+  }
+  
+  .content-container {
+    padding: 16px;
+  }
+}
