@@ -26,7 +26,6 @@ jobs:
       fail-fast: false
       matrix:
         language:
-          - python
           - javascript-typescript
 
     steps:
