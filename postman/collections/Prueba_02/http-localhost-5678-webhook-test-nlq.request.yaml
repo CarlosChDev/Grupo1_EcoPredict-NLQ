@@ -1,0 +1,13 @@
+$kind: http-request
+name: http://localhost:5678/webhook-test/nlq
+description: ""
+url: http://localhost:5678/webhook-test/nlq
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"pregunta\": \"¿Cuáles fueron los niveles de contaminación de PM2.5 en Lima?\"\r
+
+    }"
+order: 1787200596066
