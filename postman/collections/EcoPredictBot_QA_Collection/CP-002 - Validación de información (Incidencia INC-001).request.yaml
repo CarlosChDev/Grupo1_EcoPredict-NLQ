@@ -1,11 +1,12 @@
 $kind: http-request
+name: CP-002 - Validación de información (Incidencia INC-001)
 description: "Caso de prueba CP-002: Diseñado para validar el contenido recibido y registrar la incidencia INC-001 cuando el cuerpo viene vacío."
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
 body:
-  type: text
+  type: json
   content: |-
     {
       "pregunta": "",

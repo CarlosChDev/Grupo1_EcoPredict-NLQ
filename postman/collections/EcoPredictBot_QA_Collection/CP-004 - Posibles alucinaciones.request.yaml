@@ -1,11 +1,12 @@
 $kind: http-request
+name: CP-004 - Posibles alucinaciones
 description: "Caso de prueba CP-004: Comprueba que el modelo maneje consultas sobre datos inexistentes."
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
 body:
-  type: text
+  type: json
   content: |-
     {
       "pregunta": "¿Existe registro de partículas PM2.5 en la estratósfera de Lima en el año 1500?",

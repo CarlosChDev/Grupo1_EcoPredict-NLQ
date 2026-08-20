@@ -1,11 +1,12 @@
 $kind: http-request
+name: CP-003 - Respuesta incorrecta
 description: "Caso de prueba CP-003: Verifica que el endpoint identifique y rechace parámetros incorrectos."
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
 body:
-  type: text
+  type: json
   content: |-
     {
       "pregunta": "¿Cuál es el valor del parámetro?",

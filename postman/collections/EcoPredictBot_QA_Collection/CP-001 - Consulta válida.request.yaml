@@ -1,11 +1,12 @@
 $kind: http-request
+name: CP-001 - Consulta válida
 description: "Caso de prueba CP-001: Solicitud POST con consulta válida para verificar respuesta 200 OK y tiempo menor a 5000 ms."
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
 body:
-  type: text
+  type: json
   content: |-
     {
       "pregunta": "¿Qué información puede proporcionar EcoPredict sobre la calidad del aire y niveles de PM2.5?",
