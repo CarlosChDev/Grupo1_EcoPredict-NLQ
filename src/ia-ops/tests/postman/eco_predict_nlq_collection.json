@@ -21,7 +21,7 @@
 			"description": "Pruebas con consultas validas que deben retornar 200 OK.",
 			"item": [
 				{
-					"name": "1.1 Consulta de calidad del aire (PM2.5)",
+					"name": "1.1 Consulta de calidad del aire (PM2.5)",	
 					"request": {
 						"method": "POST",
 						"header": [
