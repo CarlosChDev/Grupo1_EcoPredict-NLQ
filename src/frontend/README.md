@@ -1,11 +1,74 @@
-# Frontend — Scaffold NLQ
+# Frontend — Shell + Microfrontends
 
-Prueba de concepto mínima: un input de lenguaje natural que llama directamente
-al webhook local de n8n (`HU-04 · Flujo base NLQ`). Su único objetivo es
-validar la comunicación frontend ↔ backend antes de construir la interfaz
-definitiva — no está pensado como UI final.
+Aplicación única (Vite + React + TypeScript) organizada como **Shell/Host +
+microfrontends**, tal como se definió en el informe de arquitectura. No es
+un monorepo con paquetes separados: es una sola app con carpetas
+independientes por responsabilidad, y cada microfrontend se carga en su
+propio chunk JS mediante `React.lazy` (code-splitting), sin necesitar
+varios servidores de desarrollo.
 
-Stack: Vite + React + TypeScript.
+## Estructura
+
+```text
+src/
+├── main.tsx                      # punto de entrada
+├── styles/
+│   └── global.css                # tokens de diseño (colores, tipografía) + reset
+│
+├── shell/                        # Shell/Host: navegación, layout, integración
+│   ├── App.tsx                   # define las rutas y qué microfrontend carga cada una
+│   ├── config/
+│   │   └── microfrontends.ts     # registro único: id, nombre, ruta, estado
+│   ├── layout/
+│   │   ├── AppLayout.tsx         # Sidebar + Topbar + <Outlet/>
+│   │   ├── Sidebar.tsx
+│   │   ├── Topbar.tsx
+│   │   └── usePageHeader.ts      # hook para que cada página fije título/subtítulo
+│   └── pages/
+│       ├── InicioPage.tsx        # landing: tarjetas para entrar a cada microfrontend
+│       └── NotFoundPage.tsx
+│
+└── microfrontends/
+    ├── nlq-chat/                 # Microfrontend: NLQ Chat IA — funcional
+    │   ├── NlqChatPage.tsx       # punto de entrada del módulo
+    │   ├── components/
+    │   │   ├── ChatInput.tsx
+    │   │   ├── ChatMessageItem.tsx
+    │   │   └── DynamicVisualization.tsx  # gráfico (Chart.js) de la serie histórica
+    │   ├── hooks/
+    │   │   └── useNlqChat.ts     # estado del chat + llamada al webhook
+    │   ├── services/
+    │   │   └── nlqApi.ts         # fetch tipado al webhook de n8n (FLUJO B)
+    │   └── types/
+    │       └── nlq.types.ts      # tipos que reflejan el contrato de FLUJO B.json
+    │
+    └── dashboard-ambiental/      # Microfrontend: Dashboard Ambiental — SOLO VISTA
+        ├── DashboardAmbientalPage.tsx
+        ├── components/
+        │   ├── AirQualityCard.tsx
+        │   ├── PollutionIndicator.tsx
+        │   ├── WeatherSummary.tsx
+        │   └── AlertsPanel.tsx
+        ├── data/
+        │   └── mockDashboardData.ts   # datos de ejemplo — no hay fetch real todavía
+        ├── utils/
+        │   └── nivel.ts
+        └── types/
+            └── dashboard.types.ts     # calzan con `estaciones`/`mediciones_aire`
+```
+
+> **Dashboard Ambiental es solo maqueta visual.** `FLUJO A.json` únicamente
+> inserta en Postgres (`estaciones`, `mediciones_aire`); no existe todavía
+> un webhook n8n que exponga esos datos por HTTP. La página muestra un
+> banner de aviso y consume `data/mockDashboardData.ts`. Cuando exista ese
+> webhook de lectura, se agrega un `services/dashboardApi.ts` igual que
+> `nlq-chat/services/nlqApi.ts` y se reemplazan los imports `*_MOCK`.
+
+**Cómo agregar el próximo microfrontend** (Data Analytics): crear
+`src/microfrontends/<nombre>/`, agregarlo a `shell/config/microfrontends.ts`
+con `estado: "disponible"`, y sumar su ruta en `shell/App.tsx` con
+`lazy()`. El Sidebar y la página de Inicio se actualizan solos porque leen
+del mismo registro.
 
 ## Requisitos previos
 
@@ -16,24 +79,13 @@ Stack: Vite + React + TypeScript.
    docker compose up -d
    ```
 
-2. Entrar a n8n en <http://localhost:5678> y crear la cuenta owner (solo la
-   primera vez).
-
-3. Importar el workflow base si no está ya en el editor:
-   `src/n8n-workflows/templates/flujo-n8n-base.json` (menú **⋮ → Import from
-   File**).
-
-4. **Activar el workflow** con el toggle **Active** (arriba a la derecha).
-   Esto deja el webhook escuchando de forma permanente en:
+2. Entrar a n8n en <http://localhost:5678> e importar/activar el workflow
+   **FLUJO B** (`src/n8n-workflows/FLUJO B.json`). Actívalo con el toggle
+   **Active**; queda escuchando en:
 
    ```text
    http://localhost:5678/webhook/nlq
    ```
-
-   Alternativa mientras se edita el workflow sin activarlo: usar la ruta de
-   prueba `http://localhost:5678/webhook-test/nlq`, pero hay que pulsar
-   **"Listen for test event"** en el nodo Webhook antes de cada llamada (solo
-   responde a una petición por click).
 
 ## Ejecutar el frontend
 
@@ -44,34 +96,30 @@ npm install
 npm run dev
 ```
 
-Abre <http://localhost:5173>, escribe una pregunta, elige ciudad/parámetro y
-pulsa "Enviar al webhook". La respuesta cruda del workflow (JSON) se muestra
-debajo del formulario — sirve para confirmar que el viaje
-`input → fetch → n8n → Postgres/validación → respuesta` funciona de punta a
-punta.
+Abre <http://localhost:5173>. Verás la página de **Inicio** con las
+tarjetas de los tres módulos; solo **NLQ Chat IA** está habilitado, los
+otros dos aparecen como "Próximamente" (coincide con la Lista de Chequeo
+del informe: Dashboard Ambiental y Data Analytics siguen pendientes).
 
-## Payload esperado por el webhook
+## Contrato del webhook NLQ
+
+Request:
 
 ```json
-{
-  "pregunta": "string, 5-500 caracteres",
-  "ciudad": "string (default: Lima)",
-  "parametro": "pm25 | pm10 | no2 | so2 | o3 | co"
-}
+{ "pregunta": "string, 5-500 caracteres" }
 ```
 
-El nodo "Validar y parsear consulta" del workflow devuelve `codigo_http: 400`
-y una lista de `errores` si el payload no cumple estas reglas.
+Respuestas posibles (ver `src/n8n-workflows/FLUJO B.json` y
+`microfrontends/nlq-chat/types/nlq.types.ts`):
+
+- `200` con datos: `{ ok, codigo_http, texto, modelo_usado, parametro, rango, serie }`
+- `200` sin datos: `{ ok, codigo_http, mensaje, sugerencia }`
+- `400`: `{ ok: false, codigo_http: 400, errores: string[] }`
+- `422`: `{ ok: false, codigo_http: 422, motivo }`
 
 ## Troubleshooting
 
-- **`Failed to fetch` / error de red**: confirma que el contenedor `aire_n8n`
-  está corriendo (`docker ps`) y que `VITE_N8N_WEBHOOK_URL` en `.env` apunta al
-  puerto correcto.
-- **404 en `/webhook/nlq`**: el workflow no está activado. Actívalo o cambia
-  la URL a la ruta de prueba (`/webhook-test/nlq`) y pulsa "Listen for test
-  event" antes de reenviar.
-- **Error de CORS en la consola del navegador**: el nodo Webhook de n8n
-  responde `Access-Control-Allow-Origin` automáticamente para el origen que
-  hace la petición, así que no debería ocurrir en local. Si aparece, revisa
-  que no haya un proxy/reverse-proxy intermedio quitando esa cabecera.
+- **`Failed to fetch` / error de red**: confirma que el contenedor de n8n
+  está corriendo (`docker ps`) y que `VITE_N8N_WEBHOOK_URL` en `.env`
+  apunta al puerto correcto.
+- **404 en `/webhook/nlq`**: el workflow FLUJO B no está activado.
