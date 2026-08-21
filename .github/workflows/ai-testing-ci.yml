@@ -22,6 +22,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Check IA Ops structure
         run: |
           echo "Checking IA Ops directories..."
@@ -32,12 +37,11 @@ jobs:
 
           echo "IA Ops structure is valid."
 
-      - name: Check Python tests
+      - name: Install pytest
         run: |
-          if find src/ia-ops/tests -type f -name "*.py" | grep -q .; then
-            echo "Python tests found."
-            echo "IA test execution will be configured when tests are implemented."
-          else
-            echo "No Python IA tests found yet."
-            echo "IA testing implementation is not available yet."
-          fi
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run pytest
+        run: |
+          pytest src/ia-ops/tests -v
