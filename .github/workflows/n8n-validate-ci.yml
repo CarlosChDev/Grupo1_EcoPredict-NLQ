@@ -1,47 +1,79 @@
-﻿name: Validate n8n Workflows
+name: Validate n8n Workflows
 
 on:
+  # Required workflows must run for every PR so their final status is never
+  # left pending by an event-level paths filter.
   pull_request:
-    paths:
-      - "src/n8n-workflows/**/*.json"
-      - ".github/workflows/n8n-validate-ci.yml"
-
   push:
     branches:
       - main
       - Chavez
-    paths:
-      - "src/n8n-workflows/**/*.json"
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
-  validate-json:
-    name: Validate n8n JSON
+  changes:
+    name: Detect relevant changes
     runs-on: ubuntu-latest
-
+    outputs:
+      n8n: ${{ steps.filter.outputs.n8n }}
+      global: ${{ steps.filter.outputs.global }}
     steps:
+      # This is also needed for push events, where paths-filter uses git.
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Detect changed files
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            n8n:
+              - 'src/n8n-workflows/**'
+              - '.github/workflows/n8n-validate-ci.yml'
+            global:
+              - '!src/frontend/**'
+              - '!src/n8n-workflows/**'
+              - '!src/ia-ops/**'
+          predicate-quantifier: every
+
+  validate-json:
+    name: Validate n8n JSON
+    needs: changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain skipped validation
+        if: ${{ needs.changes.outputs.n8n != 'true' && needs.changes.outputs.global != 'true' }}
+        run: echo "No n8n or shared files changed; n8n JSON validation is not required."
+
+      - name: Checkout repository
+        if: ${{ needs.changes.outputs.n8n == 'true' || needs.changes.outputs.global == 'true' }}
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
+        if: ${{ needs.changes.outputs.n8n == 'true' || needs.changes.outputs.global == 'true' }}
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Validate JSON files
+        if: ${{ needs.changes.outputs.n8n == 'true' || needs.changes.outputs.global == 'true' }}
         shell: bash
         run: |
           set -e
 
-          files=
+          mapfile -d '' files < <(find src/n8n-workflows -type f -name '*.json' -print0)
 
-          if [ -z "" ]; then
+          if [ "${#files[@]}" -eq 0 ]; then
             echo "No n8n JSON files found."
             exit 0
           fi
 
-          for file in ; do
-            echo "Validating: "
-            node -e "JSON.parse(require('fs').readFileSync('', 'utf8'))"
+          for file in "${files[@]}"; do
+            echo "Validating: $file"
+            node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$file"
           done
 
           echo "All n8n JSON files are valid."
