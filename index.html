@@ -18,8 +18,8 @@
     <div class="card">
         <h2>Burndown Chart - sprint 0</h2>
         <div class="metrics">
-            <div class="metric-box"><label>Total Story Points</label><span>30</span></div>
-            <div class="metric-box"><label>Completados</label><span style="color: #36b37e;">30</span></div>
+            <div class="metric-box"><label>Total Story Points</label><span>0</span></div>
+            <div class="metric-box"><label>Completados</label><span style="color: #36b37e;">0</span></div>
             <div class="metric-box"><label>Restantes</label><span style="color: #de350b;">0</span></div>
         </div>
         <canvas id="burndownChart" height="130"></canvas>
@@ -29,11 +29,11 @@
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ["Aug 10", "Aug 11", "Aug 12", "Aug 13", "Aug 14", "Aug 15", "Aug 16", "Aug 17", "Aug 18", "Aug 19", "Aug 20", "Aug 21"],
+                labels: ["Aug 26", "Aug 27", "Aug 28", "Aug 29", "Aug 30", "Aug 31", "Sep 01", "Sep 02", "Sep 03", "Sep 04", "Sep 05", "Sep 06", "Sep 07", "Sep 08"],
                 datasets: [
                     {
                         label: 'Línea Guía Ideal',
-                        data: [30.0, 27.27, 24.55, 21.82, 19.09, 16.36, 13.64, 10.91, 8.18, 5.45, 2.73, 0.0],
+                        data: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                         borderColor: '#8993a4',
                         borderDash: [6, 6],
                         borderWidth: 2,
@@ -42,7 +42,7 @@
                     },
                     {
                         label: 'Puntos Restantes (Real)',
-                        data: [null, null, null, null, null, null, null, null, null, null, null, null],
+                        data: [0, null, null, null, null, null, null, null, null, null, null, null, null, null],
                         borderColor: '#de350b',
                         backgroundColor: 'rgba(222, 53, 11, 0.05)',
                         borderWidth: 2.5,
