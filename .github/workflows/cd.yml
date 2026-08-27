@@ -1,0 +1,133 @@
+name: CD - Compose Validation
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose-validation:
+    name: Validate Docker Compose services
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate project structure
+        run: |
+          test -d src/frontend
+          test -d src/n8n-workflows
+          test -d src/database/migrations
+          test -d infrastructure
+          test -f infrastructure/docker-compose.yml
+          test -f infrastructure/.env.example
+          echo "Project structure validated."
+
+      - name: Create ephemeral CI variables
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # These values exist only in this disposable GitHub-hosted runner.
+          # They are not production credentials and are never written to .env.
+          {
+            echo "COMPOSE_PROJECT_NAME=ecopredict-ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+            echo "N8N_VERSION=1.107.4"
+            echo "POSTGRES_USER=ci_n8n_user"
+            echo "POSTGRES_PASSWORD=ci_password_${GITHUB_RUN_ID}"
+            echo "POSTGRES_DB=ci_n8n"
+            echo "APP_DB=ci_calidad_aire"
+            echo "GENERIC_TIMEZONE=America/Lima"
+            echo "N8N_ENCRYPTION_KEY=$(openssl rand -hex 32)"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate Docker Compose configuration
+        run: |
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            config -q
+          echo "Docker Compose configuration is valid."
+
+      - name: Pull and start Compose services
+        run: |
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            pull
+
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            up -d
+
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            ps
+
+      - name: Verify PostgreSQL health
+        shell: bash
+        run: |
+          set -euo pipefail
+          postgres_id="$(docker compose --project-name "$COMPOSE_PROJECT_NAME" -f infrastructure/docker-compose.yml ps -q postgres)"
+
+          if [ -z "$postgres_id" ]; then
+            echo "PostgreSQL container was not created."
+            exit 1
+          fi
+
+          for attempt in {1..36}; do
+            status="$(docker inspect --format='{{.State.Health.Status}}' "$postgres_id" 2>/dev/null || true)"
+            if [ "$status" = "healthy" ]; then
+              echo "PostgreSQL is healthy."
+              exit 0
+            fi
+
+            echo "Waiting for PostgreSQL health check ($attempt/36): ${status:-unavailable}"
+            sleep 5
+          done
+
+          echo "PostgreSQL did not become healthy in time."
+          exit 1
+
+      - name: Verify n8n readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..36}; do
+            if curl --fail --silent --show-error --output /dev/null \
+              http://localhost:5678/healthz/readiness; then
+              echo "n8n is ready and connected to PostgreSQL."
+              exit 0
+            fi
+
+            echo "Waiting for n8n readiness endpoint ($attempt/36)."
+            sleep 5
+          done
+
+          echo "n8n did not become ready in time."
+          exit 1
+
+      - name: Show Compose logs after a failure
+        if: ${{ failure() }}
+        run: |
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            logs --no-color
+
+      - name: Remove temporary Compose services
+        if: ${{ always() }}
+        run: |
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            down --volumes --remove-orphans
