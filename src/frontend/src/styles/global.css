@@ -1,10 +1,9 @@
 /* ==========================================================================
-   EcoPredict NLQ — Global Design System (index.css)
+   EcoPredict NLQ — Design System global
+   Tokens de color/tipografía + reset. Los componentes de shell/ y
+   microfrontends/ importan sus propios .css y solo consumen estas variables.
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   1. CSS VARIABLES & THEME TOKENS
-   -------------------------------------------------------------------------- */
 :root {
   /* Backgrounds */
   --bg-app: #0c1428;
@@ -25,7 +24,7 @@
   --primary-teal: #00d69d;
   --primary-cyan: #00c9dd;
   --accent-gradient: linear-gradient(135deg, #08b99b, #08a9c5);
-  
+
   /* Status Colors */
   --status-good: #00d3a3;
   --status-good-bg: rgba(0, 211, 163, 0.12);
@@ -38,12 +37,11 @@
   /* Typography */
   --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Fira Code", "Consolas", "Courier New", monospace;
-  
+
   --text-main: #e7edf5;
   --text-muted: #8996aa;
   --text-dim: #57697f;
-  --text-dimmer: #e7edf5;
-  
+
   /* Radius & Shadows */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -52,9 +50,6 @@
   --glow-teal: 0 0 15px rgba(0, 220, 180, 0.25);
 }
 
-/* --------------------------------------------------------------------------
-   2. RESET & BASE ELEMENTS
-   -------------------------------------------------------------------------- */
 *,
 *::before,
 *::after {
@@ -85,9 +80,6 @@ body {
   flex-direction: column;
 }
 
-/* --------------------------------------------------------------------------
-   3. TYPOGRAPHY HELPERS
-   -------------------------------------------------------------------------- */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-main);
   font-weight: 600;
@@ -103,59 +95,7 @@ code, kbd, samp, pre {
 }
 
 /* --------------------------------------------------------------------------
-   4. CORE LAYOUT UTILITIES (React View Shell)
-   -------------------------------------------------------------------------- */
-.app-layout {
-  display: flex;
-  min-height: 100vh;
-  width: 100%;
-}
-
-.sidebar {
-  width: 225px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-subtle);
-  padding: 14px 10px;
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 100;
-}
-
-.main-content {
-  margin-left: 225px;
-  width: calc(100% - 225px);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  height: 62px;
-  border-bottom: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  background: rgba(11, 20, 40, 0.7);
-  backdrop-filter: blur(8px);
-  position: sticky;
-  top: 0;
-  z-index: 90;
-}
-
-.content-container {
-  padding: 20px 24px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* --------------------------------------------------------------------------
-   5. CARDS & CONTAINERS
+   Cards genéricas — reutilizadas por shell y por cualquier microfrontend
    -------------------------------------------------------------------------- */
 .card {
   background: var(--bg-card);
@@ -165,16 +105,32 @@ code, kbd, samp, pre {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card:hover {
-  border-color: #2e5575;
-}
-
 .card-gradient {
   background: var(--bg-card-gradient);
 }
 
+.card-label {
+  color: #697a8e;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+.card-label .small-icon {
+  color: var(--primary-teal);
+  margin-right: 7px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
 /* --------------------------------------------------------------------------
-   6. UI INTERACTIVE CONTROLS (Inputs, Buttons, Badges)
+   Controles interactivos genéricos
    -------------------------------------------------------------------------- */
 button,
 .btn {
@@ -202,6 +158,11 @@ button:hover,
   color: #fff;
 }
 
+button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
 button:active,
 .btn:active {
   transform: scale(0.98);
@@ -219,7 +180,6 @@ button:active,
   color: #000;
 }
 
-/* Inputs / Search / NLQ Bar */
 input[type="text"],
 input[type="search"],
 textarea,
@@ -248,7 +208,6 @@ textarea::placeholder {
   color: var(--text-dim);
 }
 
-/* Badges & Indicators */
 .badge {
   font-size: 10px;
   font-weight: 700;
@@ -264,6 +223,11 @@ textarea::placeholder {
   color: var(--primary-teal);
 }
 
+.badge-muted {
+  background: #1c2c42;
+  color: #6c7d94;
+}
+
 .live-pulse {
   width: 7px;
   height: 7px;
@@ -272,9 +236,6 @@ textarea::placeholder {
   box-shadow: 0 0 8px var(--primary-teal);
 }
 
-/* --------------------------------------------------------------------------
-   7. SCROLLBAR STYLING
-   -------------------------------------------------------------------------- */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -291,26 +252,4 @@ textarea::placeholder {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2a4566;
-}
-
-/* --------------------------------------------------------------------------
-   8. RESPONSIVE BREAKPOINTS
-   -------------------------------------------------------------------------- */
-@media (max-width: 900px) {
-  .sidebar {
-    display: none;
-  }
-  
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .topbar {
-    padding: 0 16px;
-  }
-  
-  .content-container {
-    padding: 16px;
-  }
 }
