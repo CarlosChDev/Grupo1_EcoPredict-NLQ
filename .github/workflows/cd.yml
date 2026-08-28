@@ -1,4 +1,4 @@
-name: CD - Compose Validation
+name: CD - Pre-deployment Validation
 
 on:
   push:
@@ -26,7 +26,9 @@ jobs:
           test -d src/database/migrations
           test -d infrastructure
           test -f infrastructure/docker-compose.yml
+          test -f infrastructure/docker-compose.production.yml
           test -f infrastructure/.env.example
+          test -f infrastructure/.env.production.example
           echo "Project structure validated."
 
       - name: Create ephemeral CI variables
@@ -131,3 +133,34 @@ jobs:
             --project-name "$COMPOSE_PROJECT_NAME" \
             -f infrastructure/docker-compose.yml \
             down --volumes --remove-orphans
+
+  production-compose-contract:
+    name: Validate production Compose contract
+    needs: compose-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Placeholders are used only to validate interpolation and Compose syntax.
+    # This job does not pull images, connect to OCI, or expose real secrets.
+    env:
+      BACKEND_IMAGE: registry.invalid/ecopredict/backend:ci-placeholder
+      N8N_VERSION: "1.107.4"
+      POSTGRES_USER: ci_production_user
+      POSTGRES_PASSWORD: ci_production_password
+      POSTGRES_DB: n8n
+      N8N_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      N8N_PUBLIC_HOST: n8n.ci.invalid
+      N8N_WEBHOOK_URL: https://n8n.ci.invalid/
+      N8N_EDITOR_BASE_URL: https://n8n.ci.invalid/
+      GENERIC_TIMEZONE: America/Lima
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate production Docker Compose definition
+        run: |
+          docker compose \
+            --project-name ecopredict-production-contract \
+            -f infrastructure/docker-compose.production.yml \
+            config -q
+          echo "Production Compose contract is valid. No OCI deployment was attempted."
