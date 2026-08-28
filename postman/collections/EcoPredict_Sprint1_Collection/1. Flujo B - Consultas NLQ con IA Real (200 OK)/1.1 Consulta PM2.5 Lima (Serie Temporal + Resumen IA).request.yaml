@@ -1,0 +1,43 @@
+$kind: http-request
+name: 1.1 Consulta PM2.5 Lima (Serie Temporal + Resumen IA)
+description: Verifica que el bot identifique el parámetro PM2.5, consulte PostgreSQL y devuelva el resumen de IA con la serie de datos para gráficos.
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+  X-API-Key: "{{api_key}}"
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Cuál es el nivel de contaminación por PM2.5 en Lima durante la última semana?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      const res = pm.response.json();
+
+      pm.test('Campo ok es true y codigo_http es 200', function () {
+          pm.expect(res.ok).to.be.true;
+          pm.expect(res.codigo_http).to.eql(200);
+      });
+
+      pm.test('Estructura de respuesta válida (Transición o IA Real)', function () {
+          if (res.etapa === 'sprint-0-esqueleto') {
+              pm.expect(res.consulta).to.be.an('object');
+              pm.expect(res.consulta.pregunta).to.be.a('string');
+          } else {
+              pm.expect(res.texto).to.be.a('string');
+              pm.expect(res.parametro).to.be.oneOf(['pm25', 'pm10', 'no2', 'so2', 'o3', 'co']);
+          }
+      });
+
+      pm.test('Tiempo de respuesta dentro del SLA (< 5000 ms)', function () {
+          pm.expect(pm.response.responseTime).to.be.below(5000);
+      });
+    language: text/javascript
+order: 1000

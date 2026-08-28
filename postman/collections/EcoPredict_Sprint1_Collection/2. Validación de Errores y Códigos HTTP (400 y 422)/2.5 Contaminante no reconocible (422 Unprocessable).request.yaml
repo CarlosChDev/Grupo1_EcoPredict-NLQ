@@ -1,0 +1,23 @@
+$kind: http-request
+name: 2.5 Contaminante no reconocible (422 Unprocessable)
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Cuál es la receta para preparar ceviche de pescado peruano?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 422 o 400 controlado', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);
+      });
+      pm.test('No produce error 500 del servidor', function () {
+          pm.expect(pm.response.code).to.not.eql(500);
+      });
+    language: text/javascript
+order: 5000

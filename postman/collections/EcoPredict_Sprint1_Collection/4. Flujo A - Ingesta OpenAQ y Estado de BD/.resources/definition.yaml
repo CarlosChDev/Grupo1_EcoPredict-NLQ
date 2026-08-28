@@ -1,0 +1,3 @@
+$kind: collection
+description: Pruebas de verificación de ingesta de estaciones, lecturas normalizadas y persistencia.
+order: 4000

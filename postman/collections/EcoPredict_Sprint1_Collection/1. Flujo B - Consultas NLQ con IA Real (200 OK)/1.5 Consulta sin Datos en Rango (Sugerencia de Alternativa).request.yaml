@@ -1,0 +1,27 @@
+$kind: http-request
+name: 1.5 Consulta sin Datos en Rango (Sugerencia de Alternativa)
+description: Valida el nodo 'Sugerir alternativa' cuando no existen mediciones en el rango solicitado.
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+  X-API-Key: "{{api_key}}"
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Cuál fue el nivel de ozono (O3) en el año 1990 en Lima?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 200', function () {
+          pm.response.to.have.status(200);
+      });
+      const res = pm.response.json();
+      pm.test('Devuelve respuesta estructurada y no crashea', function () {
+          pm.expect(res.ok).to.be.true;
+          pm.expect(res.codigo_http).to.eql(200);
+      });
+    language: text/javascript
+order: 5000
