@@ -143,3 +143,9 @@ CREATE TABLE IF NOT EXISTS alerta_estado (
     ultima_alerta TIMESTAMPTZ,
     PRIMARY KEY (estacion_id, parametro)
 );
+
+CREATE TABLE IF NOT EXISTS rate_limit ( 
+    ip TEXT PRIMARY KEY, 
+    conteo INT NOT NULL DEFAULT 1, 
+    ventana_inicio TIMESTAMPTZ NOT NULL DEFAULT now() 
+); 
