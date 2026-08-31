@@ -142,7 +142,7 @@ jobs:
             -f infrastructure/docker-compose.yml \
             exec -T n8n \
             n8n import:workflow \
-            --input=/workflows/FLUJO\ B.json
+            --input="/workflows/FLUJO B.json"
 
           echo "FLUJO B imported into n8n."
 
@@ -160,6 +160,42 @@ jobs:
             --active=true
 
           echo "FLUJO B activated."
+
+      - name: Restart n8n to apply workflow activation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            restart n8n
+
+          echo "n8n restarted to apply workflow activation."
+
+      - name: Wait for n8n after workflow activation
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..36}; do
+            if curl \
+              --fail \
+              --silent \
+              --show-error \
+              --output /dev/null \
+              http://127.0.0.1:5678/healthz/readiness; then
+
+              echo "n8n is ready after workflow activation."
+              exit 0
+            fi
+
+            echo "Waiting for n8n after restart ($attempt/36)."
+            sleep 5
+          done
+
+          echo "n8n did not become ready after restart."
+          exit 1
 
       - name: Verify NLQ webhook
         shell: bash
