@@ -449,7 +449,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "=={{ JSON.stringify({\n  ok: true,\n  codigo_http: 200,\n  mensaje: $json.total > 0\n    ? `No hay datos de ${$('Sugerir alternativa').first().json.parametro_solicitado} entre ${$('Sugerir alternativa').first().json.desde_solicitado} y ${$('Sugerir alternativa').first().json.hasta_solicitado}. Sí hay información disponible entre ${$json.desde_disponible} y ${$json.hasta_disponible} (${$json.total} mediciones). Intenta preguntar por ese rango.`\n    : `No hay ninguna medición registrada de ${$('Sugerir alternativa').first().json.parametro_solicitado} todavía. Prueba con otro parámetro: pm25, pm10, no2, so2, o3 o co.`,\n  sugerencia: $json.total > 0 ? { desde: $json.desde_disponible, hasta: $json.hasta_disponible } : null\n}) }}",
+        "responseBody": "={{ JSON.stringify({\n  ok: true,\n  codigo_http: 200,\n  mensaje: $json.total > 0\n    ? `No hay datos de ${$('Sugerir alternativa').first().json.parametro_solicitado} entre ${$('Sugerir alternativa').first().json.desde_solicitado} y ${$('Sugerir alternativa').first().json.hasta_solicitado}. Sí hay información disponible entre ${$json.desde_disponible} y ${$json.hasta_disponible} (${$json.total} mediciones). Intenta preguntar por ese rango.`\n    : `No hay ninguna medición registrada de ${$('Sugerir alternativa').first().json.parametro_solicitado} todavía. Prueba con otro parámetro: pm25, pm10, no2, so2, o3 o co.`,\n  sugerencia: $json.total > 0 ? { desde: $json.desde_disponible, hasta: $json.hasta_disponible } : null\n}) }}",
         "options": {
           "responseCode": 200
         }
