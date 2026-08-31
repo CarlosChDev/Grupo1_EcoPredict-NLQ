@@ -121,8 +121,8 @@
       "waitBetweenTries": 1000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
+          "id": "YQ0e4QZUnKwXyP3E",
+          "name": "Groq Account"
         }
       },
       "onError": "continueErrorOutput"
@@ -150,12 +150,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
-        },
-        "httpDigestAuth": {
-          "id": "iF6xxZnbJGk5S4VC",
-          "name": "Unnamed credential"
+          "id": "CjW9SCFWD5LAug8V",
+          "name": "Gemini Account"
         }
       }
     },
@@ -242,8 +238,8 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "J5SF5vJXy3sDkUNJ",
-          "name": "Postgres account 2"
+          "id": "3nXjzXjwiMArXcUf",
+          "name": "Postgres account"
         }
       },
       "notes": "Usar credencial con rol nlq_reader (solo SELECT) cuando este creado en Postgres. Mientras tanto puede usarse la credencial principal para la demo."
@@ -322,8 +318,8 @@
       "waitBetweenTries": 1000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
+          "id": "YQ0e4QZUnKwXyP3E",
+          "name": "Groq Account"
         }
       },
       "onError": "continueErrorOutput"
@@ -351,8 +347,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
+          "id": "CjW9SCFWD5LAug8V",
+          "name": "Gemini Account"
         }
       }
     },
@@ -405,8 +401,8 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "J5SF5vJXy3sDkUNJ",
-          "name": "Postgres account 2"
+          "id": "3nXjzXjwiMArXcUf",
+          "name": "Postgres account"
         }
       },
       "onError": "continueRegularOutput",
@@ -428,8 +424,8 @@
       "name": "Consultar rango disponible",
       "credentials": {
         "postgres": {
-          "id": "J5SF5vJXy3sDkUNJ",
-          "name": "Postgres account 2"
+          "id": "3nXjzXjwiMArXcUf",
+          "name": "Postgres account"
         }
       }
     },
