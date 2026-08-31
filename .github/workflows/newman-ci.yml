@@ -33,8 +33,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # These values are created only for this disposable GitHub runner.
-          # They are not production credentials and are never written to .env.
           {
             echo "COMPOSE_PROJECT_NAME=ecopredict-newman-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
             echo "N8N_VERSION=1.107.4"
@@ -52,6 +50,7 @@ jobs:
             --project-name "$COMPOSE_PROJECT_NAME" \
             -f infrastructure/docker-compose.yml \
             config -q
+
           echo "Docker Compose configuration is valid."
 
       - name: Start ephemeral QA environment
@@ -70,13 +69,20 @@ jobs:
             --project-name "$COMPOSE_PROJECT_NAME" \
             -f infrastructure/docker-compose.yml \
             ps
+
           echo "Ephemeral QA environment started."
 
       - name: Wait for PostgreSQL health
         shell: bash
         run: |
           set -euo pipefail
-          postgres_id="$(docker compose --project-name "$COMPOSE_PROJECT_NAME" -f infrastructure/docker-compose.yml ps -q postgres)"
+
+          postgres_id="$(
+            docker compose \
+              --project-name "$COMPOSE_PROJECT_NAME" \
+              -f infrastructure/docker-compose.yml \
+              ps -q postgres
+          )"
 
           if [ -z "$postgres_id" ]; then
             echo "PostgreSQL container was not created."
@@ -84,7 +90,12 @@ jobs:
           fi
 
           for attempt in {1..36}; do
-            status="$(docker inspect --format='{{.State.Health.Status}}' "$postgres_id" 2>/dev/null || true)"
+            status="$(
+              docker inspect \
+                --format='{{.State.Health.Status}}' \
+                "$postgres_id" 2>/dev/null || true
+            )"
+
             if [ "$status" = "healthy" ]; then
               echo "PostgreSQL is healthy."
               exit 0
@@ -103,8 +114,13 @@ jobs:
           set -euo pipefail
 
           for attempt in {1..36}; do
-            if curl --fail --silent --show-error --output /dev/null \
+            if curl \
+              --fail \
+              --silent \
+              --show-error \
+              --output /dev/null \
               http://127.0.0.1:5678/healthz/readiness; then
+
               echo "n8n is ready."
               exit 0
             fi
@@ -116,6 +132,66 @@ jobs:
           echo "n8n did not become ready in time."
           exit 1
 
+      - name: Import FLUJO B into n8n
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            exec -T n8n \
+            n8n import:workflow \
+            --input=/workflows/FLUJO\ B.json
+
+          echo "FLUJO B imported into n8n."
+
+      - name: Activate FLUJO B
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker compose \
+            --project-name "$COMPOSE_PROJECT_NAME" \
+            -f infrastructure/docker-compose.yml \
+            exec -T n8n \
+            n8n update:workflow \
+            --id=vQie4yWQPUsRGdif \
+            --active=true
+
+          echo "FLUJO B activated."
+
+      - name: Verify NLQ webhook
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in {1..12}; do
+            status="$(
+              curl \
+                --silent \
+                --output /dev/null \
+                --write-out '%{http_code}' \
+                -X POST \
+                -H 'Content-Type: application/json' \
+                -d '{"pregunta":"consulta de calidad del aire"}' \
+                http://127.0.0.1:5678/webhook/nlq
+            )"
+
+            echo "Webhook HTTP status: $status"
+
+            if [ "$status" != "404" ]; then
+              echo "NLQ webhook is registered."
+              exit 0
+            fi
+
+            echo "Webhook is not ready yet ($attempt/12)."
+            sleep 5
+          done
+
+          echo "NLQ webhook is still returning 404."
+          exit 1
+
       - name: Install Newman
         run: |
           npm install --global newman@6.2.1
@@ -124,10 +200,13 @@ jobs:
       - name: Run QA collection with Newman
         run: |
           echo "Running QA collection with Newman."
-          newman run src/ia-ops/tests/postman/eco_predict_nlq_collection.json \
+
+          newman run \
+            src/ia-ops/tests/postman/eco_predict_nlq_collection.json \
             --env-var base_url=http://127.0.0.1:5678 \
             --env-var webhook_path=/webhook/nlq \
             --reporters cli
+
           echo "Newman QA collection passed."
 
       - name: Show Compose logs after a failure
@@ -145,4 +224,5 @@ jobs:
             --project-name "$COMPOSE_PROJECT_NAME" \
             -f infrastructure/docker-compose.yml \
             down --volumes --remove-orphans
+
           echo "Ephemeral QA environment removed."
