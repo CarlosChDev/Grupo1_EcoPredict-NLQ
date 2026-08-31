@@ -1,4 +1,4 @@
-name: CD - Compose Validation
+name: CD - Pre-deployment Validation
 
 on:
   push:
@@ -8,6 +8,11 @@ on:
 
 permissions:
   contents: read
+
+# Never run two deployments against the same OCI host at the same time.
+concurrency:
+  group: ecopredict-production-deployment
+  cancel-in-progress: false
 
 jobs:
   compose-validation:
@@ -131,3 +136,137 @@ jobs:
             --project-name "$COMPOSE_PROJECT_NAME" \
             -f infrastructure/docker-compose.yml \
             down --volumes --remove-orphans
+
+  deploy-oci:
+    name: Deploy main to OCI
+    needs:
+      - compose-validation
+    # workflow_dispatch is intentionally validation-only. Deployment happens
+    # exclusively for a push created after a merge into main.
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Load OCI SSH deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.OCI_SSH_KEY }}
+
+      - name: Configure verified OCI host key
+        env:
+          OCI_KNOWN_HOSTS: ${{ vars.OCI_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${OCI_KNOWN_HOSTS:-}" ]; then
+            echo "Missing required GitHub variable OCI_KNOWN_HOSTS. Refusing an unverified SSH connection."
+            exit 1
+          fi
+
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$OCI_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Synchronize and validate services on OCI
+        env:
+          OCI_HOST: ${{ secrets.OCI_HOST }}
+          OCI_USER: ${{ secrets.OCI_USER }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=20 \
+            "$OCI_USER@$OCI_HOST" 'bash -se' <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          APP_DIR="/home/ubuntu/Grupo1_EcoPredict-NLQ"
+          COMPOSE_FILE="infrastructure/docker-compose.yml"
+          FRONTEND_DIR="$APP_DIR/src/frontend"
+
+          on_error() {
+            exit_code=$?
+            set +e
+            echo "Deployment validation failed. Current service status:"
+            cd "$APP_DIR" 2>/dev/null && docker compose -f "$COMPOSE_FILE" ps || true
+            pm2 status ecopredict-frontend || true
+            exit "$exit_code"
+          }
+          trap on_error ERR
+
+          command -v git >/dev/null
+          command -v npm >/dev/null
+          command -v pm2 >/dev/null
+          command -v docker >/dev/null
+          command -v curl >/dev/null
+          docker compose version >/dev/null
+
+          test -d "$APP_DIR/.git"
+          test -f "$APP_DIR/$COMPOSE_FILE"
+          test -f "$FRONTEND_DIR/package.json"
+          test -f "$FRONTEND_DIR/package-lock.json"
+
+          cd "$APP_DIR"
+          git fetch --prune origin
+          git checkout -f main
+          git reset --hard origin/main
+
+          cd "$FRONTEND_DIR"
+          npm ci
+          pm2 restart ecopredict-frontend --update-env
+
+          cd "$APP_DIR"
+          docker compose -f "$COMPOSE_FILE" up -d
+
+          postgres_id=""
+          for attempt in $(seq 1 36); do
+            postgres_id="$(docker compose -f "$COMPOSE_FILE" ps -q postgres || true)"
+            postgres_status="$(docker inspect --format='{{.State.Health.Status}}' "$postgres_id" 2>/dev/null || true)"
+            if [ "$postgres_status" = "healthy" ]; then
+              echo "PostgreSQL is healthy."
+              break
+            fi
+
+            echo "Waiting for PostgreSQL health check ($attempt/36)."
+            sleep 5
+          done
+
+          if [ "${postgres_status:-}" != "healthy" ]; then
+            echo "PostgreSQL did not become healthy in time."
+            exit 1
+          fi
+
+          for attempt in $(seq 1 36); do
+            if curl --fail --silent --show-error --output /dev/null \
+              http://127.0.0.1:5678/healthz/readiness; then
+              echo "n8n is ready."
+              break
+            fi
+
+            echo "Waiting for n8n readiness endpoint ($attempt/36)."
+            sleep 5
+          done
+
+          if ! curl --fail --silent --show-error --output /dev/null \
+            http://127.0.0.1:5678/healthz/readiness; then
+            echo "n8n did not become ready in time."
+            exit 1
+          fi
+
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error --output /dev/null \
+              http://127.0.0.1:3000/; then
+              echo "Frontend is responding."
+              exit 0
+            fi
+
+            echo "Waiting for frontend response ($attempt/24)."
+            sleep 5
+          done
+
+          echo "Frontend did not respond in time."
+          exit 1
+          REMOTE_SCRIPT
