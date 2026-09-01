@@ -10,9 +10,9 @@ Guía oficial de ejecución de pruebas automatizadas y evaluación de modelos de
 * **Sub-issues de QA:**
   * ✅ **T11 (#46):** Actualizar la colección Postman para los endpoints reales de los Flujos A y B.
   * ✅ **T12 (#47):** Incorporar casos positivos, negativos, de seguridad (X-API-Key, rate limiting) y validación de calidad de respuestas del LLM (control de alucinaciones y SQL generado).
-  * 🔄 **T13 (#48):** Configurar variables de entorno para ejecutar las pruebas contra local y Oracle Cloud sin exponer credenciales.
-  * ⏳ **T14 (#49):** Ejecutar Newman contra el entorno desplegado y validar los resultados de los Flujos A y B.
-  * ⏳ **T15 (#50):** Registrar evidencias, resultados e incidencias y elaborar el informe técnico de calidad.
+  * ✅ **T13 (#48):** Configurar variables de entorno para ejecutar las pruebas contra local y Oracle Cloud sin exponer credenciales.
+  * ✅ **T14 (#49):** Ejecutar Newman contra el entorno desplegado y validar los resultados de los Flujos A y B.
+  * 🔄 **T15 (#50):** Registrar evidencias, resultados e incidencias y elaborar el informe técnico de calidad.
 
 ---
 
@@ -28,9 +28,12 @@ src/ia-ops/
     ├── test_llm_quality_benchmark.py # 28 tests de calidad de LLM, alucinaciones y Text-to-SQL
     ├── test_prompt_injection.py      # 36 tests de inyección (SQLi, DAN, Jailbreaks, XSS)
     ├── test_prompt_quality.py        # 27 tests estructurales de prompts JSON
+    ├── run_newman_ci.sh              # Runner de integración continua (Bash)
+    ├── run_newman_ci.ps1             # Runner para terminal local (PowerShell)
     └── postman/
-        ├── EcoPredict_Sprint1_Collection.json # Colección de 16 requests de API (Flujos A y B)
-        └── eco_predict_nlq_environment.json   # Variables de entorno
+        ├── EcoPredict_Sprint1_Collection.json          # Colección de 16 requests de API (Flujos A y B)
+        ├── eco_predict_local.postman_environment.json  # Entorno Local (Docker)
+        └── eco_predict_oracle_cloud.postman_environment.json # Entorno Oracle Cloud
 ```
 
 ---
@@ -45,6 +48,31 @@ python -m pytest src/ia-ops/tests/ -v
 
 ### 2. Pruebas de API y Resiliencia en Consola (Newman CLI)
 ```bash
-# Ejecutar las 28 aserciones de API contra el webhook n8n
-newman run src/ia-ops/tests/postman/EcoPredict_Sprint1_Collection.json -e src/ia-ops/tests/postman/eco_predict_nlq_environment.json
+# Ejecutar las 28 aserciones contra Entorno Local
+newman run src/ia-ops/tests/postman/EcoPredict_Sprint1_Collection.json -e src/ia-ops/tests/postman/eco_predict_local.postman_environment.json
+
+# Ejecutar contra Oracle Cloud
+newman run src/ia-ops/tests/postman/EcoPredict_Sprint1_Collection.json -e src/ia-ops/tests/postman/eco_predict_oracle_cloud.postman_environment.json
+```
+
+---
+
+## ⚙️ Integración con CI/CD (GitHub Actions)
+
+Snippet para el paso de ejecución en el workflow `.github/workflows/ai-testing-ci.yml`:
+
+```yaml
+- name: Setup Node.js for Newman QA
+  uses: actions/setup-node@v4
+  with:
+    node-version: "20"
+
+- name: Install Newman CLI
+  run: npm install -g newman
+
+- name: Execute Newman API Integration Tests
+  run: |
+    newman run src/ia-ops/tests/postman/EcoPredict_Sprint1_Collection.json \
+      -e src/ia-ops/tests/postman/eco_predict_local.postman_environment.json \
+      --reporters cli
 ```
