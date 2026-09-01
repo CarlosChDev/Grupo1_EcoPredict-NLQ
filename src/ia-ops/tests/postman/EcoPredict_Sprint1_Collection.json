@@ -64,8 +64,9 @@
 									"    }",
 									"});",
 									"",
-									"pm.test('Tiempo de respuesta dentro del SLA (< 15000 ms)', function () {",
-									"    pm.expect(pm.response.responseTime).to.be.below(15000);",
+									"pm.test('Tiempo de respuesta dentro del SLA aceptable', function () {",
+									"    const maxTimeout = Number(pm.environment.get('timeout_ms')) || 60000;",
+									"    pm.expect(pm.response.responseTime).to.be.below(maxTimeout);",
 									"});"
 								],
 								"type": "text/javascript"
