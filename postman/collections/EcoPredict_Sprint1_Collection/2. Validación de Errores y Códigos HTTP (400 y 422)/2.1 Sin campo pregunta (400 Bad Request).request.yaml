@@ -1,0 +1,25 @@
+$kind: http-request
+name: 2.1 Sin campo pregunta (400 Bad Request)
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "otro_campo": "valor"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 400', function () {
+          pm.response.to.have.status(400);
+      });
+      const res = pm.response.json();
+      pm.test('Retorna mensaje de error obligatorio', function () {
+          pm.expect(res.ok).to.be.false;
+          pm.expect(res.errores[0]).to.include('obligatorio');
+      });
+    language: text/javascript
+order: 1000

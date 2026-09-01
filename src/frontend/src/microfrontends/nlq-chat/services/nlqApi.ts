@@ -25,11 +25,27 @@ export async function preguntarNlq(payload: NlqRequest): Promise<NlqResponse> {
     throw new NlqApiError("No se pudo contactar al webhook de n8n. ¿Está levantado docker compose?");
   }
 
+  let rawText = "";
+  try {
+    rawText = await res.text();
+  } catch {
+    throw new NlqApiError("No se pudo leer la respuesta del webhook.");
+  }
+
   let json: unknown;
   try {
-    json = await res.json();
+    const cleanedText = rawText.trim().startsWith("=") ? rawText.trim().slice(1) : rawText.trim();
+    json = JSON.parse(cleanedText);
   } catch {
-    throw new NlqApiError("El webhook respondió con un cuerpo que no es JSON válido.");
+    if (res.ok) {
+      json = {
+        ok: true,
+        codigo_http: 200,
+        mensaje: rawText || "No hay mediciones registradas para ese contaminante en el rango seleccionado.",
+      };
+    } else {
+      throw new NlqApiError("El webhook respondió con un cuerpo que no es JSON válido.");
+    }
   }
 
   return json as NlqResponse;

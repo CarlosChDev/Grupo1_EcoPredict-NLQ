@@ -1,0 +1,27 @@
+$kind: http-request
+name: CP-001 - Consulta válida
+description: "Caso de prueba CP-001: Solicitud POST con consulta válida para verificar respuesta 200 OK y tiempo menor a 5000 ms."
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Qué información puede proporcionar EcoPredict sobre la calidad del aire y niveles de PM2.5?",
+      "ciudad": "Lima",
+      "parametro": "pm25"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("El endpoint responde correctamente", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("El tiempo de respuesta es menor o igual a 5 segundos", function () {
+          pm.expect(pm.response.responseTime).to.be.at.most(5000);
+      });
+    language: text/javascript
+order: 1000

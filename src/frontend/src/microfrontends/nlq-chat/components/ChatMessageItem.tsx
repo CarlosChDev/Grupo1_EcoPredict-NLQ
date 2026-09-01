@@ -41,6 +41,27 @@ export function ChatMessageItem({ mensaje }: ChatMessageItemProps) {
             <DynamicVisualization respuesta={respuesta} />
           </>
         )}
+
+        {respuesta && respuesta.ok && !tieneSerie(respuesta) && !("mensaje" in respuesta) && (
+          <div className="chat-respuesta-generica">
+            <p>
+              {"texto" in respuesta
+                ? (respuesta as any).texto
+                : `Consulta recibida con éxito: "${(respuesta as any).consulta?.pregunta || mensaje.texto}"`}
+            </p>
+            {(respuesta as any).consulta && (
+              <div style={{ marginTop: "8px", fontSize: "0.85rem", opacity: 0.9 }}>
+                <span>📍 Ciudad: <strong>{(respuesta as any).consulta.ciudad || "Lima"}</strong></span> &bull;{" "}
+                <span>🧪 Parámetro: <strong>{((respuesta as any).consulta.parametro || "PM2.5").toUpperCase()}</strong></span>
+              </div>
+            )}
+            {(respuesta as any).etapa && (
+              <span className="chat-modelo" style={{ marginTop: "6px", display: "inline-block" }}>
+                Estado: {(respuesta as any).etapa}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

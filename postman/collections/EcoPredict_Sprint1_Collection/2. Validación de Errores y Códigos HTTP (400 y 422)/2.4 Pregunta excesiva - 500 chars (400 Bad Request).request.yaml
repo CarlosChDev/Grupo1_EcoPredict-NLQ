@@ -1,0 +1,24 @@
+$kind: http-request
+name: 2.4 Pregunta excesiva > 500 chars (400 Bad Request)
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 400', function () {
+          pm.response.to.have.status(400);
+      });
+      const res = pm.response.json();
+      pm.test('Mensaje de longitud máxima', function () {
+          pm.expect(res.errores[0]).to.include('excede');
+      });
+    language: text/javascript
+order: 4000
