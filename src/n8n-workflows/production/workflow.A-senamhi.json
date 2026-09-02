@@ -1,0 +1,133 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "91599caa-fd82-44be-99ff-738b8a90d7da",
+      "name": "Trigger Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -64
+      ],
+      "notes": "Ejecutar a mano cada vez que se capture un snapshot nuevo desde el sitio de SENAMHI."
+    },
+    {
+      "parameters": {
+        "fileSelector": "/workflows/senamhi_snapshot.xlsx",
+        "options": {}
+      },
+      "id": "23b312b6-4baa-4275-a6ba-5268436a31bc",
+      "name": "Leer archivo .xlsx",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -64
+      ],
+      "notes": "Ruta dentro del contenedor. Subir el archivo antes con: docker cp archivo.xlsx aire_n8n:/data/senamhi_snapshot.xlsx"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "id": "3ade68d7-f8f2-4e3a-83b8-99be20df9a85",
+      "name": "Extraer datos del XLSX",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ESTACION = 'CAMPO DE MARTE';\nconst fechaCaptura = new Date().toISOString();\n\nconst PARAMETROS = [\n  { fragmento: 'pm2', parametro: 'pm25' },\n  { fragmento: 'pm10', parametro: 'pm10' },\n  { fragmento: 'so2', parametro: 'so2' },\n  { fragmento: 'no2', parametro: 'no2' },\n  { fragmento: 'o3', parametro: 'o3' },\n];\n\nfunction normalizar(txt) {\n  return String(txt || '').trim().toLowerCase().replace(/\\s/g, '');\n}\n\nfunction excelSerialAFecha(serial) {\n  const utcMs = Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000;\n  const d = new Date(utcMs);\n  return { anio: d.getUTCFullYear(), mes: String(d.getUTCMonth()+1).padStart(2,'0'), dia: String(d.getUTCDate()).padStart(2,'0') };\n}\n\nfunction excelSerialAHora(serial) {\n  const totalMinutos = Math.round(serial * 24 * 60);\n  const horas = String(Math.floor(totalMinutos/60)%24).padStart(2,'0');\n  const minutos = String(totalMinutos%60).padStart(2,'0');\n  return `${horas}:${minutos}`;\n}\n\nconst filas = $input.all().map((item) => item.json);\nif (filas.length === 0) return [];\n\nconst todasLasClaves = new Set();\nfor (const f of filas) for (const k of Object.keys(f)) todasLasClaves.add(k);\n\nconst claveFechaExiste = [...todasLasClaves].some((k) => normalizar(k).includes('fecha'));\n\nlet filasDatos, mapaColumnas;\n\nif (claveFechaExiste) {\n  mapaColumnas = {};\n  for (const clave of todasLasClaves) mapaColumnas[clave] = normalizar(clave);\n  filasDatos = filas;\n} else {\n  let indiceEncabezado = -1;\n  for (let i = 0; i < filas.length; i++) {\n    const valores = Object.values(filas[i]).map(normalizar);\n    if (valores.includes('fecha')) { indiceEncabezado = i; break; }\n  }\n  if (indiceEncabezado === -1) throw new Error('No se encontro la fila de encabezado.');\n  mapaColumnas = {};\n  for (const [claveOriginal, valorCelda] of Object.entries(filas[indiceEncabezado])) {\n    mapaColumnas[claveOriginal] = normalizar(valorCelda);\n  }\n  filasDatos = filas.slice(indiceEncabezado + 1);\n}\n\nfunction encontrarClave(fragmento) {\n  return Object.entries(mapaColumnas).find(([, nombreReal]) => nombreReal.includes(fragmento))?.[0];\n}\n\nconst claveFecha = encontrarClave('fecha');\nconst claveHora = encontrarClave('hora');\nif (!claveFecha || !claveHora) throw new Error('No se pudieron ubicar las columnas Fecha/Hora.');\n\nconst columnasParametro = PARAMETROS\n  .map((p) => ({ ...p, clave: encontrarClave(p.fragmento) }))\n  .filter((p) => p.clave);\n\nconst resultado = [];\n\nfor (const fila of filasDatos) {\n  const fechaCruda = fila[claveFecha];\n  const horaCruda = fila[claveHora];\n  if (fechaCruda === undefined || fechaCruda === '' || horaCruda === undefined || horaCruda === '') continue;\n\n  let anio, mes, dia, horaStr;\n  if (typeof fechaCruda === 'number') {\n    ({ anio, mes, dia } = excelSerialAFecha(fechaCruda));\n  } else {\n    [dia, mes, anio] = String(fechaCruda).split('/');\n  }\n  if (!dia || !mes || !anio) continue;\n\n  horaStr = typeof horaCruda === 'number' ? excelSerialAHora(horaCruda) : String(horaCruda);\n\n  const medidoEn = new Date(`${anio}-${mes}-${dia}T${horaStr}:00-05:00`).toISOString();\n\n  for (const { parametro, clave } of columnasParametro) {\n    const crudo = fila[clave];\n    if (crudo === undefined || crudo === '') continue;\n    const valor = parseFloat(String(crudo).replace(',', '.'));\n    if (isNaN(valor)) continue;\n    resultado.push({ json: { estacion: ESTACION, parametro, valor, medido_en: medidoEn, fecha_captura: fechaCaptura } });\n  }\n}\n\nreturn resultado;"
+      },
+      "id": "fa8ab541-8220-474a-861e-76c178f5447f",
+      "name": "Normalizar filas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO mediciones_referencia_qa (estacion, parametro, valor, medido_en, fecha_captura, fuente)\nVALUES ($1, $2, $3, $4, $5, 'SENAMHI');",
+        "options": {
+          "queryReplacement": "={{ [$json.estacion, $json.parametro, $json.valor, $json.medido_en, $json.fecha_captura] }}"
+        }
+      },
+      "id": "a03d653e-80b8-4cb4-ac01-ce93e4044629",
+      "name": "Insertar en mediciones_referencia_qa",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        656,
+        -64
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "XdrJBUfEBEGkCoen",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Usar credencial de ESCRITURA (no nlq_reader, que es solo lectura). Esta tabla NUNCA la consulta el Flujo B."
+    }
+  ],
+  "connections": {
+    "Trigger Manual": {
+      "main": [
+        [
+          {
+            "node": "Leer archivo .xlsx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer archivo .xlsx": {
+      "main": [
+        [
+          {
+            "node": "Extraer datos del XLSX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer datos del XLSX": {
+      "main": [
+        [
+          {
+            "node": "Normalizar filas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar filas": {
+      "main": [
+        [
+          {
+            "node": "Insertar en mediciones_referencia_qa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0c0234eee8f2b76c2aaa0bab3761be2c63f7354d495ee30540a7b1f1e4dcce1d"
+  }
+}

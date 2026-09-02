@@ -149,3 +149,13 @@ CREATE TABLE IF NOT EXISTS rate_limit (
     conteo INT NOT NULL DEFAULT 1, 
     ventana_inicio TIMESTAMPTZ NOT NULL DEFAULT now() 
 ); 
+
+CREATE TABLE IF NOT EXISTS mediciones_referencia_qa ( 
+    id BIGSERIAL PRIMARY KEY, 
+    estacion TEXT NOT NULL, 
+    parametro TEXT NOT NULL, 
+    valor DOUBLE PRECISION, 
+    medido_en TIMESTAMPTZ NOT NULL, 
+    fecha_captura TIMESTAMPTZ NOT NULL DEFAULT now(), 
+    fuente TEXT NOT NULL DEFAULT 'SENAMHI' 
+); 
