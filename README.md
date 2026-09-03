@@ -6,14 +6,16 @@ EcoPredict & NLQ es un sistema orientado al análisis de información ambiental 
 
 ## Objetivo
 
-* Integrar fuentes de datos ambientales.
-* Automatizar la ingesta y procesamiento de información.
-* Utilizar IA para detectar patrones y anomalías.
-* Permitir consultas mediante lenguaje natural.
-* Aplicar buenas prácticas de **DevSecOps**.
+- Integrar fuentes de datos ambientales.
+- Automatizar la ingesta y procesamiento de información.
+- Utilizar IA para detectar patrones y anomalías.
+- Permitir consultas mediante lenguaje natural.
+- Aplicar buenas prácticas de **DevSecOps**.
 
 ---
+
 ## Arquitectura del Sistema - EcoPredict & NLQ
+
 ```mermaid
 flowchart TD
     U["Usuario<br/>[Persona]"]
@@ -40,7 +42,9 @@ flowchart TD
     LLM --> IAOPS
 
 ```
-##  Diagrama de Flujos  
+
+## Diagrama de Flujos
+
 ```mermaid
 flowchart TD
     A1["n8n<br/>Cron 06:00 a.m."]
@@ -52,7 +56,7 @@ flowchart TD
     A1 -->|1| A2
     A2 -->|2| A3
     A3 -->|3| A4
-    A4 -->|4| A5 
+    A4 -->|4| A5
 
 
     B1["Frontend<br/>Usuario escribe pregunta"]
@@ -66,8 +70,9 @@ flowchart TD
     B2 -->|2| B3
     B3 -->|3| B4
     B4 -->|4| B5
-    B5 -->|5| B6 
-```    
+    B5 -->|5| B6
+```
+
 ## 📁 Estructura principal
 
 ```text
@@ -87,12 +92,12 @@ flowchart TD
 └── README.md
 ```
 
-* `.github/` — Plantillas y workflows de CI/CD.
-* `src/frontend/` — Código del frontend.
-* `src/n8n-workflows/` — Workflows de n8n.
-* `src/database/` — Migraciones y seeders.
-* `src/ia-ops/` — Prompts, pruebas y configuración de IA.
-* `infrastructure/` — Configuración de infraestructura local.
+- `.github/` — Plantillas y workflows de CI/CD.
+- `src/frontend/` — Código del frontend.
+- `src/n8n-workflows/` — Workflows de n8n.
+- `src/database/` — Migraciones y seeders.
+- `src/ia-ops/` — Prompts, pruebas y configuración de IA.
+- `infrastructure/` — Configuración de infraestructura local.
 
 ---
 
@@ -114,19 +119,18 @@ No se deben subir archivos `.env` reales.
 
 ## Gobernanza y seguridad
 
-* `main` será la rama principal y estará protegida.
-* Los cambios deberán realizarse mediante **Pull Requests**.
-* Todo PR deberá pasar las validaciones automáticas.
-* Los desarrolladores trabajarán en ramas independientes.
-* No se deben incluir credenciales, tokens ni secretos en el repositorio.
-* Los workflows de n8n deberán revisarse antes de incorporarse.
-* Las validaciones de calidad y seguridad se automatizarán mediante **GitHub Actions**.
+- `main` será la rama principal y estará protegida.
+- Los cambios deberán realizarse mediante **Pull Requests**.
+- Todo PR deberá pasar las validaciones automáticas.
+- Los desarrolladores trabajarán en ramas independientes.
+- No se deben incluir credenciales, tokens ni secretos en el repositorio.
+- Los workflows de n8n deberán revisarse antes de incorporarse.
+- Las validaciones de calidad y seguridad se automatizarán mediante **GitHub Actions**.
 
 ---
 
 ## Estado
 
-**Fase actual:** Estructuración y gobernanza DevSecOps.
+Fase actual: Implementación e integración de la solución.
 
-La integración de frontend, backend, n8n, base de datos e IA se realizará progresivamente.
-
+El proyecto se encuentra en proceso de implementación e integración de sus componentes de infraestructura, backend, n8n, base de datos, QA, seguridad, automatización CI/CD y frontend, de acuerdo con las tareas definidas para el desarrollo de la solución.
