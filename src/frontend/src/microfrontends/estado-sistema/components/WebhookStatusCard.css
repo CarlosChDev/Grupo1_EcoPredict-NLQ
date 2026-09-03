@@ -1,0 +1,67 @@
+.webhook-status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.estado-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.estado-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.webhook-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.metric {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.metric p {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.4px;
+  margin-bottom: 6px;
+}
+
+.metric strong {
+  font-size: 18px;
+  color: var(--text-main);
+}
+
+.metric .unit {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.webhook-error-msg {
+  color: var(--status-bad);
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 640px) {
+  .webhook-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

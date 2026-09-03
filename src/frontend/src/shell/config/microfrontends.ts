@@ -40,4 +40,13 @@ export const microfrontends: MicrofrontendConfig[] = [
     ruta: "/data-analytics",
     estado: "proximamente",
   },
+  {
+    id: "estado-sistema",
+    nombre: "Estado del Sistema",
+    descripcion:
+      "Diagnóstico técnico del webhook de Flujo B: latencia, código de respuesta y verificación automática.",
+    icono: "⚡",
+    ruta: "/estado-sistema",
+    estado: "disponible",
+  },
 ];
