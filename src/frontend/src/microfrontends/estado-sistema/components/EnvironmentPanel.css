@@ -1,0 +1,44 @@
+.env-toggle {
+  display: flex;
+  background: var(--bg-input);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  margin: 12px 0;
+}
+
+.env-toggle-btn {
+  flex: 1;
+  height: 30px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.env-toggle-btn.active {
+  background: var(--accent-gradient);
+  color: #03141f;
+  box-shadow: var(--glow-teal);
+}
+
+.env-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.env-url {
+  background: var(--bg-card-alt);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  word-break: break-all;
+  margin-bottom: 12px;
+}
+
+.env-badges {
+  display: flex;
+  gap: 8px;
+}
