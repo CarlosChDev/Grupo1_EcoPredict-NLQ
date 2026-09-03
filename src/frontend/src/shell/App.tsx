@@ -18,6 +18,12 @@ const DashboardAmbientalPage = lazy(() =>
   })),
 );
 
+const EstadoSistemaPage = lazy(() =>
+  import("../microfrontends/estado-sistema/EstadoSistemaPage").then((m) => ({
+    default: m.EstadoSistemaPage,
+  })),
+);
+
 export function App() {
   return (
     <BrowserRouter>
@@ -37,6 +43,14 @@ export function App() {
             element={
               <Suspense fallback={<div className="card">Cargando Dashboard Ambiental…</div>}>
                 <DashboardAmbientalPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="estado-sistema"
+            element={
+              <Suspense fallback={<div className="card">Cargando Estado del Sistema…</div>}>
+                <EstadoSistemaPage />
               </Suspense>
             }
           />
