@@ -4,6 +4,22 @@ import type { ChatMessage } from "../types/nlq.types";
 
 export type EstadoEnvio = "idle" | "cargando" | "ok" | "error";
 
+/**
+ * crypto.randomUUID() solo existe en contexto seguro (HTTPS o localhost).
+ * En producción por HTTP plano (ej. IP pública sin TLS) no está disponible
+ * y lanza TypeError, tumbando el envío del chat sin que se vea nada.
+ */
+function generarId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export function useNlqChat() {
   const [mensajes, setMensajes] = useState<ChatMessage[]>([]);
   const [estado, setEstado] = useState<EstadoEnvio>("idle");
@@ -14,7 +30,7 @@ export function useNlqChat() {
     if (!texto) return;
 
     const mensajeUsuario: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: generarId(),
       role: "usuario",
       texto,
       timestamp: new Date(),
@@ -27,7 +43,7 @@ export function useNlqChat() {
       const respuesta = await preguntarNlq({ pregunta: texto });
 
       const mensajeAsistente: ChatMessage = {
-        id: crypto.randomUUID(),
+        id: generarId(),
         role: "asistente",
         texto: "texto" in respuesta ? respuesta.texto : "",
         timestamp: new Date(),

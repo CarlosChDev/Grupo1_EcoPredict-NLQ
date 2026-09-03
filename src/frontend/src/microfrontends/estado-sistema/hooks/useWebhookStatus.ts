@@ -5,6 +5,22 @@ import { cargarHistorial, guardarHistorial, MAX_ENTRADAS } from "../utils/histor
 
 const INTERVALO_AUTO_MS = 5 * 60 * 1000;
 
+/**
+ * crypto.randomUUID() solo existe en contexto seguro (HTTPS o localhost).
+ * En producción por HTTP plano (ej. IP pública sin TLS) no está disponible
+ * y lanza TypeError sin capturar, tumbando el árbol de React a pantalla negra.
+ */
+function generarId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 export function useWebhookStatus(entorno: Entorno) {
   const [resultado, setResultado] = useState<WebhookCheckResult | null>(null);
   const [verificando, setVerificando] = useState(false);
@@ -15,7 +31,7 @@ export function useWebhookStatus(entorno: Entorno) {
     setResultado(r);
     if (r.estado === "operativo" && r.timestamp) setUltimaExitosa(r.timestamp);
     setHistorial((prev) => {
-      const entrada: HistorialEntry = { ...r, id: crypto.randomUUID() };
+      const entrada: HistorialEntry = { ...r, id: generarId() };
       const siguiente = [entrada, ...prev].slice(0, MAX_ENTRADAS);
       guardarHistorial(siguiente);
       return siguiente;
