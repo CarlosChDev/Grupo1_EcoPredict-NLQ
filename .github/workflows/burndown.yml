@@ -40,7 +40,7 @@ jobs:
           PROJECT_TOKEN: ${{ secrets.PROJECT_PAT }}
           USER_NAME: ${{ github.repository_owner }}
           PROJECT_NUMBER: 4
-          TARGET_ITERATION: 'sprint 0'
+          TARGET_ITERATION: 'sprint 1'
         run: |
           python - << 'EOF'
           import os, json, requests
