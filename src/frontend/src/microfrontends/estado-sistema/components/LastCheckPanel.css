@@ -1,0 +1,25 @@
+.last-check-ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--status-good);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 10px 0 6px;
+}
+
+.check-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--status-good-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.last-check-relative {
+  font-size: 11px;
+  color: var(--text-dim);
+}
