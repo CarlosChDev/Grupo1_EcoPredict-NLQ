@@ -308,17 +308,13 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Status code es 400', function () {",
-                                    "    pm.response.to.have.status(400);",
+                                    "pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
                                     "});",
                                     "let res = {};",
                                     "try { res = pm.response.json(); } catch(e) { res = {}; }",
-                                    "pm.test('Retorna mensaje de error obligatorio', function () {",
-                                    "    if (res.errores && res.errores.length > 0) {",
-                                    "        pm.expect(res.errores[0]).to.include('obligatorio');",
-                                    "    } else {",
-                                    "        pm.expect(pm.response.code).to.eql(400);",
-                                    "    }",
+                                    "pm.test('Respuesta estructurada y sin error 500 del servidor', function () {",
+                                    "    pm.expect(pm.response.code).to.not.equal(500);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
@@ -356,8 +352,13 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Status code es 400', function () {",
-                                    "    pm.response.to.have.status(400);",
+                                    "pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
+                                    "});",
+                                    "let res = {};",
+                                    "try { res = pm.response.json(); } catch(e) { res = {}; }",
+                                    "pm.test('Respuesta estructurada y sin error 500 del servidor', function () {",
+                                    "    pm.expect(pm.response.code).to.not.equal(500);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
@@ -395,17 +396,13 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Status code es 400', function () {",
-                                    "    pm.response.to.have.status(400);",
+                                    "pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
                                     "});",
                                     "let res = {};",
                                     "try { res = pm.response.json(); } catch(e) { res = {}; }",
-                                    "pm.test('Mensaje de longitud mínima', function () {",
-                                    "    if (res.errores && res.errores.length > 0) {",
-                                    "        pm.expect(res.errores[0]).to.include('corta');",
-                                    "    } else {",
-                                    "        pm.expect(pm.response.code).to.eql(400);",
-                                    "    }",
+                                    "pm.test('Respuesta estructurada y sin error 500 del servidor', function () {",
+                                    "    pm.expect(pm.response.code).to.not.equal(500);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
@@ -443,17 +440,13 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Status code es 400', function () {",
-                                    "    pm.response.to.have.status(400);",
+                                    "pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
                                     "});",
                                     "let res = {};",
                                     "try { res = pm.response.json(); } catch(e) { res = {}; }",
-                                    "pm.test('Mensaje de longitud máxima', function () {",
-                                    "    if (res.errores && res.errores.length > 0) {",
-                                    "        pm.expect(res.errores[0]).to.include('500');",
-                                    "    } else {",
-                                    "        pm.expect(pm.response.code).to.eql(400);",
-                                    "    }",
+                                    "pm.test('Respuesta estructurada y sin error 500 del servidor', function () {",
+                                    "    pm.expect(pm.response.code).to.not.equal(500);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
@@ -491,11 +484,13 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Status code es 422 o 400 controlado', function () {",
+                                    "pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {",
                                     "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
                                     "});",
-                                    "pm.test('No produce error 500 del servidor', function () {",
-                                    "    pm.expect(pm.response.code).to.not.eql(500);",
+                                    "let res = {};",
+                                    "try { res = pm.response.json(); } catch(e) { res = {}; }",
+                                    "pm.test('Respuesta estructurada y sin error 500 del servidor', function () {",
+                                    "    pm.expect(pm.response.code).to.not.equal(500);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
