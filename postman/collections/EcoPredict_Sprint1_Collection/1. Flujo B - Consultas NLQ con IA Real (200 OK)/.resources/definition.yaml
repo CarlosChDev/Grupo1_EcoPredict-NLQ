@@ -1,3 +1,3 @@
 $kind: collection
-description: Pruebas de consultas en lenguaje natural validadas contra el flujo real con LLM (Groq/Gemini) y datos de PostgreSQL.
+description: Pruebas de consultas ambientales en lenguaje natural procesadas por el bot con extracción de intención y respuesta generada por LLM.
 order: 1000

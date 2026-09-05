@@ -12,5 +12,4 @@ localResources:
 
 cloudResources:
   collections:
-    ../postman/collections/EcoPredictBot_QA_Collection: ce7183f6-4971-46e8-bc62-60ae7f338087
-    ../postman/collections/EcoPredict_Sprint1_Collection: e13ba173-27df-4657-86f3-7ee1a4909044
+    ../postman/collections/EcoPredict_Sprint1_Collection: 98397136-feb1-4f3d-bfd0-8c1905cf3f21
