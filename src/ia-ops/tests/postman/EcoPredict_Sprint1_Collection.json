@@ -352,13 +352,8 @@
                             "listen": "test",
                             "script": {
                                 "exec": [
-                                    "pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {",
+                                    "pm.test('Validacion de pregunta vacia (400 o 200 controlado)', function () {",
                                     "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
-                                    "});",
-                                    "let res = {};",
-                                    "try { res = pm.response.json(); } catch(e) { res = {}; }",
-                                    "pm.test('Respuesta estructurada y sin error 500 del servidor', function () {",
-                                    "    pm.expect(pm.response.code).to.not.equal(500);",
                                     "});"
                                 ],
                                 "type": "text/javascript"
