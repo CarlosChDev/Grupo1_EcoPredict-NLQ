@@ -1,0 +1,20 @@
+$kind: http-request
+name: 3.5 Simulación de Ráfaga / Rate Limiting Check
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Cuál es la calidad del aire en Lima en este segundo?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('El endpoint gestiona peticiones en ráfaga', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 429]);
+      });
+    language: text/javascript
+order: 5000

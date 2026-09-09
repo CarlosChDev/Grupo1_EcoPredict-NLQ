@@ -121,8 +121,8 @@
       "waitBetweenTries": 1000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
+          "id": "YQ0e4QZUnKwXyP3E",
+          "name": "Groq Account"
         }
       },
       "onError": "continueErrorOutput"
@@ -150,12 +150,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
-        },
-        "httpDigestAuth": {
-          "id": "iF6xxZnbJGk5S4VC",
-          "name": "Unnamed credential"
+          "id": "CjW9SCFWD5LAug8V",
+          "name": "Gemini Account"
         }
       }
     },
@@ -242,8 +238,8 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "J5SF5vJXy3sDkUNJ",
-          "name": "Postgres account 2"
+          "id": "3nXjzXjwiMArXcUf",
+          "name": "Postgres account"
         }
       },
       "notes": "Usar credencial con rol nlq_reader (solo SELECT) cuando este creado en Postgres. Mientras tanto puede usarse la credencial principal para la demo."
@@ -322,8 +318,8 @@
       "waitBetweenTries": 1000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
+          "id": "YQ0e4QZUnKwXyP3E",
+          "name": "Groq Account"
         }
       },
       "onError": "continueErrorOutput"
@@ -351,8 +347,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "psnogtpSzoyAk1qx",
-          "name": "Header Auth account"
+          "id": "CjW9SCFWD5LAug8V",
+          "name": "Gemini Account"
         }
       }
     },
@@ -405,8 +401,8 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "J5SF5vJXy3sDkUNJ",
-          "name": "Postgres account 2"
+          "id": "3nXjzXjwiMArXcUf",
+          "name": "Postgres account"
         }
       },
       "onError": "continueRegularOutput",
@@ -428,8 +424,8 @@
       "name": "Consultar rango disponible",
       "credentials": {
         "postgres": {
-          "id": "J5SF5vJXy3sDkUNJ",
-          "name": "Postgres account 2"
+          "id": "3nXjzXjwiMArXcUf",
+          "name": "Postgres account"
         }
       }
     },
@@ -449,7 +445,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "=={{ JSON.stringify({\n  ok: true,\n  codigo_http: 200,\n  mensaje: $json.total > 0\n    ? `No hay datos de ${$('Sugerir alternativa').first().json.parametro_solicitado} entre ${$('Sugerir alternativa').first().json.desde_solicitado} y ${$('Sugerir alternativa').first().json.hasta_solicitado}. Sí hay información disponible entre ${$json.desde_disponible} y ${$json.hasta_disponible} (${$json.total} mediciones). Intenta preguntar por ese rango.`\n    : `No hay ninguna medición registrada de ${$('Sugerir alternativa').first().json.parametro_solicitado} todavía. Prueba con otro parámetro: pm25, pm10, no2, so2, o3 o co.`,\n  sugerencia: $json.total > 0 ? { desde: $json.desde_disponible, hasta: $json.hasta_disponible } : null\n}) }}",
+        "responseBody": "={{ JSON.stringify({\n  ok: true,\n  codigo_http: 200,\n  mensaje: $json.total > 0\n    ? `No hay datos de ${$('Sugerir alternativa').first().json.parametro_solicitado} entre ${$('Sugerir alternativa').first().json.desde_solicitado} y ${$('Sugerir alternativa').first().json.hasta_solicitado}. Sí hay información disponible entre ${$json.desde_disponible} y ${$json.hasta_disponible} (${$json.total} mediciones). Intenta preguntar por ese rango.`\n    : `No hay ninguna medición registrada de ${$('Sugerir alternativa').first().json.parametro_solicitado} todavía. Prueba con otro parámetro: pm25, pm10, no2, so2, o3 o co.`,\n  sugerencia: $json.total > 0 ? { desde: $json.desde_disponible, hasta: $json.hasta_disponible } : null\n}) }}",
         "options": {
           "responseCode": 200
         }

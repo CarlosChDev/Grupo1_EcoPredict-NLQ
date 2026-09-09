@@ -1,0 +1,12 @@
+$kind: collection
+description: |-
+  Colección de Pruebas QA Automatizadas - Sprint 1 (HU-03 / T01).
+  Pruebas para endpoints reales de n8n: Flujo A (Ingesta/Anomalías) y Flujo B (Chatbot NLQ con IA Real).
+
+  Alumno: Johann Romero (QA Prompt Engineer)
+  Proyecto: EcoPredict & NLQ
+  Universidad de San Martín de Porres (USMP)
+variables:
+  base_url: http://localhost:5678
+  webhook_path: /webhook/nlq
+  api_key: EcoPredict_QA_Secret_Key_2026

@@ -1,0 +1,27 @@
+$kind: http-request
+name: 1.3 Consulta de Detección de Anomalías
+description: Evalúa consultas sobre detección de anomalías ambientales.
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+  X-API-Key: "{{api_key}}"
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "¿Se detectaron picos inusuales o anomalías de PM10 en los últimos días?"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 200', function () {
+          pm.response.to.have.status(200);
+      });
+      const res = pm.response.json();
+      pm.test('Respuesta estructurada para anomalías', function () {
+          pm.expect(res.ok).to.be.true;
+          pm.expect(res.codigo_http).to.eql(200);
+      });
+    language: text/javascript
+order: 3000

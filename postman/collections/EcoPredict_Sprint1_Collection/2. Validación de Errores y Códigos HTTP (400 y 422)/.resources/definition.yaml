@@ -1,0 +1,3 @@
+$kind: collection
+description: Pruebas de robustez para validar que el sistema rechace entradas mal formadas o intenciones no reconocibles.
+order: 2000

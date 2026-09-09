@@ -1,0 +1,30 @@
+$kind: http-request
+name: CP-002 - Validación de información (Incidencia INC-001)
+description: "Caso de prueba CP-002: Diseñado para validar el contenido recibido y registrar la incidencia INC-001 cuando el cuerpo viene vacío."
+url: "{{base_url}}{{webhook_path}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "pregunta": "",
+      "ciudad": "Lima",
+      "parametro": "pm25"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("El endpoint responde con HTTP 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("La respuesta contiene información", function () {
+          const body = pm.response.text();
+          // Validación estricta que dispara FAIL si la pregunta vino vacía
+          const res = pm.response.json();
+          pm.expect(res.consulta.pregunta.length).to.be.greaterThan(10);
+      });
+    language: text/javascript
+order: 2000

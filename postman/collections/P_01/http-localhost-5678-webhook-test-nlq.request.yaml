@@ -1,0 +1,27 @@
+$kind: http-request
+name: http://localhost:5678/webhook-test/nlq
+description: ""
+url: http://localhost:5678/webhook/nlq
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"pregunta\": \"¿Qué información puede proporcionar EcoPredict sobre la calidad del aire y niveles de PM2.5 en Lima?\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"El endpoint responde correctamente\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      pm.test(\"El tiempo de respuesta es menor o igual a 5 segundos\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.at.most(5000);\r
+
+      });"
+    language: text/javascript
+order: 1787200596066

@@ -1,0 +1,3 @@
+$kind: collection
+description: Pruebas de consultas en lenguaje natural validadas contra el flujo real con LLM (Groq/Gemini) y datos de PostgreSQL.
+order: 1000
