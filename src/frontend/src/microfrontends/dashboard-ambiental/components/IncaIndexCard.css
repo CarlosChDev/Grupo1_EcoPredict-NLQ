@@ -1,0 +1,122 @@
+.inca-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inca-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inca-numero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inca-valor {
+  font-family: var(--font-m);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.inca-nivel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.inca-actualizado {
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.inca-ring {
+  flex-shrink: 0;
+}
+
+.inca-ring-track {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 7;
+}
+
+.inca-ring-fill {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.inca-ring-label {
+  font-family: var(--font-b);
+  font-size: 8px;
+  font-weight: 700;
+  fill: var(--ink-3);
+  text-anchor: middle;
+  letter-spacing: 0.05em;
+}
+
+.inca-ring-valor {
+  font-family: var(--font-m);
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.inca-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inca-gauge-track {
+  position: relative;
+  height: 8px;
+  border-radius: 20px;
+  background: linear-gradient(
+    90deg,
+    var(--good) 0%,
+    var(--good) 10%,
+    var(--mod) 10%,
+    var(--mod) 20%,
+    var(--bad) 20%,
+    var(--bad) 100%
+  );
+}
+
+.inca-gauge-marker {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--ink);
+  box-shadow: 0 0 0 2px var(--solid);
+  transform: translateX(-50%);
+}
+
+.inca-gauge-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--ink-3);
+  font-family: var(--font-m);
+}
+
+.inca-mensaje {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  border-left: 2px solid var(--accent);
+  padding-left: 12px;
+}

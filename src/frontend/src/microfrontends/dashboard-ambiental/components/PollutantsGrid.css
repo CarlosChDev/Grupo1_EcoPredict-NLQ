@@ -1,0 +1,60 @@
+.pollutants-grid-card .card-label {
+  justify-content: space-between;
+}
+
+.pollutants-grid-nota {
+  margin-left: auto;
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: normal;
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.pollutants-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .pollutants-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.pollutant-tile {
+  background: var(--track);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pollutant-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.pollutant-tile-valor {
+  display: flex;
+  align-items: baseline;
+}
+
+.pollutant-tile-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pollutant-tile-eca {
+  font-size: 10.5px;
+  color: var(--ink-3);
+}

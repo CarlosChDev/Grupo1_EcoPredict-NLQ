@@ -1,0 +1,25 @@
+.station-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.station-ranking-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.station-ranking-nombre {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.station-ranking-valor {
+  margin-left: auto;
+  font-family: var(--font-m);
+  font-size: 13px;
+  font-weight: 700;
+}

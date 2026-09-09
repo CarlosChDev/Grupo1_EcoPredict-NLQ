@@ -1,8 +1,10 @@
 import { Suspense, lazy } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "./layout/AppLayout";
 import { InicioPage } from "./pages/InicioPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { microfrontends } from "./config/microfrontends";
+import { usePreferences } from "./preferences/usePreferences";
 
 // Cada microfrontend se carga bajo demanda: entra a su propio chunk JS y
 // solo se descarga cuando el usuario navega a su ruta.
@@ -24,12 +26,27 @@ const EstadoSistemaPage = lazy(() =>
   })),
 );
 
+const AjustesPage = lazy(() =>
+  import("../microfrontends/ajustes/AjustesPage").then((m) => ({
+    default: m.AjustesPage,
+  })),
+);
+
+/** Respeta Ajustes › Apariencia › "Vista de inicio" al entrar a "/". */
+function IndexRoute() {
+  const { vistaInicio } = usePreferences();
+  if (vistaInicio === "inicio") return <InicioPage />;
+
+  const destino = microfrontends.find((mf) => mf.id === vistaInicio);
+  return <Navigate to={destino?.ruta ?? "/"} replace />;
+}
+
 export function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<AppLayout />}>
-          <Route index element={<InicioPage />} />
+          <Route index element={<IndexRoute />} />
           <Route
             path="nlq-chat"
             element={
@@ -51,6 +68,14 @@ export function App() {
             element={
               <Suspense fallback={<div className="card">Cargando Estado del Sistema…</div>}>
                 <EstadoSistemaPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="ajustes"
+            element={
+              <Suspense fallback={<div className="card">Cargando Ajustes…</div>}>
+                <AjustesPage />
               </Suspense>
             }
           />

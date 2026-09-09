@@ -9,11 +9,19 @@ export const ESTADO_LABEL: Record<EstadoWebhook, string> = {
 };
 
 export const ESTADO_COLOR_VAR: Record<EstadoWebhook, string> = {
-  operativo: "var(--status-good)",
-  degradado: "var(--status-moderate)",
-  caido: "var(--status-bad)",
-  verificando: "var(--primary-cyan)",
-  desconocido: "#6c7d94",
+  operativo: "var(--good)",
+  degradado: "var(--mod)",
+  caido: "var(--bad)",
+  verificando: "var(--aqua)",
+  desconocido: "var(--ink-3)",
+};
+
+export const ESTADO_PILL_CLASS: Record<EstadoWebhook, string> = {
+  operativo: "p-good",
+  degradado: "p-mod",
+  caido: "p-bad",
+  verificando: "p-neutral",
+  desconocido: "p-neutral",
 };
 
 export const TIPO_LABEL: Record<TipoPing, string> = {

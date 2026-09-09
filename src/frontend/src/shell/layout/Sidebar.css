@@ -1,88 +1,111 @@
 .sidebar {
-  width: 225px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-subtle);
-  padding: 14px 10px;
+  width: 232px;
+  background: var(--glass-2);
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  padding: 22px 14px;
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
+  gap: 6px;
   z-index: 100;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 8px 28px;
+  gap: 11px;
+  padding: 0 8px 22px;
 }
 
 .logo-icon {
-  width: 37px;
-  height: 37px;
+  width: 36px;
+  height: 36px;
   border-radius: 11px;
-  background: var(--accent-gradient);
+  background: linear-gradient(145deg, var(--accent), var(--aqua));
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 19px;
-  box-shadow: var(--glow-teal);
+  box-shadow: 0 6px 18px -6px var(--accent);
   flex-shrink: 0;
 }
 
 .logo-text {
-  line-height: 1.05;
+  line-height: 1.1;
 }
 
 .logo-text strong {
   display: block;
-  font-size: 14px;
+  font-family: var(--font-d);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .logo-text span {
-  color: var(--primary-teal);
-  font-size: 11px;
+  color: var(--ink-3);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   font-weight: 600;
 }
 
 .section-title {
-  color: #53627a;
+  color: var(--ink-3);
   font-size: 10px;
-  letter-spacing: 1px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   font-weight: 700;
-  margin: 8px 7px 9px;
+  margin: 6px 10px 6px;
 }
 
 .nav-item {
-  height: 43px;
+  height: 40px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 13px;
-  border-radius: 10px;
-  color: var(--text-muted);
-  font-size: 14px;
-  margin-bottom: 4px;
+  gap: 11px;
+  padding: 0 12px;
+  border-radius: 11px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 2px;
   cursor: default;
   text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
 a.nav-item {
   cursor: pointer;
 }
 
+a.nav-item:hover {
+  background: var(--track);
+  color: var(--ink);
+}
+
 .nav-item .icon {
   width: 17px;
-  text-align: center;
-  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
 }
 
 .nav-item.active {
-  background: var(--bg-surface-active);
-  color: var(--primary-teal);
-  border: 1px solid var(--border-highlight);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  border: none;
+}
+
+.nav-item.active .icon {
+  opacity: 1;
 }
 
 .nav-item.disabled {
@@ -91,35 +114,38 @@ a.nav-item {
 
 .soon-badge {
   margin-left: auto;
-  font-size: 8px;
+  font-family: var(--font-m);
+  font-size: 9px;
   font-weight: 700;
-  padding: 3px 6px;
-  border-radius: 4px;
-  background: #1c2c42;
-  color: #6c7d94;
+  padding: 2px 6px;
+  border-radius: 20px;
+  background: var(--track);
+  color: var(--ink-3);
 }
 
 .stream {
-  margin-top: 10px;
-  border: 1px solid var(--border-highlight);
-  background: #102739;
-  border-radius: 10px;
-  padding: 11px 10px;
+  margin-top: auto;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  border-radius: var(--r);
+  padding: 12px;
 }
 
 .stream-title {
-  color: var(--primary-teal);
-  font-size: 11px;
-  font-weight: bold;
+  color: var(--ink-3);
+  font-size: 10px;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 6px;
-  letter-spacing: 0.5px;
+  gap: 7px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .stream p {
-  font-size: 9px;
-  color: #65778c;
+  font-family: var(--font-m);
+  font-size: 9.5px;
+  color: var(--ink-3);
   margin: 10px 0 8px;
   line-height: 1.5;
   word-break: break-all;
@@ -131,11 +157,10 @@ a.nav-item {
 }
 
 .version {
-  margin-top: auto;
   text-align: center;
-  color: #334157;
-  font-size: 9px;
-  padding-top: 14px;
+  color: var(--ink-3);
+  font-size: 9.5px;
+  padding-top: 12px;
 }
 
 @media (max-width: 900px) {
