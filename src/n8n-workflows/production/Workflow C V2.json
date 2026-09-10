@@ -1,0 +1,330 @@
+{
+  "name": "Workflow C V2",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "estaciones",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "0f2c2a9b-7bdb-4f76-ab8b-de6f956c60f4",
+      "name": "Webhook GET /estaciones",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        112
+      ],
+      "webhookId": "hu23-estaciones-get",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH ultimas AS (\n  SELECT\n    e.id          AS estacion_id,\n    e.nombre      AS estacion_nombre,\n    e.latitud     AS estacion_lat,\n    e.longitud    AS estacion_lon,\n    e.zona        AS estacion_zona,\n    m.parametro   AS parametro,\n    m.valor       AS valor,\n    m.unidad      AS unidad,\n    m.medido_en   AS medido_en,\n    ROW_NUMBER() OVER (\n      PARTITION BY e.id, m.parametro\n      ORDER BY m.medido_en DESC\n    ) AS rn\n  FROM mediciones_aire m\n  JOIN estaciones e ON e.id = m.estacion_id\n)\nSELECT\n  estacion_id,\n  estacion_nombre,\n  estacion_lat,\n  estacion_lon,\n  estacion_zona,\n  parametro,\n  MAX(valor)     FILTER (WHERE rn = 1) AS valor,\n  MAX(unidad)    FILTER (WHERE rn = 1) AS unidad,\n  MAX(medido_en) FILTER (WHERE rn = 1) AS medido_en,\n  MAX(valor)     FILTER (WHERE rn = 2) AS valor_anterior\nFROM ultimas\nWHERE rn <= 2\nGROUP BY estacion_id, estacion_nombre, estacion_lat, estacion_lon, estacion_zona, parametro\nORDER BY estacion_id, parametro;",
+        "options": {}
+      },
+      "id": "dcb5f4ca-890e-43b6-9eba-e535ab0258e7",
+      "name": "Postgres - Última medición y anterior por estación y parámetro",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -224,
+        112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "HouqG0p271KQBRdB",
+          "name": "nlq reader"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agrupa las filas planas (una por estación+parámetro) en el contrato acordado con frontend\nconst rows = $input.all().map(i => i.json);\n\nconst estacionesMap = new Map();\n\nfor (const row of rows) {\n  const id = row.estacion_id;\n  if (!estacionesMap.has(id)) {\n    estacionesMap.set(id, {\n      id: id,\n      nombre: row.estacion_nombre,\n      zona: row.estacion_zona ?? null,\n      coordenadas: {\n        lat: row.estacion_lat,\n        lon: row.estacion_lon\n      },\n      mediciones: []\n    });\n  }\n  estacionesMap.get(id).mediciones.push({\n    parametro: row.parametro,\n    valor: row.valor,\n    valorAnterior: row.valor_anterior ?? null,\n    unidad: row.unidad,\n    medidoEn: row.medido_en\n  });\n}\n\nconst responseBody = {\n  estaciones: Array.from(estacionesMap.values()),\n  total_estaciones: estacionesMap.size,\n  generado_en: new Date().toISOString()\n};\n\nreturn [{ json: responseBody }];"
+      },
+      "id": "e5b56d20-0e2d-4283-94fc-bf21d3de09de",
+      "name": "Formatear contrato de respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "382e796f-4219-4d20-982e-4d6c1f36df31",
+      "name": "Responder 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $input.first().json;\nreturn [{\n  json: {\n    error: true,\n    mensaje: 'Error al consultar las mediciones de estaciones.',\n    detalle: err.message || err.error || 'Error desconocido'\n  }\n}];"
+      },
+      "id": "0f5bb69c-b706-46ee-b401-217b92c561b4",
+      "name": "Formatear error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "82bafea6-6f48-4acd-a898-b4747bdc0e2d",
+      "name": "Responder 500 Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "path": "estaciones/serie-horaria",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ae6eed09-5442-4e51-9541-a74fc7260733",
+      "name": "Webhook GET /estaciones/serie-horaria",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        528
+      ],
+      "webhookId": "hu23-serie-horaria-get",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  date_trunc('hour', medido_en) AS hora,\n  AVG(valor) FILTER (WHERE parametro = 'pm25') AS pm25,\n  AVG(valor) FILTER (WHERE parametro = 'pm10') AS pm10\nFROM mediciones_aire\nWHERE medido_en > now() - interval '24 hours'\nGROUP BY 1\nORDER BY 1;",
+        "options": {}
+      },
+      "id": "b26bec48-1399-4b72-9fa1-c56a49f0005c",
+      "name": "Postgres - Serie horaria PM2.5/PM10 (24h)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -224,
+        528
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "HouqG0p271KQBRdB",
+          "name": "nlq reader"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\n\nconst serie = rows.map(row => ({\n  hora: row.hora,\n  pm25: row.pm25 !== null ? Number(row.pm25) : null,\n  pm10: row.pm10 !== null ? Number(row.pm10) : null\n}));\n\nreturn [{ json: { serie } }];"
+      },
+      "id": "2478fa08-7d16-43b7-bcef-8e4ee2bf2bd8",
+      "name": "Formatear serie horaria",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "505e4745-b827-4d54-8e46-00319e668a71",
+      "name": "Responder 200 OK Serie",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const err = $input.first().json;\nreturn [{\n  json: {\n    error: true,\n    mensaje: 'Error al consultar la serie horaria de PM2.5/PM10.',\n    detalle: err.message || err.error || 'Error desconocido'\n  }\n}];"
+      },
+      "id": "a0feae1f-bd25-4913-bbc2-c1d8c9a0e341",
+      "name": "Formatear error serie",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "f12d48c2-d856-4d6a-b019-8383dc2e411a",
+      "name": "Responder 500 Error Serie",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        624
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook GET /estaciones": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Última medición y anterior por estación y parámetro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Última medición y anterior por estación y parámetro": {
+      "main": [
+        [
+          {
+            "node": "Formatear contrato de respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Formatear error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear contrato de respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear error": {
+      "main": [
+        [
+          {
+            "node": "Responder 500 Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook GET /estaciones/serie-horaria": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Serie horaria PM2.5/PM10 (24h)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Serie horaria PM2.5/PM10 (24h)": {
+      "main": [
+        [
+          {
+            "node": "Formatear serie horaria",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Formatear error serie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear serie horaria": {
+      "main": [
+        [
+          {
+            "node": "Responder 200 OK Serie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear error serie": {
+      "main": [
+        [
+          {
+            "node": "Responder 500 Error Serie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3446d7a4-6763-4042-91db-5f249c302334",
+  "meta": {
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "ysNws5UJgEAoeUY4",
+  "tags": []
+}
