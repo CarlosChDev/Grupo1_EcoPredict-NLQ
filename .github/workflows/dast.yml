@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - Chavez
+
+  workflow_run:
+    workflows:
+      - "CD - Pre-deployment Validation"
+    types:
+      - completed
+
   workflow_dispatch:
 
 permissions:
@@ -13,6 +20,17 @@ permissions:
 jobs:
   zap-baseline-scan:
     name: OWASP ZAP Baseline Scan
+    if: >-
+      ${{ 
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -28,11 +46,18 @@ jobs:
           fail_action: false
           artifact_name: zap-baseline-report
 
+      - name: Translate ZAP results
+        if: always()
+        run: |
+          python3 .github/scripts/translate-zap.py \
+            report_json.json \
+            report_json_es.json
+
       - name: Convert ZAP report to SARIF
         if: always()
         run: |
           python3 .github/scripts/zap-to-sarif.py \
-            report_json.json \
+            report_json_es.json \
             results/zap-results.sarif
 
       - name: Upload ZAP results to GitHub Code Scanning
