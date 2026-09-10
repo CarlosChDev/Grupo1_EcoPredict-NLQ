@@ -145,7 +145,7 @@ def main():
                 {
                     "physicalLocation": {
                         "artifactLocation": {
-                            "uri": uri
+                            "uri": f"dast/zap/{uri.replace('http://', '').replace('/', '_').replace(':', '_')}"
                         }
                     }
                 }
@@ -154,6 +154,7 @@ def main():
                 "primaryLocationHash": fingerprint
             },
             "properties": {
+                "zap-uri": uri,
                 "zap-risk": riskdesc,
                 "zap-plugin-id": plugin_id,
                 "zap-alert-ref": alert_ref,
