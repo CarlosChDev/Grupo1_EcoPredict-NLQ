@@ -23,3 +23,18 @@ indicando un dato no confiable.
 **Total de registros:** 385
 **Aislamiento:** tabla `mediciones_referencia_qa`, separada de
 `mediciones_aire`. Verificado que el Flujo B no la consulta.
+
+
+## Workflow C — Endpoints de estaciones (Dashboard)
+
+**Propósito:** exponer datos de solo lectura para el Dashboard Ambiental, sin depender del bot (Flujo B).
+**Auth:** Header Auth (`X-API-Key`) + credencial Postgres `nlq_reader`.
+
+### Endpoints
+| Endpoint | Descripción |
+|---|---|
+| `GET /estaciones` | Última medición por estación (incluye `medidoEn`, `valorAnterior`, `zona`). |
+| `GET /estaciones/serie-horaria` | Promedio horario de PM2.5/PM10, últimas 24h. |
+
+
+**Ubicación:** `HU-23_Flujo_C_estaciones_corregido.json`
