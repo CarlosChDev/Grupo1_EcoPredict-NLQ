@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   zap-baseline-scan:
@@ -26,3 +27,17 @@ jobs:
           allow_issue_writing: false
           fail_action: false
           artifact_name: zap-baseline-report
+
+      - name: Convert ZAP report to SARIF
+        if: always()
+        run: |
+          python3 .github/scripts/zap-to-sarif.py \
+            report_json.json \
+            results/zap-results.sarif
+
+      - name: Upload ZAP results to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results/zap-results.sarif
+          category: dast-zap-baseline
