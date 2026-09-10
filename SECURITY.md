@@ -13,12 +13,12 @@ El objetivo es establecer controles que permitan proteger el código fuente, con
 La seguridad del proyecto se implementa mediante diferentes capas que actúan sobre el repositorio, el código, los servicios y la aplicación desplegada.
 
 ```text
-                         🛡️ ECOPREDICT & NLQ
+                          ECOPREDICT & NLQ
                                   │
         ┌─────────────────────────┼─────────────────────────┐
         │                         │                         │
         ▼                         ▼                         ▼
-   🔐 GOBERNANZA              🔎 CÓDIGO                 🌐 APLICACIÓN
+     GOBERNANZA                CÓDIGO                  APLICACIÓN
         │                         │                         │
    Branches / PRs              CodeQL                 OWASP ZAP
    Rulesets                    Validaciones            Análisis DAST
@@ -27,7 +27,7 @@ La seguridad del proyecto se implementa mediante diferentes capas que actúan so
         └─────────────────────────┼─────────────────────────┘
                                   │
                                   ▼
-                         📊 GESTIÓN DE RIESGOS
+                          GESTIÓN DE RIESGOS
                                   │
                                   ▼
                      GitHub Code Scanning
@@ -35,7 +35,7 @@ La seguridad del proyecto se implementa mediante diferentes capas que actúan so
 
 ---
 
-# 🔐 2. Gobernanza del repositorio
+# 2. Gobernanza del repositorio
 
 El repositorio utiliza controles de gobernanza para mantener un flujo de cambios controlado y evitar modificaciones directas no autorizadas sobre la rama principal.
 
@@ -45,30 +45,30 @@ La rama `main` se encuentra protegida mediante las reglas configuradas en GitHub
 
 Entre los principales controles se consideran:
 
-| Control                   | Propósito                                                |
-| ------------------------- | -------------------------------------------------------- |
-| 🌿 Protección de `main`   | Evitar modificaciones directas                           |
-| 🔀 Pull Requests          | Integrar cambios mediante revisión                       |
-| ✅ Checks obligatorios    | Validar automáticamente los cambios                      |
-| 👥 Revisión de cambios    | Reducir el riesgo de integrar modificaciones incorrectas |
-| 🔒 Reglas del repositorio | Mantener condiciones de integración controladas          |
+| Control                | Propósito                                                |
+| ---------------------- | -------------------------------------------------------- |
+| Protección de `main`   | Evitar modificaciones directas                           |
+| Pull Requests          | Integrar cambios mediante revisión                       |
+| Checks obligatorios    | Validar automáticamente los cambios                      |
+| Revisión de cambios    | Reducir el riesgo de integrar modificaciones incorrectas |
+| Reglas del repositorio | Mantener condiciones de integración controladas          |
 
 ### 🔄 Flujo de integración
 
 ```text
-👨‍💻 Desarrollo
+ Desarrollo
       │
       ▼
-🌿 Rama de trabajo
+ Rama de trabajo
       │
       ▼
-🔀 Pull Request
+ Pull Request
       │
       ▼
-🧪 Validaciones automáticas
+ Validaciones automáticas
       │
       ▼
-👀 Revisión
+ Revisión
       │
       ▼
 ✅ Aprobación
@@ -79,7 +79,7 @@ Entre los principales controles se consideran:
 
 ---
 
-# 🔀 3. Pull Requests
+# 3. Pull Requests
 
 Los cambios destinados a la rama principal se gestionan mediante **Pull Requests**.
 
@@ -107,34 +107,34 @@ La plantilla permite registrar información como:
 El proyecto utiliza **GitHub Actions** para automatizar controles durante el desarrollo.
 
 ```text
-                 🔄 GitHub Actions
+                  GitHub Actions
                         │
        ┌────────────────┼────────────────┐
        │                │                │
        ▼                ▼                ▼
-  🧪 Frontend       🔧 n8n           🤖 IA
-  Validation       Validation       Testing
+     Frontend          n8n              IA
+  Validation       Validation         Testing
        │                │                │
        └────────────────┼────────────────┘
                         │
               ┌─────────┴─────────┐
               │                   │
               ▼                   ▼
-           🔎 SAST             🌐 DAST
-           CodeQL           OWASP ZAP
+            SAST                DAST
+           CodeQL             OWASP ZAP
 ```
 
 Las validaciones permiten detectar errores y problemas potenciales antes de que los cambios sean integrados en la rama principal.
 
 ---
 
-# 🔎 5. Análisis SAST – CodeQL
+# 5. Análisis SAST – CodeQL
 
 **CodeQL** se utiliza para realizar análisis estático de seguridad sobre el código fuente.
 
 Este mecanismo permite identificar patrones de código que pueden estar asociados con vulnerabilidades o prácticas inseguras.
 
-### 🎯 Objetivo
+### Objetivo
 
 > Analizar el código fuente para detectar posibles riesgos de seguridad antes de que estos lleguen al entorno de ejecución.
 
@@ -149,7 +149,7 @@ GitHub
 
 ---
 
-# 🌐 6. Análisis DAST – OWASP ZAP
+# 6. Análisis DAST – OWASP ZAP
 
 Para evaluar la seguridad de la aplicación en ejecución se utiliza **OWASP ZAP**.
 
@@ -159,16 +159,16 @@ A diferencia del análisis SAST, DAST analiza el comportamiento de la aplicació
 ☁️ Aplicación desplegada
           │
           ▼
-     🌐 OWASP ZAP
+      OWASP ZAP
           │
           ▼
-    🔎 Análisis dinámico
+     Análisis dinámico
           │
           ▼
-    ⚠️ Hallazgos
+     Hallazgos
           │
           ▼
-📊 GitHub Code Scanning
+ GitHub Code Scanning
 ```
 
 El workflow correspondiente se encuentra en:
@@ -181,22 +181,22 @@ Los resultados obtenidos permiten identificar problemas relacionados con configu
 
 ---
 
-# 📊 7. Gestión y centralización de riesgos
+# 7. Gestión y centralización de riesgos
 
 Los resultados provenientes de los análisis de seguridad se centralizan mediante **GitHub Code Scanning**.
 
 Esto permite mantener en un mismo lugar los resultados generados por diferentes herramientas.
 
-| 🔎 Análisis | 🛠️ Herramienta | 🎯 Objetivo                    |
-| ----------- | -------------- | ------------------------------ |
-| SAST        | CodeQL         | Analizar código fuente         |
-| DAST        | OWASP ZAP      | Analizar aplicación desplegada |
+| Análisis | Herramienta | Objetivo                       |
+| -------- | ----------- | ------------------------------ |
+| SAST     | CodeQL      | Analizar código fuente         |
+| DAST     | OWASP ZAP   | Analizar aplicación desplegada |
 
 La integración de los resultados DAST se realiza mediante el formato **SARIF**, permitiendo que los hallazgos de OWASP ZAP sean registrados dentro de Code Scanning.
 
 ---
 
-# ⚠️ 8. Clasificación de riesgos
+# 8. Clasificación de riesgos
 
 Los hallazgos de seguridad son evaluados considerando su severidad y el posible impacto sobre la aplicación.
 
@@ -213,7 +213,7 @@ Esta clasificación facilita determinar qué resultados requieren mayor atenció
 
 ---
 
-# 🔑 9. Protección de información sensible
+# 9. Protección de información sensible
 
 La información sensible no debe almacenarse directamente dentro del código fuente ni dentro de archivos versionados.
 
@@ -230,20 +230,20 @@ El archivo `.env.example` sirve como referencia para identificar las variables r
 
 ---
 
-# 🐳 10. Seguridad de la infraestructura
+# 10. Seguridad de la infraestructura
 
 La aplicación utiliza componentes desplegados mediante contenedores y configuraciones de infraestructura.
 
 La validación mediante Docker Compose permite verificar que la definición de los servicios mantenga una configuración coherente antes de utilizarla en un entorno de despliegue.
 
 ```text
-🐳 Docker Compose
+ Docker Compose
       │
       ▼
-⚙️ Configuración de servicios
+ Configuración de servicios
       │
       ▼
-🧪 Validación
+ Validación
       │
       ▼
 ✅ Configuración válida
@@ -253,25 +253,25 @@ Entre los componentes considerados se encuentran servicios de aplicación, n8n y
 
 ---
 
-# ☁️ 11. Aplicación desplegada
+# 11. Aplicación desplegada
 
 La seguridad también considera el entorno donde la aplicación se encuentra ejecutándose.
 
 Para las pruebas DAST se utiliza la aplicación desplegada en **Oracle Cloud Infrastructure (OCI)**.
 
 ```text
-☁️ OCI
+ OCI
  │
- ├── 🌐 Aplicación
- ├── 🔧 Servicios
- ├── 🗄️ PostgreSQL
- └── ⚙️ Configuración
+ ├──  Aplicación
+ ├──  Servicios
+ ├──  PostgreSQL
+ └──  Configuración
        │
        ▼
-🌐 OWASP ZAP
+ OWASP ZAP
        │
        ▼
-📊 Code Scanning
+ Code Scanning
 ```
 
 De esta forma, el análisis de seguridad no se limita al código fuente, sino que también contempla el comportamiento de la aplicación en ejecución.
@@ -308,17 +308,17 @@ infrastructure/
 
 # 📋 13. Resumen de controles
 
-| 🛡️ Área            | Control                    | Estado |
-| ------------------ | -------------------------- | :----: |
-| 🌿 Gobernanza      | Protección de ramas        |   ✅   |
-| 🔀 Integración     | Pull Requests              |   ✅   |
-| ⚙️ Automatización  | GitHub Actions             |   ✅   |
-| 🧪 Calidad         | Validaciones CI            |   ✅   |
-| 🔎 Seguridad       | CodeQL / SAST              |   ✅   |
-| 🌐 Seguridad       | OWASP ZAP / DAST           |   ✅   |
-| 📊 Gestión         | GitHub Code Scanning       |   ✅   |
-| ⚠️ Riesgos         | Clasificación de hallazgos |   ✅   |
-| 🐳 Infraestructura | Docker Compose Validation  |   ✅   |
-| 🔑 Configuración   | `.env.example`             |   ✅   |
+| Área            | Control                    | Estado |
+| --------------- | -------------------------- | :----: |
+| Gobernanza      | Protección de ramas        |   ✅   |
+| Integración     | Pull Requests              |   ✅   |
+| Automatización  | GitHub Actions             |   ✅   |
+| Calidad         | Validaciones CI            |   ✅   |
+| Seguridad       | CodeQL / SAST              |   ✅   |
+| Seguridad       | OWASP ZAP / DAST           |   ✅   |
+| Gestión         | GitHub Code Scanning       |   ✅   |
+| Riesgos         | Clasificación de hallazgos |   ✅   |
+| Infraestructura | Docker Compose Validation  |   ✅   |
+| Configuración   | `.env.example`             |   ✅   |
 
 ---
