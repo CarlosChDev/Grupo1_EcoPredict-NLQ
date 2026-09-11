@@ -4,7 +4,7 @@ workspace:
 
 localResources:
   collections:
-    - ../src/ia-ops/tests/postman/eco_predict_nlq_collection.json
+    - ../src/ia-ops/tests/postman/EcoPredict NLQ - QA Tests (Webhook n8n)
   environments:
     - ../src/ia-ops/tests/postman/eco_predict_nlq_environment.json
 
@@ -12,4 +12,4 @@ localResources:
 
 cloudResources:
   collections:
-    ../postman/collections/EcoPredict_Sprint1_Collection: 98397136-feb1-4f3d-bfd0-8c1905cf3f21
+    ../postman/collections/EcoPredict_Sprint1_Collection: 3ec043b1-0107-4d7a-a44a-f0ba683fc41c
