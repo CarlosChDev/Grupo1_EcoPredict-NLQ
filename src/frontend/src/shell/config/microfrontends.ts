@@ -49,4 +49,12 @@ export const microfrontends: MicrofrontendConfig[] = [
     ruta: "/estado-sistema",
     estado: "disponible",
   },
+  {
+    id: "ajustes",
+    nombre: "Ajustes",
+    descripcion: "Preferencias de apariencia y accesibilidad de este dispositivo.",
+    icono: "⚙️",
+    ruta: "/ajustes",
+    estado: "disponible",
+  },
 ];

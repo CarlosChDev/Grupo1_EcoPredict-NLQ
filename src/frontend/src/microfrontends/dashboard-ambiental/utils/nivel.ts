@@ -9,9 +9,15 @@ export const NIVEL_LABEL: Record<NivelEstado, string> = {
 };
 
 export const NIVEL_COLOR_VAR: Record<NivelEstado, string> = {
-  bueno: "var(--status-good)",
-  moderado: "var(--status-moderate)",
-  malo: "var(--status-bad)",
+  bueno: "var(--good)",
+  moderado: "var(--mod)",
+  malo: "var(--bad)",
+};
+
+export const NIVEL_PILL_CLASS: Record<NivelEstado, string> = {
+  bueno: "p-good",
+  moderado: "p-mod",
+  malo: "p-bad",
 };
 
 export function peorNivel(niveles: NivelEstado[]): NivelEstado {

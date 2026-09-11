@@ -1,53 +1,47 @@
 .history-empty {
   font-size: 12px;
-  color: var(--text-dim);
+  color: var(--ink-3);
   margin-top: 8px;
 }
 
-.history-table-wrap {
-  max-height: 320px;
+.history-timeline {
+  display: flex;
+  flex-direction: column;
+  max-height: 340px;
   overflow-y: auto;
   margin-top: 12px;
 }
 
-.history-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-}
-
-.history-table th {
-  text-align: left;
-  font-size: 10px;
-  color: var(--text-dim);
-  letter-spacing: 0.4px;
-  padding: 6px 8px;
-  position: sticky;
-  top: 0;
-  background: var(--bg-card);
-}
-
-.history-table td {
-  padding: 8px;
-  border-top: 1px solid var(--border-subtle);
-  color: var(--text-main);
-}
-
-.history-estado {
-  display: inline-flex;
+.history-row {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 600;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.history-row:last-child {
+  border-bottom: 0;
+}
+
+.history-time {
+  width: 78px;
+  flex-shrink: 0;
+  font-family: var(--font-m);
   font-size: 11px;
+  color: var(--ink-3);
 }
 
-.history-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+.history-detail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
 }
 
-.history-tipo {
-  color: var(--text-muted);
+.history-tag {
+  font-size: 11px;
+  color: var(--ink-2);
   white-space: nowrap;
 }

@@ -1,5 +1,5 @@
 import type { WebhookCheckResult } from "../types/status.types";
-import { ESTADO_COLOR_VAR, ESTADO_LABEL } from "../utils/estado";
+import { ESTADO_COLOR_VAR, ESTADO_LABEL, ESTADO_PILL_CLASS } from "../utils/estado";
 import "./WebhookStatusCard.css";
 
 interface WebhookStatusCardProps {
@@ -17,32 +17,32 @@ export function WebhookStatusCard({ resultado, verificando, onProbar }: WebhookS
       <div className="webhook-status-header">
         <div className="card-label">
           <span className="small-icon">⚡</span>
-          WEBHOOK FLUJO B
+          Webhook Flujo B
         </div>
-        <span className="estado-pill" style={{ color, borderColor: color, background: `${color}1a` }}>
-          <span className="estado-dot" style={{ background: color }} />
+        <span className={`pill ${ESTADO_PILL_CLASS[estado]}`}>
+          <span className="dot" style={{ background: color }} />
           {ESTADO_LABEL[estado]}
         </span>
       </div>
 
       <div className="webhook-metrics-grid">
         <div className="metric">
-          <p>LATENCIA</p>
-          <strong>
+          <span className="eyebrow">Latencia</span>
+          <strong className="tile-num">
             {resultado?.latenciaMs ?? "—"} <span className="unit">ms</span>
           </strong>
         </div>
         <div className="metric">
-          <p>ÚLTIMA RESPUESTA</p>
-          <strong>{resultado?.codigoHttp ?? "—"}</strong>
+          <span className="eyebrow">Última respuesta</span>
+          <strong className="tile-num">{resultado?.codigoHttp ?? "—"}</strong>
         </div>
         <div className="metric">
-          <p>X-API-KEY</p>
-          <strong>{resultado ? (resultado.apiKeyEnviada ? "✔ presente" : "no configurada") : "—"}</strong>
+          <span className="eyebrow">X-API-Key</span>
+          <strong className="metric-text">{resultado ? (resultado.apiKeyEnviada ? "✔ presente" : "no configurada") : "—"}</strong>
         </div>
         <div className="metric">
-          <p>RATE LIMIT RESTANTE</p>
-          <strong>{resultado?.rateLimitRestante ?? "No expuesto"}</strong>
+          <span className="eyebrow">Rate limit restante</span>
+          <strong className="metric-text">{resultado?.rateLimitRestante ?? "No expuesto"}</strong>
         </div>
       </div>
 

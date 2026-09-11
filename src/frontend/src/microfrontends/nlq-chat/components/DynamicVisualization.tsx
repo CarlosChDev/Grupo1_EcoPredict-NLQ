@@ -28,7 +28,17 @@ export function DynamicVisualization({ respuesta }: DynamicVisualizationProps) {
   const estaciones = Array.from(new Set(serie.map((p) => p.estacion)));
   const etiquetas = Array.from(new Set(serie.map((p) => p.x))).sort();
 
-  const colores = ["#00d69d", "#00c9dd", "#ffc000", "#ff4d55", "#9860ed"];
+  const raiz = document.documentElement;
+  const cssVar = (nombre: string) => getComputedStyle(raiz).getPropertyValue(nombre).trim();
+  const colores = [
+    cssVar("--accent"),
+    cssVar("--aqua"),
+    cssVar("--mod"),
+    cssVar("--crit"),
+    cssVar("--extreme"),
+  ];
+  const colorTexto = cssVar("--ink-2");
+  const colorGrid = cssVar("--grid");
 
   const data = {
     labels: etiquetas.map((iso) => new Date(iso).toLocaleDateString("es-PE")),
@@ -57,11 +67,11 @@ export function DynamicVisualization({ respuesta }: DynamicVisualizationProps) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { display: estaciones.length > 1, labels: { color: "#8996aa" } },
+              legend: { display: estaciones.length > 1, labels: { color: colorTexto } },
             },
             scales: {
-              x: { ticks: { color: "#8996aa" }, grid: { color: "#18253b" } },
-              y: { ticks: { color: "#8996aa" }, grid: { color: "#18253b" } },
+              x: { ticks: { color: colorTexto }, grid: { color: colorGrid } },
+              y: { ticks: { color: colorTexto }, grid: { color: colorGrid } },
             },
           }}
         />
