@@ -40,7 +40,7 @@ export function PollutantsGrid({ estacion }: PollutantsGridProps) {
           const color = NIVEL_COLOR_VAR[nivel];
 
           const delta =
-            medicion.valorAnterior !== undefined && medicion.valorAnterior !== 0
+            medicion.valorAnterior !== undefined && medicion.valorAnterior !== null && medicion.valorAnterior !== 0
               ? Math.round(((medicion.valor - medicion.valorAnterior) / medicion.valorAnterior) * 100)
               : null;
 

@@ -2,8 +2,10 @@ import type { NivelEstado, ParametroCalidadAire } from "../types/dashboard.types
 
 /**
  * Límites del ECA-Aire nacional (D.S. N° 003-2017-MINAM) usados como referencia
- * de comparación. Unidades consistentes con las que produce FLUJO A: µg/m³ para
- * todos los parámetros salvo CO, que se ingiere en mg/m³.
+ * de comparación. Todos en µg/m³, igual que el campo `unidad` que trae FLUJO A/C
+ * para los 6 parámetros (el CO del ECA es 10 mg/m³ = 10 000 µg/m³ — antes este
+ * límite estaba en mg/m³ mientras el dato llega en µg/m³, lo que disparaba el
+ * % del ECA x1000 y el Índice INCA a valores absurdos como 16089).
  */
 export const ECA_LIMITE: Record<ParametroCalidadAire, number> = {
   pm25: 50, // 24 h
@@ -11,7 +13,7 @@ export const ECA_LIMITE: Record<ParametroCalidadAire, number> = {
   so2: 250, // 24 h
   no2: 200, // 1 h
   o3: 100, // 8 h
-  co: 10, // 8 h, mg/m³
+  co: 10000, // 8 h
 };
 
 /**
