@@ -29,7 +29,7 @@ export function PmTrendChart({ serie }: PmTrendChartProps) {
   const colorEca = cssVar("--crit");
 
   const etiquetas = serie.map((p) =>
-    new Date(p.horaIso).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
+    new Date(p.hora).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" }),
   );
 
   const data = {
