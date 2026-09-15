@@ -1,9 +1,9 @@
 import { usePageHeader } from "../../shell/layout/usePageHeader";
-import { AirQualityCard } from "./components/AirQualityCard";
-import { AlertsPanel } from "./components/AlertsPanel";
-import { PollutionIndicator } from "./components/PollutionIndicator";
-import { WeatherSummary } from "./components/WeatherSummary";
-import { ALERTAS_MOCK, CLIMA_MOCK, ESTACIONES_MOCK } from "./data/mockDashboardData";
+import { IncaIndexCard } from "./components/IncaIndexCard";
+import { PmTrendChart } from "./components/PmTrendChart";
+import { PollutantsGrid } from "./components/PollutantsGrid";
+import { StationRanking } from "./components/StationRanking";
+import { ESTACIONES_MOCK, SERIE_PM_MOCK } from "./data/mockDashboardData";
 import "./DashboardAmbientalPage.css";
 
 /**
@@ -18,9 +18,11 @@ import "./DashboardAmbientalPage.css";
  */
 export function DashboardAmbientalPage() {
   usePageHeader({
-    titulo: "Dashboard Ambiental",
-    subtitulo: "Estado actual de la calidad del aire y alertas",
+    titulo: "Panel de calidad del aire",
+    subtitulo: "Lima Metropolitana · datos horarios",
   });
+
+  const estacionReferencia = ESTACIONES_MOCK[0];
 
   return (
     <div className="dashboard-page">
@@ -29,12 +31,14 @@ export function DashboardAmbientalPage() {
       </div>
 
       <div className="dashboard-top-grid">
-        <AirQualityCard estaciones={ESTACIONES_MOCK} />
-        <WeatherSummary clima={CLIMA_MOCK} />
-        <AlertsPanel alertas={ALERTAS_MOCK} />
+        <IncaIndexCard estacion={estacionReferencia} />
+        <PollutantsGrid estacion={estacionReferencia} />
       </div>
 
-      <PollutionIndicator estaciones={ESTACIONES_MOCK} />
+      <div className="dashboard-bottom-grid">
+        <PmTrendChart serie={SERIE_PM_MOCK} />
+        <StationRanking estaciones={ESTACIONES_MOCK} />
+      </div>
     </div>
   );
 }

@@ -10,8 +10,9 @@ interface ChatMessageItemProps {
 export function ChatMessageItem({ mensaje }: ChatMessageItemProps) {
   if (mensaje.role === "usuario") {
     return (
-      <div className="chat-message usuario">
-        <div className="chat-bubble">{mensaje.texto}</div>
+      <div className="msg me">
+        <div className="msg-av">TÚ</div>
+        <div className="bubble">{mensaje.texto}</div>
       </div>
     );
   }
@@ -19,9 +20,14 @@ export function ChatMessageItem({ mensaje }: ChatMessageItemProps) {
   const respuesta = mensaje.respuesta;
 
   return (
-    <div className="chat-message asistente">
-      <div className="chat-avatar">🤖</div>
-      <div className="chat-bubble">
+    <div className="msg ai">
+      <div className="msg-av">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+          <path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      </div>
+      <div className="bubble">
         {respuesta && esError(respuesta) && (
           <p className="chat-error">
             {respuesta.codigo_http === 400

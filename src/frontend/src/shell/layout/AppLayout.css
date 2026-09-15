@@ -1,22 +1,65 @@
 .app-layout {
+  position: relative;
   display: flex;
   min-height: 100vh;
   width: 100%;
 }
 
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+}
+
+.aurora::before {
+  width: 46vw;
+  height: 46vw;
+  left: -8vw;
+  top: -14vw;
+  background: radial-gradient(circle, var(--accent), transparent 68%);
+}
+
+.aurora::after {
+  width: 40vw;
+  height: 40vw;
+  right: -10vw;
+  bottom: -16vw;
+  background: radial-gradient(circle, var(--aqua), transparent 68%);
+  opacity: 0.38;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora {
+    opacity: 0.6;
+  }
+}
+
 .main-content {
-  margin-left: 225px;
-  width: calc(100% - 225px);
+  position: relative;
+  z-index: 1;
+  margin-left: 232px;
+  width: calc(100% - 232px);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
 .content-container {
-  padding: 20px 24px 32px;
+  padding: 22px 26px 44px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap);
 }
 
 @media (max-width: 900px) {

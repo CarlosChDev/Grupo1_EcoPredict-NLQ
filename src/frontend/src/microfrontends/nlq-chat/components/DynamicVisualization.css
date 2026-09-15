@@ -1,8 +1,8 @@
 .dynamic-visualization {
   margin-top: 10px;
-  background: #0e1b2e;
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-md);
+  background: var(--solid);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
   padding: 14px;
 }
 
@@ -12,11 +12,11 @@
   align-items: center;
   margin-bottom: 10px;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--ink-2);
 }
 
 .dv-header strong {
-  color: var(--primary-teal);
+  color: var(--accent);
   font-size: 12px;
   letter-spacing: 0.5px;
 }

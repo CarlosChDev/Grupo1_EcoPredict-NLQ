@@ -28,6 +28,8 @@ export function AppLayout() {
 
   return (
     <div className="app-layout">
+      <div className="aurora" aria-hidden="true" />
+
       <Sidebar />
 
       <main className="main-content">

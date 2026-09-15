@@ -1,0 +1,68 @@
+name: DAST - OWASP ZAP
+
+on:
+  push:
+    branches:
+      - Chavez
+
+  workflow_run:
+    workflows:
+      - "CD - Pre-deployment Validation"
+    types:
+      - completed
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  zap-baseline-scan:
+    name: OWASP ZAP Baseline Scan
+    if: >-
+      ${{ 
+        github.event_name == 'push' ||
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "http://144.22.203.51:5678"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap-baseline-report
+
+      - name: Translate ZAP results
+        if: always()
+        run: |
+          python3 .github/scripts/translate-zap.py \
+            report_json.json \
+            report_json_es.json
+
+      - name: Convert ZAP report to SARIF
+        if: always()
+        run: |
+          python3 .github/scripts/zap-to-sarif.py \
+            report_json_es.json \
+            results/zap-results.sarif
+
+      - name: Upload ZAP results to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: results/zap-results.sarif
+          category: dast-zap-baseline

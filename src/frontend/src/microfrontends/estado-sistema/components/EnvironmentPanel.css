@@ -1,25 +1,35 @@
 .env-toggle {
-  display: flex;
-  background: var(--bg-input);
-  border-radius: var(--radius-pill);
+  display: inline-flex;
+  width: 100%;
+  background: var(--track);
+  border: 1px solid var(--border);
+  border-radius: 11px;
   padding: 3px;
+  gap: 2px;
   margin: 12px 0;
 }
 
 .env-toggle-btn {
   flex: 1;
-  height: 30px;
+  height: 32px;
   border: none;
-  border-radius: var(--radius-pill);
+  border-radius: 8px;
   background: transparent;
-  color: var(--text-muted);
-  font-size: 12px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.env-toggle-btn:hover {
+  color: var(--ink);
 }
 
 .env-toggle-btn.active {
-  background: var(--accent-gradient);
-  color: #03141f;
-  box-shadow: var(--glow-teal);
+  background: var(--solid);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14);
 }
 
 .env-toggle-btn:disabled {
@@ -28,12 +38,12 @@
 }
 
 .env-url {
-  background: var(--bg-card-alt);
-  border-radius: var(--radius-md);
+  background: var(--track);
+  border-radius: var(--r);
   padding: 10px 12px;
-  font-family: var(--font-mono);
+  font-family: var(--font-m);
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--ink-2);
   word-break: break-all;
   margin-bottom: 12px;
 }

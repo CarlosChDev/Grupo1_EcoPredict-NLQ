@@ -15,9 +15,10 @@ export type NivelEstado = "bueno" | "moderado" | "malo";
 export interface MedicionParametro {
   parametro: ParametroCalidadAire;
   valor: number;
+  /** Valor de la lectura anterior (misma estación/parámetro), para la flecha de tendencia. */
+  valorAnterior?: number;
   unidad: string;
   medidoEn: string;
-  nivel: NivelEstado;
 }
 
 export interface EstacionResumen {
@@ -27,22 +28,9 @@ export interface EstacionResumen {
   mediciones: MedicionParametro[];
 }
 
-export interface Alerta {
-  id: string;
-  nivel: NivelEstado;
-  parametro: ParametroCalidadAire;
-  estacion: string;
-  mensaje: string;
-}
-
-/**
- * Aún no hay ninguna fuente meteorológica conectada (Figura 1 del informe
- * menciona SENAMHI como fuente futura, pero ningún flujo n8n la ingiere
- * todavía). Estructura provisional para no bloquear la maqueta visual.
- */
-export interface ClimaResumen {
-  temperaturaC: number;
-  humedadPct: number;
-  vientoKmh: number;
-  condicion: string;
+/** Un punto horario de la serie PM2.5/PM10 de las últimas 24 horas (agregado de todas las estaciones). */
+export interface PuntoSerieHoraria {
+  horaIso: string;
+  pm25: number | null;
+  pm10: number | null;
 }

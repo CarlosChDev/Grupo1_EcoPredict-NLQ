@@ -1,20 +1,20 @@
 .estado-sistema-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap);
 }
 
 .estado-sistema-grid {
   display: grid;
   grid-template-columns: 1.7fr 1fr;
-  gap: 20px;
+  gap: var(--gap);
   align-items: start;
 }
 
 .estado-sistema-side {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--gap);
 }
 
 @media (max-width: 900px) {
