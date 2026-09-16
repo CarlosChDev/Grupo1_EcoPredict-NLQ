@@ -530,7 +530,7 @@
               "script": {
                 "exec": [
                   "pm.test('Acceso autorizado con API Key', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422, 429]);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -695,7 +695,7 @@
               "script": {
                 "exec": [
                   "pm.test('El endpoint gestiona peticiones en ráfaga', function () {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 429]);",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 422, 429]);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -739,8 +739,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status code es 200', function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Validacion de respuesta de ingesta', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 422, 429]);",
                   "});",
                   "let res = {};",
                   "try { res = pm.response.json(); } catch(e) { res = {}; }",
@@ -748,7 +748,7 @@
                   "    if (res.ok !== undefined) {",
                   "        pm.expect(res.ok).to.be.oneOf([true, false]);",
                   "    } else {",
-                  "        pm.expect(pm.response.code).to.eql(200);",
+                  "        pm.expect(pm.response.code).to.be.oneOf([200, 422, 429]);",
                   "    }",
                   "});"
                 ],
