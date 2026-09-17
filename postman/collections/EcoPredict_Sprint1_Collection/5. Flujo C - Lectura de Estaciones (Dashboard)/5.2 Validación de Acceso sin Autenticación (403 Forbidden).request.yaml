@@ -1,0 +1,19 @@
+$kind: http-request
+description: Verifica que el endpoint rechace peticiones que no incluyan la cabecera X-API-Key requerida.
+url: "{{base_url}}/webhook/estaciones"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 403 Forbidden', function () {
+          pm.expect(pm.response.code).to.be.oneOf([401, 403]);
+      });
+
+      let res = {};
+      try { res = pm.response.json(); } catch(e) { res = {}; }
+
+      pm.test('Acceso denegado sin exponer catalogo de estaciones', function () {
+          pm.expect(res.estaciones).to.be.undefined;
+      });
+    language: text/javascript
+order: 2000

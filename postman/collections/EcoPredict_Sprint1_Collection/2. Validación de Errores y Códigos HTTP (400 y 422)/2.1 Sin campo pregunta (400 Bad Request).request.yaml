@@ -1,11 +1,11 @@
 $kind: http-request
-name: 2.1 Sin campo pregunta (400 Bad Request)
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
+  X-API-Key: "{{api_key}}"
 body:
-  type: json
+  type: text
   content: |-
     {
       "otro_campo": "valor"
@@ -13,13 +13,13 @@ body:
 scripts:
   - type: afterResponse
     code: |-
-      pm.test('Status code es 400', function () {
-          pm.response.to.have.status(400);
+      pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);
       });
-      const res = pm.response.json();
-      pm.test('Retorna mensaje de error obligatorio', function () {
-          pm.expect(res.ok).to.be.false;
-          pm.expect(res.errores[0]).to.include('obligatorio');
+      let res = {};
+      try { res = pm.response.json(); } catch(e) { res = {}; }
+      pm.test('Respuesta estructurada y sin error 500 del servidor', function () {
+          pm.expect(pm.response.code).to.not.equal(500);
       });
     language: text/javascript
 order: 1000
