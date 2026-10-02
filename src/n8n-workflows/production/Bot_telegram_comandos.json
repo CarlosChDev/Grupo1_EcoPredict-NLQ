@@ -1,0 +1,298 @@
+{
+  "name": "Bot_telegram_comandos",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "ef6ce2b9-53c3-43a2-8dd5-b3b93fc69dee",
+      "name": "Cada 15 segundos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT ultimo_update_id FROM telegram_offset WHERE id = 1;",
+        "options": {}
+      },
+      "id": "ac464e55-800e-4527-b9c1-a73b59d5ac7c",
+      "name": "Leer offset",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -576,
+        64
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getUpdates?offset={{ Number($json.ultimo_update_id) + 1 }}&timeout=0&allowed_updates=%5B%22message%22%5D",
+        "options": {}
+      },
+      "id": "14f8a2b3-eb51-48f5-9b4b-9f3b9752af51",
+      "name": "Pedir mensajes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -384,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $input.first().json;\nconst ups = Array.isArray(res.result) ? res.result : [];\nif (!res.ok || ups.length === 0) return [];\nreturn [{ json: { max_id: Math.max(...ups.map(u => u.update_id)), updates: ups } }];"
+      },
+      "id": "942d5687-5781-4f4a-8daa-a8c21149a9f9",
+      "name": "Preparar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE telegram_offset SET ultimo_update_id = GREATEST(ultimo_update_id, $1::bigint), actualizado_en = now()\nWHERE id = 1 RETURNING ultimo_update_id;",
+        "options": {
+          "queryReplacement": "={{ String($('Preparar').first().json.max_id) }}"
+        }
+      },
+      "id": "c55d8b26-4685-4c1e-be60-9ba80e2c8ca7",
+      "name": "Guardar offset",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        64,
+        -64
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ups = $('Preparar').first().json.updates;\nreturn ups\n  .filter(u => u.message && typeof u.message.text === 'string' && u.message.chat && u.message.chat.type === 'private')\n  .map(u => ({ json: { chat_id: u.message.chat.id, text: u.message.text } }));"
+      },
+      "id": "7538e78d-fcb9-4c4c-bcf7-4d581c825991",
+      "name": "Un item por mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const t = String($json.text ?? '').trim();\nconst partes = t.split(/\\s+/);\nconst validos = ['/start', '/estaciones', '/suscribir', '/baja'];\nconst cmd = (partes[0] || '').toLowerCase().split('@')[0];\nconst comando = validos.includes(cmd) ? cmd : '/otro';\nconst arg = partes[1] ?? '';\nconst estacion_id = /^\\d{1,9}$/.test(arg) ? Number(arg) : 0;\nreturn { json: { chat_id: $json.chat_id, comando, estacion_id } };"
+      },
+      "id": "28875a5e-0e13-4cc0-b298-d0726ad12f0a",
+      "name": "Interpretar comando",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH\nest AS (\n  SELECT id, nombre FROM estaciones WHERE activo AND id = $3::int\n),\nalta AS (\n  INSERT INTO suscriptores_telegram (chat_id, estacion_id)\n  SELECT $1::bigint, id FROM est WHERE $2 = '/suscribir'\n  ON CONFLICT (chat_id, estacion_id) DO UPDATE SET activo = true\n  RETURNING estacion_id\n),\nbaja AS (\n  UPDATE suscriptores_telegram SET activo = false\n  WHERE $2 = '/baja' AND chat_id = $1::bigint AND estacion_id = $3::int AND activo\n  RETURNING estacion_id\n)\nSELECT\n  (SELECT count(*) FROM alta) AS altas,\n  (SELECT count(*) FROM baja) AS bajas,\n  (SELECT nombre FROM est) AS estacion,\n  (SELECT string_agg(id::text || ' · ' || nombre, E'\\n' ORDER BY nombre) FROM estaciones WHERE activo) AS lista;",
+        "options": {
+          "queryReplacement": "={{ $json.chat_id }},{{ $json.comando }},{{ $json.estacion_id }}"
+        }
+      },
+      "id": "dda962be-7c67-461f-8fd9-3c7de8f7d0a4",
+      "name": "Ejecutar comando",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        736,
+        -64
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const r = $json;\nconst c = $('Interpretar comando').item.json;\nlet texto;\nswitch (c.comando) {\n  case '/start':\n    texto = 'Hola 👋 Soy el bot de alertas de calidad del aire de EcoPredict.\\n\\nComandos:\\n/estaciones – ver las estaciones y su número\\n/suscribir N – recibir alertas de la estación N\\n/baja N – dejar de recibirlas\\n\\nEjemplo: /suscribir 10';\n    break;\n  case '/estaciones':\n    texto = 'Estaciones disponibles (número · nombre):\\n\\n' + (r.lista || 'No hay estaciones.') + '\\n\\nPara suscribirte: /suscribir N';\n    break;\n  case '/suscribir':\n    if (!c.estacion_id) texto = 'Indica el número de la estación. Ejemplo: /suscribir 10\\nVer los números: /estaciones';\n    else if (!r.estacion) texto = `No existe la estación ${c.estacion_id}. Mira la lista con /estaciones`;\n    else texto = `✅ Listo. Recibirás alertas de ${r.estacion}.\\nPara dejar de recibirlas: /baja ${c.estacion_id}`;\n    break;\n  case '/baja':\n    if (!c.estacion_id) texto = 'Indica el número de la estación. Ejemplo: /baja 10';\n    else if (Number(r.bajas) === 0) texto = `No estabas suscrito a la estación ${c.estacion_id}.`;\n    else texto = `Listo. Ya no recibirás alertas de ${r.estacion}.`;\n    break;\n  default:\n    texto = 'No entendí ese comando. Usa /estaciones, /suscribir N o /baja N.';\n}\nreturn { json: { chat_id: c.chat_id, texto } };"
+      },
+      "id": "2f15c227-8f74-4613-a5f4-c16dc02a64ba",
+      "name": "Armar respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "5af9851b-f4e6-4107-a3b8-3b16f6fd6e28",
+      "name": "Responder",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1168,
+        -64
+      ],
+      "webhookId": "65ce6d62-47c7-47a4-9e2f-86e9f5e7418d",
+      "credentials": {
+        "telegramApi": {
+          "id": "atXyNp6RyvGgkRPk",
+          "name": "Ecopredict-telegram"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cada 15 segundos": {
+      "main": [
+        [
+          {
+            "node": "Leer offset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer offset": {
+      "main": [
+        [
+          {
+            "node": "Pedir mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pedir mensajes": {
+      "main": [
+        [
+          {
+            "node": "Preparar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar": {
+      "main": [
+        [
+          {
+            "node": "Guardar offset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar offset": {
+      "main": [
+        [
+          {
+            "node": "Un item por mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Un item por mensaje": {
+      "main": [
+        [
+          {
+            "node": "Interpretar comando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interpretar comando": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar comando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar comando": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ef022359-919e-4e62-b175-1f3ac9c26ec5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "r5aId9UJTje8W8wC",
+  "tags": []
+}

@@ -1,0 +1,302 @@
+{
+  "name": "Notificar_telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "e468d013-fbbd-450b-9cc7-d18f09518fe0",
+      "name": "Entrada",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -752,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT s.id AS suscriptor_id, s.chat_id, a.id AS alerta_id, a.estacion_id, a.parametro,\n       a.severidad, a.valor_registrado, a.analisis_llm, e.nombre AS estacion\nFROM alertas_anomalias a\nJOIN estaciones e ON e.id = a.estacion_id\nJOIN suscriptores_telegram s ON s.estacion_id = a.estacion_id AND s.activo\nWHERE a.id = $1\n  AND NOT EXISTS (\n    SELECT 1 FROM notificaciones_telegram n\n    WHERE n.suscriptor_id = s.id AND n.estacion_id = a.estacion_id\n      AND n.parametro = a.parametro AND n.estado = 'enviado'\n      AND n.enviado_en > now() - interval '24 hours');",
+        "options": {
+          "queryReplacement": "={{ String($json.alerta_id) }}"
+        }
+      },
+      "id": "da102f99-f137-4def-b696-7ae2d448d19f",
+      "name": "Buscar suscriptores",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -512,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const d = $json;\nconst analisis = (d.analisis_llm || 'Sin análisis disponible.').slice(0, 3500);\nconst mensaje =\n  `⚠️ Alerta de calidad del aire · ${d.estacion}\\n` +\n  `${String(d.parametro).toUpperCase()}: ${d.valor_registrado} (severidad ${d.severidad})\\n\\n` +\n  `${analisis}\\n\\n` +\n  `Para dejar de recibir alertas de esta estación: /baja ${d.estacion_id}`;\nreturn { json: { ...d, mensaje } };"
+      },
+      "id": "a2212223-3b95-4624-9ee1-98d96d485a2e",
+      "name": "Armar mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3ea8ba1a-fe36-4210-9f3c-dba8018afa51",
+      "name": "Enviar a Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        192
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "webhookId": "5607693a-6ae5-42ad-bdd7-efc088536770",
+      "credentials": {
+        "telegramApi": {
+          "id": "atXyNp6RyvGgkRPk",
+          "name": "Ecopredict-telegram"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO notificaciones_telegram (suscriptor_id, alerta_id, estacion_id, parametro, estado)\nVALUES ($1, $2, $3, $4, 'enviado');",
+        "options": {
+          "queryReplacement": "={{ $('Armar mensaje').item.json.suscriptor_id }},{{ $('Armar mensaje').item.json.alerta_id }},{{ $('Armar mensaje').item.json.estacion_id }},{{ $('Armar mensaje').item.json.parametro }}"
+        }
+      },
+      "id": "c3bdcc77-c2ee-40df-891a-e64f4b2318d4",
+      "name": "Registrar envío",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        64
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE alertas_anomalias SET notificado_telegram = true WHERE id = $1::bigint;",
+        "options": {
+          "queryReplacement": "={{ String($('Armar mensaje').item.json.alerta_id) }}"
+        }
+      },
+      "id": "97b0a3fc-658b-4cca-b453-123d74520f90",
+      "name": "Marcar alerta notificada",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        -80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO notificaciones_telegram (suscriptor_id, alerta_id, estacion_id, parametro, estado, error)\nVALUES ($1, $2, $3, $4, 'fallido', $5);",
+        "options": {
+          "queryReplacement": "={{ $('Armar mensaje').item.json.suscriptor_id }},{{ $('Armar mensaje').item.json.alerta_id }},{{ $('Armar mensaje').item.json.estacion_id }},{{ $('Armar mensaje').item.json.parametro }},{{ String($json.error?.message ?? 'error').replace(/,/g, ';') }}"
+        }
+      },
+      "id": "b33bffb6-1af2-4df4-bad6-943df19f4290",
+      "name": "Registrar fallo",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "3ab4a1de-6d08-4c4d-98d5-72999be801b2",
+              "leftValue": "={{ String($json.error?.message ?? '') }}",
+              "rightValue": "blocked",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "c7a3026e-26a9-47ef-8d5f-5ef82bb2133a",
+              "leftValue": "={{ String($json.error?.message ?? '') }}",
+              "rightValue": "403",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "5a4ef577-478d-40c9-8f13-110c028c413e",
+      "name": "¿Bot bloqueado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        224,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE suscriptores_telegram SET activo = false WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ String($('Armar mensaje').item.json.suscriptor_id) }}"
+        }
+      },
+      "id": "c7a711c4-3039-49f3-86ab-3b84c2c864bc",
+      "name": "Dar de baja",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        464,
+        464
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Entrada": {
+      "main": [
+        [
+          {
+            "node": "Buscar suscriptores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar suscriptores": {
+      "main": [
+        [
+          {
+            "node": "Armar mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar mensaje": {
+      "main": [
+        [
+          {
+            "node": "Enviar a Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a Telegram": {
+      "main": [
+        [
+          {
+            "node": "Registrar envío",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Marcar alerta notificada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar fallo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Bot bloqueado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Bot bloqueado?": {
+      "main": [
+        [
+          {
+            "node": "Dar de baja",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2ea1acfc-5510-4b8e-8b9b-36824323847c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "EwBblFua9hSAkbEK",
+  "tags": []
+}
