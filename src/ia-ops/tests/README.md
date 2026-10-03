@@ -4,15 +4,21 @@ Guía oficial de ejecución de pruebas automatizadas, calidad de prompts, detecc
 
 ---
 
-## 📌 Control de Historias de Usuario y Tareas (Sprint 2)
+## 📌 Control de Historias de Usuario y Tareas
 
-* **HU Principal:** `HU-16 - Calidad, Detección de Anomalías, Flujo C y Rate Limiting (#100)`
+### Sprint 3 (En Curso)
+* **Historias Técnicas:**
+  * `HT-09 (#151): Automatización de pruebas funcionales del Sprint 3`
+  * `HT-10 (#152): Auditoría de calidad de IA y observabilidad (IA Ops)`
 * **Sub-issues de QA:**
-  * ✅ **T14 (#116):** Validación de Detección de Anomalías con Pytest (Z-Score y umbrales ECA MINAM/OMS).
-  * ✅ **T15 (#117):** Validación del Flujo C (`GET /estaciones`) con Postman y Newman CLI.
-  * ✅ **T16 (#118):** Pruebas de Rate Limiting por IP Real en Nginx (`X-Forwarded-For`, 10 req/min).
-  * ✅ **T17 (#119):** Pruebas de Integración y Visualización del Dashboard (Índice INCA y Ranking).
-  * ✅ **T18 (#120):** CI/CD Quality Gates e Informe Técnico Consolidado de Calidad del Sprint 2.
+  * ✅ **T23 (#183):** Benchmark Anti-Alucinaciones y Evaluación RAG para Consultas Coloquiales (HU-17).
+  * 🔄 **T24 (#184):** Métricas de Calidad de IA (Alucinación, Fallback Groq→Gemini, Latencia) y Evaluador LLM-as-a-Judge.
+  * 🔄 **T25 (#185):** Verificación y Auditoría contra Dashboard de Langfuse (HT-08).
+  * 🔄 **T18 (#178):** Pruebas de Notificación Ciudadana y Suscripciones en Telegram (HU-19).
+  * 🔄 **T19 (#179):** Validación del Cooldown Anti-Spam (24h) en Telegram (HU-19).
+  * 🔄 **T20 (#180):** Certificación de Contratos y SLA de OCI Functions Serverless (HT-07).
+  * 🔄 **T21 (#181):** Pruebas de Integración del Microfrontend de Analítica (HU-23).
+  * 🔄 **T22 (#182):** Consolidación de Quality Gates en CI/CD y Auditoría Dependabot.
 
 ---
 
@@ -25,6 +31,7 @@ src/ia-ops/
 │   └── statistical_detector.py           # Motor matemático puro de Z-Score y ECA-Aire
 ├── prompts/
 │   ├── benchmark_eval_dataset.json       # 15 casos de referencia científica (OMS 2021 / MINAM)
+│   ├── rag_benchmark_dataset.json        # 20 casos de benchmark RAG y lenguaje coloquial (Sprint 3)
 │   ├── nlq_prompts.json                  # 12 plantillas estructuradas de prompts
 │   └── system_prompt.md                  # Restricciones éticas y guardrails del modelo
 └── tests/
@@ -33,6 +40,7 @@ src/ia-ops/
     ├── test_statistical_anomaly_detection.py # 33 tests de Z-score y severidad ECA MINAM/OMS
     ├── test_rate_limiting.py             # 12 tests de Rate Limiting por IP Real e Nginx
     ├── test_dashboard_integration.py     # 22 tests de integración de Dashboard e Índice INCA
+    ├── test_rag_benchmark_quality.py     # 32 tests de calidad RAG y evaluación anti-alucinaciones (T23)
     └── postman/
         ├── EcoPredict_Sprint1_Collection.json          # Colección de 18 requests y 34 aserciones (Flujos A, B y C)
         ├── eco_predict_local.postman_environment.json  # Entorno Local (Docker)
@@ -45,12 +53,15 @@ src/ia-ops/
 
 ### 1. Suite Completa de Pruebas Unitarias e Integración (Pytest)
 ```bash
-# Ejecutar los 158 tests automatizados del repositorio
+# Ejecutar los 190 tests automatizados del repositorio
 pytest src/ia-ops/tests/ -v
 ```
 
 ### 2. Pruebas Específicas por Módulo
 ```bash
+# Benchmark RAG y Anti-Alucinaciones (32 tests - T23)
+pytest src/ia-ops/tests/test_rag_benchmark_quality.py -v
+
 # Detección de Anomalías (33 tests)
 pytest src/ia-ops/tests/test_statistical_anomaly_detection.py -v
 
@@ -70,22 +81,14 @@ newman run src/ia-ops/tests/postman/EcoPredict_Sprint1_Collection.json \
 
 ---
 
-## 📊 Métricas Consolidadas de Calidad (Sprint 2)
+## 📊 Métricas Consolidadas de Calidad (Sprint 3)
 
 | Dimensión de Calidad | Métrica Obtenida | Criterio de Aceptación / SLA | Estado |
 |---|:---:|:---:|:---:|
-| **Tests en Pytest** | **158 tests** | $\ge 150$ | ✅ **100% Aprobados (0.42s)** |
-| **Aserciones en Newman CLI** | **34 aserciones** | 34 | ✅ **100% Aprobadas (16.1s)** |
+| **Tests en Pytest** | **190 tests** | $\ge 180$ | ✅ **100% Aprobados (0.74s)** |
+| **Aserciones en Newman CLI** | **34 aserciones** | 34 | ✅ **100% Aprobadas (13.6s)** |
+| **Tasa de Acierto con RAG (T23)** | **100.0% (20/20)** | $\ge 95\%$ | 🚀 **Fidelidad Semántica** |
+| **Groundedness Promedio RAG** | **0.991** | $\ge 0.950$ | 🛡️ **Anti-Alucinaciones** |
 | **SLA Flujo C (`GET /estaciones`)** | **138 ms** | $< 500\text{ ms}$ | ⚡ **Margen +72.4%** |
 | **Compilación Frontend** | **85 módulos** | 0 errores TypeScript | ✅ **100% Limpio (501ms)** |
-| **Tasa de Aprobación Global** | **100% (192/192)** | 100% | 🚀 **Cero Regresiones** |
-
----
-
-## ⚙️ Quality Gates en CI/CD (GitHub Actions)
-
-Los flujos de trabajo en `.github/workflows/` ejecutan automáticamente las validaciones ante cada PR:
-* `ai-testing-ci.yml`: Ejecuta `pytest src/ia-ops/tests -v` (158 tests).
-* `newman-ci.yml`: Valida los contratos de API con Newman CLI.
-* `frontend-ci.yml`: Valida el build de TypeScript y Vite.
-* `dast.yml`: Análisis dinámico de seguridad OWASP ZAP.
+| **Tasa de Aprobación Global** | **100% (224/224)** | 100% | 🚀 **Cero Regresiones** |
