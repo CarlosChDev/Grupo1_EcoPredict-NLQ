@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/dashboard-ambiental", "destination": "/index.html" },
+    { "source": "/dashboard-ambiental/:path*", "destination": "/:path*" }
+  ]
+}

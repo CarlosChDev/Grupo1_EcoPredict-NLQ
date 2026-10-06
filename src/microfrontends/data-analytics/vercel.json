@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/data-analytics", "destination": "/index.html" },
+    { "source": "/data-analytics/:path*", "destination": "/:path*" }
+  ]
+}
