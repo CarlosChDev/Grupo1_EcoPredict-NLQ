@@ -42,6 +42,7 @@ flowchart TD
     LLM --> IAOPS
 
 ```
+
 ## 🚀 Diagrama de Despliegue — EcoPredict & NLQ en OCI
 
 Representación de la infraestructura desplegada en **Oracle Cloud Infrastructure (OCI)**, mostrando la red, el nodo de cómputo, los servicios internos y las integraciones externas.
@@ -170,18 +171,6 @@ infrastructure/.env.example
 ```
 
 No se deben subir archivos `.env` reales.
-
----
-
-## Gobernanza y seguridad
-
-- `main` será la rama principal y estará protegida.
-- Los cambios deberán realizarse mediante **Pull Requests**.
-- Todo PR deberá pasar las validaciones automáticas.
-- Los desarrolladores trabajarán en ramas independientes.
-- No se deben incluir credenciales, tokens ni secretos en el repositorio.
-- Los workflows de n8n deberán revisarse antes de incorporarse.
-- Las validaciones de calidad y seguridad se automatizarán mediante **GitHub Actions**.
 
 ---
 

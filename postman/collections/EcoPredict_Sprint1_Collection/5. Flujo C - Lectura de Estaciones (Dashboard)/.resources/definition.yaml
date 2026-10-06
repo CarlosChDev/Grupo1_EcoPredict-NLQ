@@ -1,0 +1,3 @@
+$kind: collection
+description: Pruebas de integración del endpoint GET /estaciones para alimentar el Dashboard ambiental del frontend con la última medición por estación y SLA < 500ms.
+order: 5000

@@ -1,0 +1,12 @@
+name: EcoPredict - Oracle Cloud (Remoto)
+values:
+  - key: base_url
+    value: 'http://144.22.203.51:5678'
+  - key: webhook_path
+    value: /webhook/nlq
+  - key: frontend_url
+    value: 'http://144.22.203.51/nlq-chat'
+  - key: api_key
+    value: 6e6f29272fd207dc749c42a87068ed6f
+  - key: timeout_ms
+    value: '60000'

@@ -1,0 +1,42 @@
+$kind: http-request
+name: 5.1 Consulta Catálogo de Estaciones y Últimas Mediciones (200 OK)
+description: Valida que el endpoint devuelva el listado completo de estaciones con coordenadas y última medición por parámetro sin depender de ningún LLM.
+url: "{{base_url}}/webhook/estaciones"
+method: GET
+headers:
+  X-API-Key: "{{api_key}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code es 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      let res = {};
+      try { res = pm.response.json(); } catch(e) { res = {}; }
+
+      pm.test('Respuesta contiene total_estaciones y generado_en validos', function () {
+          pm.expect(res.total_estaciones).to.be.a('number');
+          pm.expect(res.total_estaciones).to.be.above(0);
+          pm.expect(res.generado_en).to.exist;
+      });
+
+      pm.test('Estructura de estaciones y mediciones valida para Dashboard', function () {
+          pm.expect(res.estaciones).to.be.an('array');
+          if (res.estaciones.length > 0) {
+              const est = res.estaciones[0];
+              pm.expect(est).to.have.property('id');
+              pm.expect(est).to.have.property('nombre');
+              pm.expect(est).to.have.property('coordenadas');
+              pm.expect(est.coordenadas).to.have.property('lat');
+              pm.expect(est.coordenadas).to.have.property('lon');
+              pm.expect(est).to.have.property('mediciones');
+              pm.expect(est.mediciones).to.be.an('array');
+          }
+      });
+
+      pm.test('Tiempo de respuesta cumple SLA de Dashboard (< 500 ms)', function () {
+          pm.expect(pm.response.responseTime).to.be.below(500);
+      });
+    language: text/javascript
+order: 1000

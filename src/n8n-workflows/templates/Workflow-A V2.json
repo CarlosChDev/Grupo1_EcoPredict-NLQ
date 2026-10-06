@@ -1,0 +1,645 @@
+{
+  "name": "Workflow A",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "3f313cf8-9dfc-4225-9515-ef7151e484d6",
+      "name": "Schedule Trigger 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        -48
+      ],
+      "notes": "Para probar sin esperar al cron, usa 'Execute workflow'."
+    },
+    {
+      "parameters": {
+        "url": "https://api.openaq.org/v3/locations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "bbox",
+              "value": "-77.20,-12.40,-76.75,-11.75"
+            },
+            {
+              "name": "limit",
+              "value": "20"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "c46bdbda-1268-4eb1-85c8-bd50bb7da4a8",
+      "name": "OpenAQ: listar estaciones PE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        48
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jMfJRFcM1WHFwmmB",
+          "name": "openaq"
+        }
+      },
+      "notes": "FIX: bbox de Lima Metropolitana en vez de iso=pe (el parametro iso no filtra en v3, devuelve found:0). Credencial httpHeaderAuth: header 'X-API-Key'."
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst body = $input.first().json;\nconst results = body.results || [];\n\nif (results.length === 0) {\n  throw new Error('OpenAQ no devolvio estaciones. Revisa la API key o el bbox.');\n}\n\nreturn results.map((loc) => ({\n  json: {\n    codigo_externo: String(loc.id),\n    nombre: (loc.name || 'SIN NOMBRE').toUpperCase(),\n    tipo: 'calidad_aire',\n    zona: null,\n    latitud: loc.coordinates ? loc.coordinates.latitude : null,\n    longitud: loc.coordinates ? loc.coordinates.longitude : null,\n    proveedor: 'OpenAQ',\n  },\n}));\n"
+      },
+      "id": "8483c3e7-5a46-4092-a0f1-3f1a7b8993f7",
+      "name": "Preparar estaciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO estaciones (codigo_externo, nombre, tipo, zona, latitud, longitud, proveedor)\nVALUES ($1, $2, $3, $4, $5, $6, $7)\nON CONFLICT (codigo_externo, proveedor)\nDO UPDATE SET nombre = EXCLUDED.nombre, latitud = EXCLUDED.latitud, longitud = EXCLUDED.longitud\nRETURNING id, codigo_externo;",
+        "options": {
+          "queryReplacement": "={{ [$json.codigo_externo, $json.nombre, $json.tipo, $json.zona, $json.latitud, $json.longitud, $json.proveedor] }}"
+        }
+      },
+      "id": "af94ecdb-46f3-40fa-a986-a569ca190d8b",
+      "name": "Upsert estaciones",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        864,
+        80
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "Credencial: PostgreSQL - Calidad Aire (host=postgres, db=calidad_aire)"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.openaq.org/v3/locations/{{ $json.codigo_externo }}/latest",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "d16bbac1-ae35-412f-a01f-ad68129f51f3",
+      "name": "OpenAQ: ultimas mediciones",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1072,
+        -128
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "jMfJRFcM1WHFwmmB",
+          "name": "openaq"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "Se ejecuta una vez por estacion (comportamiento por defecto de n8n). IMPORTANTE: /latest devuelve el ultimo valor reportado por el sensor, NO 'lo de hoy'. Si un sensor no transmite hace tiempo, su ultimo dato puede ser antiguo."
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// ============================================================\n// FIX: el endpoint /latest NO trae el nombre del parametro\n// directamente (solo sensorsId). Se construye un mapa\n// sensorId -> {parametro, unidad} a partir de loc.sensors[]\n// en la respuesta original de /locations.\n// ============================================================\nconst locsResponse = $('OpenAQ: listar estaciones PE').first().json;\nconst ubicaciones = locsResponse.results || [];\n\nconst sensorInfo = {};\nfor (const loc of ubicaciones) {\n  const sensores = loc.sensors || [];\n  for (const s of sensores) {\n    sensorInfo[s.id] = {\n      parametro: ((s.parameter && (s.parameter.name || s.parameter.id)) || 'desconocido').toLowerCase(),\n      unidad: (s.parameter && s.parameter.units) || 'ug/m3',\n    };\n  }\n}\n\nconst estaciones = $('Upsert estaciones').all();\nconst respuestas = $input.all();\nconst filas = [];\n\nfor (let i = 0; i < respuestas.length; i++) {\n  const resp = respuestas[i].json;\n  const estacionId = estaciones[i] ? estaciones[i].json.id : null;\n  if (!estacionId) continue;\n\n  const resultados = resp.results || [];\n  for (const r of resultados) {\n    const info = sensorInfo[r.sensorsId] || {};\n    const parametro = info.parametro || 'desconocido';\n    const valor = typeof r.value === 'number' ? r.value : null;\n    const unidad = info.unidad || 'ug/m3';\n    const medidoEn = (r.datetime && (r.datetime.utc || r.datetime.local)) || r.datetime || null;\n\n    // Se descarta si falta el valor, la fecha, o no se pudo mapear el parametro\n    // (mejor perder el dato que insertarlo como 'desconocido')\n    if (valor === null || !medidoEn || parametro === 'desconocido') continue;\n\n    filas.push({\n      json: {\n        estacion_id: estacionId,\n        parametro,\n        valor,\n        unidad,\n        medido_en: medidoEn,\n        payload_crudo: JSON.stringify(r),\n      },\n    });\n  }\n}\n\nreturn filas;\n"
+      },
+      "id": "01b0e59e-9fa0-415c-a75e-9652e4c3654f",
+      "name": "Normalizar mediciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst RANGOS = {\n  pm25: [0, 1000], pm10: [0, 1500], no2: [0, 2000],\n  so2: [0, 2000], o3: [0, 1000], co: [0, 50000],\n};\n\nreturn $input.all().filter((item) => {\n  const { parametro, valor } = item.json;\n  const rango = RANGOS[parametro];\n  if (!rango) return true;\n  return valor >= rango[0] && valor <= rango[1];\n});\n"
+      },
+      "id": "3f5d3ce6-8c43-49c8-9e9b-cbfa59163a52",
+      "name": "Filtrar lecturas invalidas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO mediciones_aire (estacion_id, parametro, valor, unidad, medido_en, payload_crudo)\nVALUES ($1, $2, $3, $4, $5, $6::jsonb)\nON CONFLICT (estacion_id, parametro, medido_en)\nDO UPDATE SET valor = EXCLUDED.valor, ingerido_en = now()\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [$json.estacion_id, $json.parametro, $json.valor, $json.unidad, $json.medido_en, $json.payload_crudo] }}"
+        }
+      },
+      "id": "65b1a31e-3a68-423e-8fc7-416876cb6875",
+      "name": "Upsert mediciones_aire",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1792,
+        -144
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO ingesta_estado (fuente, ultimo_medido_en, ultima_ejecucion, filas_insertadas)\nVALUES ('openaq', now(), now(), $1)\nON CONFLICT (fuente)\nDO UPDATE SET ultimo_medido_en = now(), ultima_ejecucion = now(), filas_insertadas = $1;",
+        "options": {
+          "queryReplacement": "={{ [ $items('Upsert mediciones_aire').length ] }}"
+        }
+      },
+      "id": "48e88fd0-6cf2-4099-b995-54de3f069699",
+      "name": "Actualizar ingesta_estado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2064,
+        -144
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "executeOnce=true: corre UNA sola vez aunque le lleguen muchos items."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH historico AS (\n  SELECT\n    m.estacion_id,\n    m.parametro,\n    m.valor,\n    m.medido_en,\n    ROW_NUMBER() OVER (PARTITION BY m.estacion_id, m.parametro ORDER BY m.medido_en DESC) AS rn\n  FROM mediciones_aire m\n  WHERE m.medido_en > now() - interval '30 days'\n),\nultimo AS (\n  SELECT estacion_id, parametro, valor AS valor_actual, medido_en AS medido_en_actual\n  FROM historico WHERE rn = 1\n),\nestadisticas AS (\n  SELECT estacion_id, parametro,\n         AVG(valor) AS promedio, STDDEV_POP(valor) AS desviacion,\n         COUNT(*) AS cantidad_muestras\n  FROM historico WHERE rn > 1\n  GROUP BY estacion_id, parametro\n)\nSELECT u.estacion_id, e.nombre AS estacion_nombre, u.parametro,\n       u.valor_actual, u.medido_en_actual, s.promedio, s.desviacion, s.cantidad_muestras,\n       CASE WHEN s.desviacion > 0 THEN (u.valor_actual - s.promedio) / s.desviacion ELSE 0 END AS z_score\nFROM ultimo u\nJOIN estaciones e ON e.id = u.estacion_id\nLEFT JOIN estadisticas s ON s.estacion_id = u.estacion_id AND s.parametro = u.parametro\nWHERE s.cantidad_muestras >= 5;",
+        "options": {}
+      },
+      "id": "eaa3dd09-6b24-4f63-a5d8-cfb99efc6f93",
+      "name": "Calcular estadisticas y detectar posibles anomalias (SQL)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2336,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "HouqG0p271KQBRdB",
+          "name": "nlq reader"
+        }
+      },
+      "notes": "Usa una credencial de Postgres. Compara el ultimo valor contra el promedio de los 30 dias PREVIOS (los excluye del calculo de la linea base)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// ADVERTENCIA: los valores de UMBRALES_ECA son referenciales,\n// tomados de conocimiento general del D.S. 003-2017-MINAM.\n// VERIFICAR contra la norma vigente y las unidades reales de\n// mediciones_aire.unidad antes de usar en produccion.\n//\n// Mapeo hacia las columnas REALES de alertas_anomalias:\n// - valor_registrado = el valor que disparo la alerta\n// - umbral_base = el limite ECA (si excede la norma) o el\n//                 promedio historico (si es atipico estadistico)\n// - desviacion  = el z-score calculado\n// analisis_llm, notificado_telegram, notificado_correo quedan\n// sin llenar: pertenecen a HU-10, fuera de esta HU (sin IA).\n// ============================================================\nconst UMBRALES_ECA = {\n  pm25: 50,\n  pm10: 100,\n  so2: 250,\n  no2: 200,\n  o3: 100,\n  co: 10000,\n};\n\nconst Z_UMBRAL = 2.5;\n\nconst filas = $input.all().map((i) => i.json);\nconst anomalias = [];\n\nfor (const fila of filas) {\n  const zScore = Number(fila.z_score);\n  const valorActual = Number(fila.valor_actual);\n  const promedioHistorico = Number(fila.promedio);\n  const umbralNormativo = UMBRALES_ECA[fila.parametro];\n\n  const excedeNormativo = umbralNormativo !== undefined && valorActual > umbralNormativo;\n  const esAtipico = Math.abs(zScore) > Z_UMBRAL;\n\n  if (!excedeNormativo && !esAtipico) continue;\n\n  const severidad = excedeNormativo ? 'alta' : 'moderada';\n\n  anomalias.push({\n    json: {\n      estacion_id: fila.estacion_id,\n      parametro: fila.parametro,\n      valor_registrado: valorActual,\n      umbral_base: excedeNormativo ? umbralNormativo : promedioHistorico,\n      desviacion: Number(zScore.toFixed(2)),\n      severidad,\n    },\n  });\n}\n\nreturn anomalias;"
+      },
+      "id": "c6fee4e6-b7ca-4bae-ba95-3e2d5ad3c012",
+      "name": "Evaluar umbrales y clasificar severidad",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2544,
+        -144
+      ],
+      "notes": "Si no hay anomalias, devuelve [] y la cadena se detiene sola (0 items = el siguiente nodo no corre). No hace falta un IF explicito."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) AS existe\nFROM alertas_anomalias\nWHERE estacion_id = $1 AND parametro = $2\n  AND detectado_en > now() - interval '1 hour';",
+        "options": {
+          "queryReplacement": "={{ [$json.estacion_id, $json.parametro] }}"
+        }
+      },
+      "id": "24a1a548-769d-47f0-9014-2fa61928e1f5",
+      "name": "Verificar alerta reciente (SQL)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2864,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "HouqG0p271KQBRdB",
+          "name": "nlq reader"
+        }
+      },
+      "notes": "Usar credencial nlq_reader (solo lectura). Evita insertar la misma alerta si ya existe una para esa estacion+parametro en la ultima hora."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-sin-duplicado",
+              "leftValue": "={{ Number($json.existe) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8c7be95c-9eea-4f86-930d-e63da4e593e0",
+      "name": "¿Ya existe alerta reciente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3056,
+        48
+      ],
+      "notes": "Rama 'true' (sin duplicado, existe=0) continua hacia el analisis con IA. Rama 'false' no se conecta a nada: la alerta duplicada se descarta silenciosamente."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const original = $('Evaluar umbrales y clasificar severidad').item.json;\n\n// severidad='alta' siempre corresponde a exceso del limite normativo ECA-aire;\n// severidad='moderada' siempre corresponde a desviacion estadistica (promedio historico).\n// Esto se determina aqui, en codigo, para no depender de que el LLM lo infiera bien.\nconst esExcesoNormativo = original.severidad === 'alta';\nconst etiquetaReferencia = esExcesoNormativo\n  ? 'Limite normativo ECA-aire'\n  : 'Promedio historico de la estacion';\n\nconst sistema = 'Redactas un analisis breve (maximo 3 oraciones) de una anomalia '\n  + 'de calidad del aire detectada estadisticamente. Describe UNICAMENTE la '\n  + 'desviacion numerica observada. Usa EXACTAMENTE el termino \"limite normativo '\n  + 'ECA-aire\" cuando el valor supere la norma legal, o \"promedio historico\" '\n  + 'cuando se trate de una desviacion estadistica sin exceder la norma. '\n  + 'NUNCA uses la palabra \"umbral\" de forma ambigua sin aclarar a cual de los '\n  + 'dos casos te refieres. NUNCA inventes una causa externa (trafico, incendios, '\n  + 'clima, etc.) que no se te haya proporcionado como dato: si no tienes '\n  + 'informacion sobre la causa, no la menciones ni la sugieras.';\n\nconst usuario = `Parametro: ${original.parametro}\\n`\n  + `Valor registrado: ${original.valor_registrado}\\n`\n  + `${etiquetaReferencia}: ${original.umbral_base}\\n`\n  + `Desviacion (z-score): ${original.desviacion}\\n`\n  + `Severidad: ${original.severidad}\\n`\n  + `Tipo de anomalia: ${esExcesoNormativo ? 'excede el limite legal' : 'desviacion estadistica atipica, dentro de lo legal'}`;\n\nreturn {\n  json: {\n    estacion_id: original.estacion_id,\n    parametro: original.parametro,\n    valor_registrado: original.valor_registrado,\n    umbral_base: original.umbral_base,\n    desviacion: original.desviacion,\n    severidad: original.severidad,\n    groq_payload: {\n      model: 'openai/gpt-oss-120b',\n      messages: [{ role: 'system', content: sistema }, { role: 'user', content: usuario }],\n      temperature: 0.3, max_tokens: 200, reasoning_effort: 'none',\n    },\n    gemini_payload: {\n      contents: [{ parts: [{ text: `${sistema}\\n\\n${usuario}` }] }],\n      generationConfig: { temperature: 0.3, maxOutputTokens: 150 },\n    },\n  },\n};"
+      },
+      "id": "8fae28f4-fa09-4b21-944a-2f1e49140376",
+      "name": "Preparar prompt: analisis de anomalia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        0
+      ],
+      "notes": "Instruye explicitamente al LLM a NO inventar causas (trafico, incendios, etc.) que no se le hayan dado como dato."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.groq_payload) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "e8fea381-86f7-46db-8851-ed958bb352df",
+      "name": "Groq: redactar analisis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3728,
+        -208
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xQ6xTb8lQwdwHQuq",
+          "name": "groq"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Reutiliza la misma credencial httpHeaderAuth de Groq que ya usa el Flujo B."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.gemini_payload) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "3d5edabd-f547-422f-bf8a-dda6d5755d3f",
+      "name": "Gemini: fallback analisis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3744,
+        192
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "W82e8l13QyyGleVf",
+          "name": "gemini"
+        }
+      },
+      "notes": "Reutiliza la misma credencial httpHeaderAuth de Gemini que ya usa el Flujo B."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const r = $input.item.json;\nconst original = $('Preparar prompt: analisis de anomalia').item.json;\n\nlet texto = 'No fue posible generar el analisis automatico.';\nif (r.choices && r.choices[0]) texto = r.choices[0].message.content.trim();\nelse if (r.candidates && r.candidates[0]) texto = r.candidates[0].content.parts[0].text.trim();\n\nreturn {\n  json: {\n    estacion_id: original.estacion_id,\n    parametro: original.parametro,\n    valor_registrado: original.valor_registrado,\n    umbral_base: original.umbral_base,\n    desviacion: original.desviacion,\n    severidad: original.severidad,\n    analisis_llm: texto,\n  },\n};"
+      },
+      "id": "075259dc-627a-4c60-b182-2161afffbd45",
+      "name": "Parsear analisis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3952,
+        -32
+      ],
+      "notes": "Recibe tanto el exito de Groq como el fallback de Gemini (ambas ramas convergen aqui)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO alertas_anomalias (estacion_id, parametro, valor_registrado, umbral_base, desviacion, severidad, analisis_llm)\nVALUES ($1, $2, $3, $4, $5, $6, $7);",
+        "options": {
+          "queryReplacement": "={{ [$json.estacion_id, $json.parametro, $json.valor_registrado, $json.umbral_base, $json.desviacion, $json.severidad, $json.analisis_llm] }}"
+        }
+      },
+      "id": "c5052346-11c4-4dff-91bb-72e9f88dee78",
+      "name": "Insertar en alertas_anomalias (con analisis)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4192,
+        -32
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "notes": "REEMPLAZA al nodo anterior 'Insertar en alertas_anomalias' (el que no tenia analisis_llm). Requiere credencial de ESCRITURA, no nlq_reader."
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $json;\n\nreturn {\n  json: {\n    descartado: true,\n    motivo: 'Ya existe una alerta reciente para esta estacion y parametro (ultima hora)',\n    estacion_id: original.estacion_id,\n    parametro: original.parametro,\n  },\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3264,
+        352
+      ],
+      "id": "6e5217ca-2f6e-40fa-8638-1284f420e86c",
+      "name": "Descartar duplicado"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger 06:00": {
+      "main": [
+        [
+          {
+            "node": "OpenAQ: listar estaciones PE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAQ: listar estaciones PE": {
+      "main": [
+        [
+          {
+            "node": "Preparar estaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar estaciones": {
+      "main": [
+        [
+          {
+            "node": "Upsert estaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert estaciones": {
+      "main": [
+        [
+          {
+            "node": "OpenAQ: ultimas mediciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAQ: ultimas mediciones": {
+      "main": [
+        [
+          {
+            "node": "Normalizar mediciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar mediciones": {
+      "main": [
+        [
+          {
+            "node": "Filtrar lecturas invalidas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar lecturas invalidas": {
+      "main": [
+        [
+          {
+            "node": "Upsert mediciones_aire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert mediciones_aire": {
+      "main": [
+        [
+          {
+            "node": "Actualizar ingesta_estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular estadisticas y detectar posibles anomalias (SQL)": {
+      "main": [
+        [
+          {
+            "node": "Evaluar umbrales y clasificar severidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar umbrales y clasificar severidad": {
+      "main": [
+        [
+          {
+            "node": "Verificar alerta reciente (SQL)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar ingesta_estado": {
+      "main": [
+        [
+          {
+            "node": "Calcular estadisticas y detectar posibles anomalias (SQL)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar alerta reciente (SQL)": {
+      "main": [
+        [
+          {
+            "node": "¿Ya existe alerta reciente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ya existe alerta reciente?": {
+      "main": [
+        [
+          {
+            "node": "Preparar prompt: analisis de anomalia",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Descartar duplicado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar prompt: analisis de anomalia": {
+      "main": [
+        [
+          {
+            "node": "Groq: redactar analisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq: redactar analisis": {
+      "main": [
+        [
+          {
+            "node": "Parsear analisis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gemini: fallback analisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini: fallback analisis": {
+      "main": [
+        [
+          {
+            "node": "Parsear analisis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsear analisis": {
+      "main": [
+        [
+          {
+            "node": "Insertar en alertas_anomalias (con analisis)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fb6a46df-0344-4f6e-90ff-1f3985426f43",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "hyGB8AOwtDyWhWA9",
+  "tags": []
+}

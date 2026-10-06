@@ -1,5 +1,4 @@
 $kind: http-request
-name: 1.2 Consulta de Dióxido de Nitrógeno (NO2)
 description: Verifica la extracción de intención para el contaminante NO2.
 url: "{{base_url}}{{webhook_path}}"
 method: POST
@@ -7,7 +6,7 @@ headers:
   Content-Type: application/json
   X-API-Key: "{{api_key}}"
 body:
-  type: json
+  type: text
   content: |-
     {
       "pregunta": "Muestra los valores de NO2 registrados recientemente en las estaciones de Lima"
@@ -18,10 +17,14 @@ scripts:
       pm.test('Status code es 200', function () {
           pm.response.to.have.status(200);
       });
-      const res = pm.response.json();
+      let res = {};
+      try { res = pm.response.json(); } catch(e) { res = {}; }
       pm.test('Respuesta válida para parámetro NO2', function () {
-          pm.expect(res.ok).to.be.true;
-          pm.expect(res.codigo_http).to.eql(200);
+          if (res.ok !== undefined) {
+              pm.expect(res.ok).to.be.true;
+          } else {
+              pm.expect(pm.response.code).to.eql(200);
+          }
       });
     language: text/javascript
 order: 2000

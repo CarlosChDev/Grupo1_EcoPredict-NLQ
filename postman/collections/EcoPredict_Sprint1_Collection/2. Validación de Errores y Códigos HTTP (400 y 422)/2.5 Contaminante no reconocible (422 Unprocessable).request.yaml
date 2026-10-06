@@ -1,23 +1,25 @@
 $kind: http-request
-name: 2.5 Contaminante no reconocible (422 Unprocessable)
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
+  X-API-Key: "{{api_key}}"
 body:
-  type: json
+  type: text
   content: |-
     {
-      "pregunta": "¿Cuál es la receta para preparar ceviche de pescado peruano?"
+      "pregunta": "Dame la receta de arroz con pollo para 4 personas por favor"
     }
 scripts:
   - type: afterResponse
     code: |-
-      pm.test('Status code es 422 o 400 controlado', function () {
+      pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {
           pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);
       });
-      pm.test('No produce error 500 del servidor', function () {
-          pm.expect(pm.response.code).to.not.eql(500);
+      let res = {};
+      try { res = pm.response.json(); } catch(e) { res = {}; }
+      pm.test('Respuesta estructurada y sin error 500 del servidor', function () {
+          pm.expect(pm.response.code).to.not.equal(500);
       });
     language: text/javascript
 order: 5000

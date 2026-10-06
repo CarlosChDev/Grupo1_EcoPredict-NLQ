@@ -4,8 +4,9 @@ url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
+  X-API-Key: "{{api_key}}"
 body:
-  type: json
+  type: text
   content: |-
     {
       "pregunta": "¿Cuál es la calidad del aire en Lima en este segundo?"

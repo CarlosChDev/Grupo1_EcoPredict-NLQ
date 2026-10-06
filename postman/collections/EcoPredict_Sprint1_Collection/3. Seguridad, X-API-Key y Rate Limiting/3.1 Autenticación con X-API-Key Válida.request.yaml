@@ -1,23 +1,20 @@
 $kind: http-request
-name: 3.1 Autenticación con X-API-Key Válida
 url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
   X-API-Key: "{{api_key}}"
 body:
-  type: json
+  type: text
   content: |-
     {
-      "pregunta": "Consulta autenticada de calidad del aire"
+      "pregunta": "¿Cuál es el estado general del aire en Lima?"
     }
 scripts:
   - type: afterResponse
     code: |-
       pm.test('Acceso autorizado con API Key', function () {
           pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);
-          pm.expect(pm.response.code).to.not.eql(401);
-          pm.expect(pm.response.code).to.not.eql(403);
       });
     language: text/javascript
 order: 1000

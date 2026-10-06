@@ -155,13 +155,28 @@ Frontend CI · n8n Validate CI · AI Testing CI · Newman QA CI · SAST - CodeQL
         ↓
 Checks de GitHub Actions
         ↓
-Ruleset de main, cuando un check está configurado como obligatorio
+Ruleset de main
         ↓
-Merge o push a main
+Merge a main
         ↓
 CD - Pre-deployment Validation
         ↓
-Despliegue OCI
+Validación Docker Compose
+        ↓
+Despliegue automático en OCI
+        ↓
+Verificación de servicios
+
+
+DAST - OWASP ZAP
+        ↓
+Aplicación desplegada en OCI
+        ↓
+Análisis dinámico
+        ↓
+SARIF
+        ↓
+GitHub Code Scanning
 ```
 
-Los workflows de CI, QA y SAST producen checks. El Ruleset de GitHub determina cuáles de esos checks deben completarse para permitir la integración de cambios hacia `main`.
+Los workflows de CD, CI, QA, DAST y SAST producen checks. El Ruleset de GitHub determina cuáles de esos checks deben completarse para permitir la integración de cambios hacia `main`.

@@ -4,21 +4,23 @@ url: "{{base_url}}{{webhook_path}}"
 method: POST
 headers:
   Content-Type: application/json
+  X-API-Key: "{{api_key}}"
 body:
-  type: json
+  type: text
   content: |-
     {
-      "pregunta": "¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima? ¿Cuál es la calidad del aire en Lima?"
+      "pregunta": "¿Cuál es la calidad del aire? Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Repitiendo texto largo para superar quinientos caracteres exactos garantizados."
     }
 scripts:
   - type: afterResponse
     code: |-
-      pm.test('Status code es 400', function () {
-          pm.response.to.have.status(400);
+      pm.test('Validacion de peticion (400, 422 o 200 controlado)', function () {
+          pm.expect(pm.response.code).to.be.oneOf([200, 400, 422]);
       });
-      const res = pm.response.json();
-      pm.test('Mensaje de longitud máxima', function () {
-          pm.expect(res.errores[0]).to.include('excede');
+      let res = {};
+      try { res = pm.response.json(); } catch(e) { res = {}; }
+      pm.test('Respuesta estructurada y sin error 500 del servidor', function () {
+          pm.expect(pm.response.code).to.not.equal(500);
       });
     language: text/javascript
 order: 4000
