@@ -31,13 +31,15 @@ jobs:
         with:
           filters: |
             frontend:
-              - 'src/frontend/**'
+              - 'src/frontend-shell/**'
+              - 'src/microfrontends/**'
               - '.github/workflows/frontend-ci.yml'
             # Any file outside the three isolated components is treated as a
             # shared change. This is conservative for infrastructure, database,
             # root configuration and CI changes.
             global:
-              - '!src/frontend/**'
+              - '!src/frontend-shell/**'
+              - '!src/microfrontends/**'
               - '!src/n8n-workflows/**'
               - '!src/ia-ops/**'
           predicate-quantifier: every
@@ -58,21 +60,40 @@ jobs:
       - name: Check frontend structure
         if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.global == 'true' }}
         run: |
-          echo "Checking frontend directory..."
+          echo "Checking frontend-shell and microfrontends directories..."
 
-          if [ ! -d "src/frontend" ]; then
-            echo "Frontend directory not found."
+          if [ ! -d "src/frontend-shell" ]; then
+            echo "Frontend shell directory not found."
             exit 1
           fi
 
-          echo "Frontend directory exists."
+          if [ ! -d "src/microfrontends" ]; then
+            echo "Microfrontends directory not found."
+            exit 1
+          fi
+
+          echo "Frontend directories exist."
 
       - name: Check package.json
         if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.global == 'true' }}
         run: |
-          if [ -f "src/frontend/package.json" ]; then
-            echo "package.json found."
-          else
-            echo "package.json not found."
-            echo "Frontend implementation is not available yet."
+          missing=0
+
+          if [ ! -f "src/frontend-shell/package.json" ]; then
+            echo "package.json not found in src/frontend-shell."
+            missing=1
           fi
+
+          for dir in src/microfrontends/*/; do
+            if [ ! -f "${dir}package.json" ]; then
+              echo "package.json not found in ${dir}."
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -eq 1 ]; then
+            echo "One or more frontend packages are missing package.json."
+            exit 1
+          fi
+
+          echo "All frontend packages have package.json."
