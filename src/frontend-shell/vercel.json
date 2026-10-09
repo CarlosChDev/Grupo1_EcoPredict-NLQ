@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    { "source": "/nlq-chat", "destination": "https://ecopredict-nlq-chat.vercel.app/nlq-chat" },
+    { "source": "/nlq-chat/:path*", "destination": "https://ecopredict-nlq-chat.vercel.app/nlq-chat/:path*" },
+
+    { "source": "/dashboard-ambiental", "destination": "https://ecopredict-dashboard-ambiental.vercel.app/dashboard-ambiental" },
+    { "source": "/dashboard-ambiental/:path*", "destination": "https://ecopredict-dashboard-ambiental.vercel.app/dashboard-ambiental/:path*" },
+
+    { "source": "/estado-sistema", "destination": "https://ecopredict-estado-sistema.vercel.app/estado-sistema" },
+    { "source": "/estado-sistema/:path*", "destination": "https://ecopredict-estado-sistema.vercel.app/estado-sistema/:path*" },
+
+    { "source": "/ajustes", "destination": "https://ecopredict-ajustes.vercel.app/ajustes" },
+    { "source": "/ajustes/:path*", "destination": "https://ecopredict-ajustes.vercel.app/ajustes/:path*" },
+
+    { "source": "/data-analytics", "destination": "https://ecopredict-data-analytics.vercel.app/data-analytics" },
+    { "source": "/data-analytics/:path*", "destination": "https://ecopredict-data-analytics.vercel.app/data-analytics/:path*" },
+
+    { "source": "/api-proxy/:path*", "destination": "http://144.22.203.51/:path*" }
+  ]
+}

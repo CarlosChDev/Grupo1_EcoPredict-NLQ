@@ -1,0 +1,173 @@
+.telegram-bubble {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 22px 7px 7px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-gradient);
+  box-shadow: var(--glow-teal), var(--shadow);
+  text-decoration: none;
+  white-space: nowrap;
+  animation: telegram-float 3.6s ease-in-out infinite;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.2s ease;
+}
+
+.telegram-bubble:hover,
+.telegram-bubble:focus-visible {
+  animation-play-state: paused;
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: var(--glow-teal), var(--shadow), 0 0 0 5px var(--accent-soft);
+  filter: brightness(1.05);
+}
+
+.telegram-bubble-avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--solid);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.telegram-bubble-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: telegram-ping 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+.telegram-bubble-head {
+  position: relative;
+  color: var(--accent);
+  animation: telegram-wiggle 4.4s ease-in-out infinite;
+  transform-origin: 50% 85%;
+}
+
+.telegram-bubble-led {
+  fill: var(--good);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: telegram-led-blink 1.6s ease-in-out infinite;
+}
+
+.telegram-bubble-eye {
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: telegram-eye-blink 4.5s ease-in-out infinite;
+}
+
+.telegram-bubble-mouth {
+  stroke: var(--accent);
+}
+
+.telegram-bubble-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--good);
+  border: 2px solid var(--solid);
+}
+
+.telegram-bubble-label {
+  color: #fff;
+  font-family: var(--font-d);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+@keyframes telegram-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes telegram-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-9deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  70% {
+    transform: rotate(9deg);
+  }
+}
+
+@keyframes telegram-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes telegram-led-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes telegram-eye-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.15);
+  }
+}
+
+@media (max-width: 480px) {
+  .telegram-bubble {
+    right: 14px;
+    bottom: 14px;
+    gap: 8px;
+    padding: 6px 16px 6px 6px;
+  }
+
+  .telegram-bubble-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .telegram-bubble-head {
+    width: 25px;
+    height: 25px;
+  }
+
+  .telegram-bubble-label {
+    font-size: 12px;
+  }
+}

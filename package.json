@@ -1,0 +1,17 @@
+{
+  "name": "ecopredict-nlq",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "src/frontend-shell",
+    "src/microfrontends/*"
+  ],
+  "scripts": {
+    "dev:all": "concurrently -n shell,nlq-chat,dashboard,estado,ajustes,analytics -c blue,green,yellow,magenta,cyan,white \"npm run dev -w src/frontend-shell\" \"npm run dev -w src/microfrontends/nlq-chat\" \"npm run dev -w src/microfrontends/dashboard-ambiental\" \"npm run dev -w src/microfrontends/estado-sistema\" \"npm run dev -w src/microfrontends/ajustes\" \"npm run dev -w src/microfrontends/data-analytics\"",
+    "build:all": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

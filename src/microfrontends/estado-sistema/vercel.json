@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/estado-sistema", "destination": "/index.html" },
+    { "source": "/estado-sistema/:path*", "destination": "/:path*" }
+  ]
+}

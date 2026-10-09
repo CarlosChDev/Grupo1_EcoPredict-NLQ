@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/nlq-chat", "destination": "/index.html" },
+    { "source": "/nlq-chat/:path*", "destination": "/:path*" }
+  ]
+}

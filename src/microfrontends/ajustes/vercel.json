@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/ajustes", "destination": "/index.html" },
+    { "source": "/ajustes/:path*", "destination": "/:path*" }
+  ]
+}
