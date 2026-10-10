@@ -150,9 +150,32 @@ newman run src/ia-ops/tests/postman/eco_predict_nlq_collection.json \
 | `--timeout 10000` | Timeout global en milisegundos |
 | `--timeout-request 5000` | Timeout por request |
 | `--delay-request 500` | Delay entre requests (ms) |
-| `--iteration-count 3` | Número de iteraciones de la colección |
+| `--iteration-count 1000` / `-n 1000` | Número de iteraciones de la colección (Pruebas de carga) |
 | `--bail` | Detener al primer fallo |
 | `--verbose` | Output detallado |
+
+### 5.6 Proyección de Carga y Pruebas de Estrés (1,000 Solicitudes y Rate Limiting)
+
+Para dar respuesta a los requerimientos de auditoría de infraestructura y proyección de carga ciudadana, se dispone de la colección especializada [`EcoPredict_StressTest_1000_Requests_Collection.json`](./EcoPredict_StressTest_1000_Requests_Collection.json) y el script automatizado [`run_stress_test_1000.ps1`](./run_stress_test_1000.ps1):
+
+#### Escenario A: Auditoría de Rate Limiting y Protección DoS (Misma IP)
+Verifica que las primeras peticiones se atiendan con `200 OK` y las excedentes sean bloqueadas con `429 Too Many Requests`:
+```bash
+# Ejecución vía script de PowerShell
+powershell -ExecutionPolicy Bypass -File src/ia-ops/tests/postman/run_stress_test_1000.ps1 -Iterations 1000 -Scenario A -Env oracle
+
+# O directamente con Newman CLI:
+newman run src/ia-ops/tests/postman/EcoPredict_StressTest_1000_Requests_Collection.json \
+  -e src/ia-ops/tests/postman/eco_predict_oracle_cloud.postman_environment.json \
+  --folder "1. Escenario A - Misma IP (Auditoría de Rate Limiting y Protección DoS)" \
+  -n 1000
+```
+
+#### Escenario B: Concurrencia Ciudadana Distribuida (Múltiples IPs)
+Simula 1,000 ciudadanos distintos en Lima rotando dinámicamente la cabecera `X-Forwarded-For` para demostrar aislamiento de cuotas (`100% 200 OK` dentro del SLA):
+```bash
+powershell -ExecutionPolicy Bypass -File src/ia-ops/tests/postman/run_stress_test_1000.ps1 -Iterations 1000 -Scenario B -Env oracle -HtmlReport
+```
 
 ---
 
