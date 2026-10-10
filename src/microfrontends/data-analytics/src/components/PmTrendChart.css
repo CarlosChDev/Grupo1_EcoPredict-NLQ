@@ -1,0 +1,24 @@
+.pm-trend-chart-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pm-trend-chart-card .card-label {
+  justify-content: space-between;
+}
+
+.pm-trend-nota {
+  margin-left: auto;
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: normal;
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.pm-trend-chart {
+  position: relative;
+  height: 260px;
+  margin-top: 8px;
+}
