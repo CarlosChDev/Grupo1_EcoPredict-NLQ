@@ -15,7 +15,7 @@ Guía oficial de ejecución de pruebas automatizadas, calidad de prompts, detecc
   * ✅ **T24 (#184):** Métricas de Calidad de IA (Alucinación, Fallback Groq→Gemini, Latencia) y Evaluador LLM-as-a-Judge (HT-10).
   * ✅ **T25 (#185):** Verificación y Auditoría contra Dashboard de Langfuse (HT-08 / HT-10).
   * ✅ **T18 (#178):** Pruebas de Notificación Ciudadana y Suscripciones en Telegram (HU-19).
-  * 🔄 **T19 (#179):** Validación del Cooldown Anti-Spam (24h) en Telegram (HU-19).
+  * ✅ **T19 (#179):** Validación del Cooldown Anti-Spam (24h) en Telegram (HU-19).
   * 🔄 **T20 (#180):** Certificación de Contratos y SLA de OCI Functions Serverless (HT-07).
   * 🔄 **T21 (#181):** Pruebas de Integración del Microfrontend de Analítica (HU-23).
   * 🔄 **T22 (#182):** Consolidación de Quality Gates en CI/CD y Auditoría Dependabot.
@@ -52,6 +52,7 @@ src/ia-ops/
     ├── test_llm_judge_metrics.py         # 11 tests del motor LLM-as-a-Judge y SLA de producción (T24)
     ├── test_langfuse_observability.py    # 12 tests de integración y telemetría de Langfuse (T25)
     ├── test_telegram_subscription.py     # 14 tests de comandos, filtrado y notificaciones de Telegram (T18)
+    ├── test_telegram_cooldown.py         # 8 tests de cooldown anti-spam 24h por estacion+suscriptor (T19)
     └── postman/
         ├── EcoPredict_Sprint1_Collection.json          # Colección de 18 requests y 34 aserciones
         ├── EcoPredict_StressTest_1000_Requests_Collection.json # Suite de estrés (1,000 requests)
@@ -67,7 +68,7 @@ src/ia-ops/
 
 ### 1. Suite Completa de Pruebas Unitarias e Integración (Pytest)
 ```bash
-# Ejecutar los 227 tests automatizados del repositorio
+# Ejecutar los 235 tests automatizados del repositorio
 pytest src/ia-ops/tests/ -v
 ```
 
