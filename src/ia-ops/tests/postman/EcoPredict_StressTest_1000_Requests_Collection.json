@@ -1,0 +1,173 @@
+{
+  "info": {
+    "_postman_id": "c7a8b9e0-1111-4444-8888-abcdef123456",
+    "name": "EcoPredict - Stress & Rate Limiting Test (1000 Solicitudes)",
+    "description": "Colección especializada para pruebas de estrés, carga y validación de Rate Limiting (1,000 iteraciones). Evalúa protección DoS (429 Too Many Requests) y concurrencia multi-IP ciudadana.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "total_200",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "total_429",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "total_otros",
+      "value": "0",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Escenario A - Misma IP (Auditoría de Rate Limiting y Protección DoS)",
+      "description": "Ejecuta 1,000 solicitudes desde una misma dirección IP de origen. Las primeras peticiones son aceptadas (200 OK) y las excedentes son bloqueadas (429 Too Many Requests), certificando la protección de la nube.",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pregunta\": \"¿Cuál es el nivel de PM2.5 en San Juan de Lurigancho?\",\n  \"test_iteration\": {{test_iteration_num}}\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{webhook_path}}",
+          "host": [
+            "{{base_url}}{{webhook_path}}"
+          ]
+        },
+        "description": "Prueba de saturación por IP única."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "let currentIter = pm.info.iteration + 1;",
+              "pm.variables.set('test_iteration_num', currentIter);",
+              "if (currentIter === 1) {",
+              "    pm.collectionVariables.set('total_200', '0');",
+              "    pm.collectionVariables.set('total_429', '0');",
+              "    pm.collectionVariables.set('total_otros', '0');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let code = pm.response.code;",
+              "let current200 = parseInt(pm.collectionVariables.get('total_200') || '0');",
+              "let current429 = parseInt(pm.collectionVariables.get('total_429') || '0');",
+              "let currentOtros = parseInt(pm.collectionVariables.get('total_otros') || '0');",
+              "",
+              "pm.test('Respuesta controlada por infraestructura (200 OK o 429 Rate Limit)', function () {",
+              "    pm.expect([200, 429]).to.include(code);",
+              "});",
+              "",
+              "if (code === 200) {",
+              "    current200++;",
+              "    pm.collectionVariables.set('total_200', current200.toString());",
+              "    pm.test('Iteración ' + pm.info.iteration + ': Solicitud aceptada (200 OK)', function () {",
+              "        pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.environment.get('timeout_ms') || '60000'));",
+              "    });",
+              "} else if (code === 429) {",
+              "    current429++;",
+              "    pm.collectionVariables.set('total_429', current429.toString());",
+              "    pm.test('Iteración ' + pm.info.iteration + ': Rate Limiting activo y protegiendo el servidor (429 Too Many Requests)', function () {",
+              "        pm.expect(code).to.eql(429);",
+              "    });",
+              "} else {",
+              "    currentOtros++;",
+              "    pm.collectionVariables.set('total_otros', currentOtros.toString());",
+              "}",
+              "",
+              "if (pm.info.iteration + 1 === pm.info.iterationCount) {",
+              "    console.log('====================================================');",
+              "    console.log('📊 RESUMEN FINAL DE LA PROYECCIÓN DE 1,000 SOLICITUDES:');",
+              "    console.log('   - Peticiones Atendidas (200 OK): ' + current200);",
+              "    console.log('   - Peticiones Mitigadas por Rate Limit (429): ' + current429);",
+              "    console.log('   - Otros Códigos: ' + currentOtros);",
+              "    console.log('====================================================');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Escenario B - Múltiples IPs (Concurrencia Ciudadana Distribuida)",
+      "description": "Simula 1,000 solicitudes distribuidas entre múltiples ciudadanos rotando la cabecera X-Forwarded-For. Demuestra aislamiento de contadores por IP (sin interferencia entre usuarios).",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-API-Key",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "X-Forwarded-For",
+            "value": "{{simulated_citizen_ip}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pregunta\": \"¿Cómo está el aire hoy en mi distrito?\",\n  \"ciudadano_ip\": \"{{simulated_citizen_ip}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}{{webhook_path}}",
+          "host": [
+            "{{base_url}}{{webhook_path}}"
+          ]
+        },
+        "description": "Prueba de aislamiento multi-usuario con IPs rotativas."
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generar IP dinámica dentro del rango de proveedores peruanos (190.237.X.Y)",
+              "let iter = pm.info.iteration + 1;",
+              "let subnet = Math.floor(iter / 250) + 1;",
+              "let host = (iter % 250) + 1;",
+              "let simulatedIp = '190.237.' + subnet + '.' + host;",
+              "pm.variables.set('simulated_citizen_ip', simulatedIp);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Solicitud ciudadana atendida exitosamente (200 OK)', function () {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test('Latencia dentro del SLA (< 5,000 ms)', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

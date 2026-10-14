@@ -1,0 +1,70 @@
+{
+  "$schema": "https://langfuse.com/schema/config.json",
+  "project": {
+    "name": "EcoPredict-NLQ-Observability",
+    "description": "Configuración de observabilidad, telemetría y auditoría de IA con Langfuse para EcoPredict & NLQ.",
+    "version": "1.0.0",
+    "environment": "production"
+  },
+  "connection": {
+    "host": "http://localhost:3000",
+    "cloud_fallback": "https://cloud.langfuse.com",
+    "public_key_env": "LANGFUSE_PUBLIC_KEY",
+    "secret_key_env": "LANGFUSE_SECRET_KEY",
+    "timeout_seconds": 10,
+    "max_retries": 3,
+    "batch_size": 20
+  },
+  "pricing_catalog": {
+    "groq-llama-3.3-70b": {
+      "display_name": "Groq LLaMA 3.3 70B Versatile (Principal)",
+      "provider": "groq",
+      "cost_per_million_input_tokens_usd": 0.59,
+      "cost_per_million_output_tokens_usd": 0.79,
+      "sla_latency_threshold_ms": 2000
+    },
+    "gemini-1.5-flash": {
+      "display_name": "Google Gemini 1.5 Flash (Fallback Respaldo)",
+      "provider": "google",
+      "cost_per_million_input_tokens_usd": 0.075,
+      "cost_per_million_output_tokens_usd": 0.30,
+      "sla_latency_threshold_ms": 5000
+    }
+  },
+  "metrics_and_scores": {
+    "groundedness": {
+      "data_type": "NUMERIC",
+      "scale": "0.0_to_1.0",
+      "min_acceptable": 0.90,
+      "description": "Fidelidad factual respecto al contexto ambiental recuperado de la base de datos."
+    },
+    "hallucination_detected": {
+      "data_type": "BOOLEAN",
+      "alert_on_true": true,
+      "description": "Indica si el evaluador LLM-as-a-Judge detectó falsificación numérica o geográfica."
+    },
+    "latency_sla_breach": {
+      "data_type": "BOOLEAN",
+      "threshold_ms": 5000,
+      "description": "Alerta cuando el tiempo de respuesta extremo a extremo supera el SLA contractual de 5s."
+    },
+    "user_relevance": {
+      "data_type": "NUMERIC",
+      "scale": "1.0_to_5.0",
+      "min_acceptable": 4.0,
+      "description": "Pertinencia semántica de la respuesta generada a la consulta ambiental ciudadana."
+    },
+    "tone_quality": {
+      "data_type": "NUMERIC",
+      "scale": "1.0_to_5.0",
+      "min_acceptable": 4.0,
+      "description": "Claridad y empatía ciudadana en la comunicación de riesgos para la salud."
+    }
+  },
+  "tagging_rules": {
+    "default_tags": ["ecopredict", "nlq", "sprint-3", "flujo-b"],
+    "fallback_tag": "fallback-failover",
+    "alert_tag": "alerta-ambiental",
+    "qa_audit_tag": "qa-audited"
+  }
+}
