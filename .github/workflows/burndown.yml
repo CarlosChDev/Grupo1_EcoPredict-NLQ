@@ -28,7 +28,7 @@ jobs:
           PROJECT_TOKEN: ${{ secrets.PROJECT_PAT }}
           USER_NAME: ${{ github.repository_owner }}
           PROJECT_NUMBER: 4              # El número de tu proyecto v2
-          TARGET_ITERATION: 'sprint 0' # Nombre exacto de tu Iteración
+          TARGET_ITERATION: 'sprint 3' # Nombre exacto de tu Iteración
         run: |
           python - << 'EOF'
           import os, json, requests
