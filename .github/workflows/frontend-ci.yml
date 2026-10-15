@@ -1,99 +1,62 @@
 name: Frontend CI
 
 on:
-  # Do not filter pull_request here. A required workflow must always create a
-  # status check; filtering is performed by the changes job below.
-  pull_request:
   push:
-    branches:
-      - main
-      - Chavez
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
-  pull-requests: read
+
+concurrency:
+  group: frontend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Detect relevant changes
-    runs-on: ubuntu-latest
-    outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
-      global: ${{ steps.filter.outputs.global }}
-    steps:
-      # This is also needed for push events, where paths-filter uses git.
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Detect changed files
-        id: filter
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            frontend:
-              - 'src/frontend-shell/**'
-              - 'src/microfrontends/**'
-              - '.github/workflows/frontend-ci.yml'
-            # Any file outside the three isolated components is treated as a
-            # shared change. This is conservative for infrastructure, database,
-            # root configuration and CI changes.
-            global:
-              - '!src/frontend-shell/**'
-              - '!src/microfrontends/**'
-              - '!src/n8n-workflows/**'
-              - '!src/ia-ops/**'
-          predicate-quantifier: every
-
   frontend-ci:
     name: Frontend Validation
-    needs: changes
     runs-on: ubuntu-latest
-    steps:
-      - name: Explain skipped validation
-        if: ${{ needs.changes.outputs.frontend != 'true' && needs.changes.outputs.global != 'true' }}
-        run: echo "No frontend or shared files changed; frontend validation is not required."
+    timeout-minutes: 15
 
+    steps:
       - name: Checkout repository
-        if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.global == 'true' }}
         uses: actions/checkout@v4
 
-      - name: Check frontend structure
-        if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.global == 'true' }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Validate monorepo structure
+        shell: bash
         run: |
-          echo "Checking frontend-shell and microfrontends directories..."
+          set -Eeuo pipefail
 
-          if [ ! -d "src/frontend-shell" ]; then
-            echo "Frontend shell directory not found."
-            exit 1
-          fi
+          required_paths=(
+            "package.json"
+            "package-lock.json"
+            "packages/ui-shell/package.json"
+            "src/frontend-shell/package.json"
+            "src/microfrontends/ajustes/package.json"
+            "src/microfrontends/dashboard-ambiental/package.json"
+            "src/microfrontends/data-analytics/package.json"
+            "src/microfrontends/estado-sistema/package.json"
+            "src/microfrontends/nlq-chat/package.json"
+          )
 
-          if [ ! -d "src/microfrontends" ]; then
-            echo "Microfrontends directory not found."
-            exit 1
-          fi
-
-          echo "Frontend directories exist."
-
-      - name: Check package.json
-        if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.global == 'true' }}
-        run: |
-          missing=0
-
-          if [ ! -f "src/frontend-shell/package.json" ]; then
-            echo "package.json not found in src/frontend-shell."
-            missing=1
-          fi
-
-          for dir in src/microfrontends/*/; do
-            if [ ! -f "${dir}package.json" ]; then
-              echo "package.json not found in ${dir}."
-              missing=1
+          for path in "${required_paths[@]}"; do
+            if [[ ! -f "$path" ]]; then
+              echo "::error::Required file not found: $path"
+              exit 1
             fi
           done
 
-          if [ "$missing" -eq 1 ]; then
-            echo "One or more frontend packages are missing package.json."
-            exit 1
-          fi
+          echo "Monorepo structure validated."
 
-          echo "All frontend packages have package.json."
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all frontend workspaces
+        run: npm run build:all
