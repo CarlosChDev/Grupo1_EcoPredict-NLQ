@@ -18,7 +18,7 @@ Guía oficial de ejecución de pruebas automatizadas, calidad de prompts, detecc
   * ✅ **T19 (#179):** Validación del Cooldown Anti-Spam (24h) en Telegram (HU-19).
   * ✅ **T20 (#180):** Certificación de Contratos y SLA de OCI Functions Serverless (HT-07).
   * ✅ **T21 (#181):** Pruebas de Integración del Microfrontend de Analítica (HU-23).
-  * 🔄 **T22 (#182):** Consolidación de Quality Gates en CI/CD y Auditoría Dependabot.
+  * ✅ **T22 (#182):** Consolidación de Quality Gates en CI/CD y Auditoría Dependabot.
 
 ---
 
@@ -55,6 +55,7 @@ src/ia-ops/
     ├── test_telegram_cooldown.py         # 8 tests de cooldown anti-spam 24h por estacion+suscriptor (T19)
     ├── test_oci_functions_contract.py    # 10 tests de contratos JSON Schema, SLA y seguridad en OCI Functions (T20)
     ├── test_microfrontend_analytics.py   # 11 tests de integracion, categorias ECA y tendencias (T21)
+    ├── test_quality_gates_cicd.py        # 8 tests de pipelines CI/CD, Dependabot y Least Privilege (T22)
     └── postman/
         ├── EcoPredict_Sprint1_Collection.json          # Colección de 18 requests y 34 aserciones
         ├── EcoPredict_StressTest_1000_Requests_Collection.json # Suite de estrés (1,000 requests)
@@ -70,7 +71,7 @@ src/ia-ops/
 
 ### 1. Suite Completa de Pruebas Unitarias e Integración (Pytest)
 ```bash
-# Ejecutar los 256 tests automatizados del repositorio
+# Ejecutar los 264 tests automatizados del repositorio
 pytest src/ia-ops/tests/ -v
 ```
 
