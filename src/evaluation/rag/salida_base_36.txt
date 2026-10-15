@@ -1,0 +1,254 @@
+Zonas cargadas: 13
+  id  162 | distrito derivado: ate                          | ref: zona=Ate | 'Zona Ate, Lima. Estaciones: ATE, CERES (CRS), PARI'
+  id  163 | distrito derivado: carabayllo                   | ref: zona=Carabayllo | 'Zona Carabayllo, Lima. Estaciones: CARABAYLLO.'
+  id  164 | distrito derivado: lurigancho chosica           | ref: zona=Lurigancho-Chosica | 'Zona Lurigancho-Chosica, Lima. Estaciones: CAJAMAR'
+  id  165 | distrito derivado: puente piedra                | ref: zona=Puente Piedra | 'Zona Puente Piedra, Lima. Estaciones: PUENTE PIEDR'
+  id  166 | distrito derivado: villa maria del triunfo      | ref: zona=Villa María del Triunfo | 'Zona Villa María del Triunfo, Lima. Estaciones: VI'
+  id  167 | distrito derivado: san martin de porres         | ref: zona=San Martín de Porres | 'Zona San Martín de Porres, Lima. Estaciones: SAN M'
+  id  168 | distrito derivado: santa anita                  | ref: zona=Santa Anita | 'Zona Santa Anita, Lima. Estaciones: SANTA ANITA.'
+  id  169 | distrito derivado: san borja                    | ref: zona=San Borja | 'Zona San Borja, Lima. Estaciones: SAN BORJA.'
+  id  170 | distrito derivado: san juan de lurigancho       | ref: zona=San Juan de Lurigancho | 'Zona San Juan de Lurigancho, Lima. Estaciones: SAN'
+  id  171 | distrito derivado: jesus maria                  | ref: zona=Jesús María | 'Zona Jesús María, Lima. Estaciones: CAMPO DE MARTE'
+  id  172 | distrito derivado: surco                        | ref: zona=Surco | 'Zona Surco, Lima. Estaciones: US DIPLOMATIC POST: '
+  id  173 | distrito derivado: la molina                    | ref: zona=La Molina | 'Zona La Molina, Lima. Estaciones: PERU, LIMA, LA M'
+  id  174 | distrito derivado: pachacamac                   | ref: zona=Pachacámac | 'Zona Pachacámac, Lima. Estaciones: QUEBRADA VERDE,'
+
+Vectorizando 36 preguntas (usa caché si ya existe)...
+
+Archivo: preguntas_eval.csv
+Preguntas: 36 (9 con zona, 27 'ninguna')
+
+método             zona correcta  zona equivocada  falsos aceptados
+lista_fija                 8/9              0/9               0/27 
+lista_estaciones           8/9              0/9               0/27 
+lista_alias                8/9              0/9               0/27 
+rag_top1                   8/9              1/9              27/27 
+rag_piso                   8/9              0/9              13/27 
+
+--- Preguntas donde algún método falla ---
+
+#2 esperado='ninguna'  sim1=0.629
+   Mano, ¿por la Av. Universitaria la contaminación está insoportable o se puede caminar norm
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> jesus maria
+   ok  rag_piso          -> ninguna
+
+#4 esperado='ninguna'  sim1=0.659
+   Oe, ¿el aire por mi zona está feo como para usar mascarilla o estoy exagerando?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#5 esperado='ninguna'  sim1=0.680
+   ¿Dónde está más contaminado ahorita, por Lima Norte o por el Centro?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#6 esperado='ninguna'  sim1=0.622
+   Oye bot, ¿se puede respirar bien por Los Olivos o está pura polvareda?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#7 esperado='ninguna'  sim1=0.634
+   Habla, ¿hay alguna alerta de esmog por acá cerca o todo piola?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#9 esperado='ninguna'  sim1=0.660
+   Hola, ¿cómo está la calidad del aire por la zona financiera de San Isidro hoy?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#10 esperado='ninguna'  sim1=0.625
+   Oye, voy a ir a trabajar a un café en Miraflores, ¿el ambiente por allá está muy cargado?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> surco
+   ok  rag_piso          -> ninguna
+
+#11 esperado='ninguna'  sim1=0.628
+   Buenas, ¿por Javier Prado el tráfico ha hecho que el aire se ponga muy pesado hoy?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> surco
+   ok  rag_piso          -> ninguna
+
+#13 esperado='ninguna'  sim1=0.675
+   Oye, ¿por la Av. Aramburú la contaminación está más alta de lo normal ahorita?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#15 esperado='ninguna'  sim1=0.645
+   Oe, ¿cómo viene el reporte del aire por la zona de Corpac para esta tarde?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#16 esperado='ninguna'  sim1=0.604
+   Hola, ¿el aire por el Golf de San Isidro está piola o está lleno de esmog?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#17 esperado='ninguna'  sim1=0.638
+   Habla causa, ¿por la Av. Abancay y el Centro el aire está muy cochinazo hoy o pasa nada?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#18 esperado='ninguna'  sim1=0.643
+   Buenas, ¿por la Av. Argentina y el Callao la contaminación está brava ahorita?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#19 esperado='ninguna'  sim1=0.631
+   Oye, ¿por la Vía Expresa hay mucho humo feo acumulado a esta hora?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> pachacamac
+   ok  rag_piso          -> ninguna
+
+#20 esperado='ninguna'  sim1=0.625
+   Habla, ¿por el puente Nuevo en El Agustino el aire está muy pesado para andar con la venta
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> puente piedra
+   ok  rag_piso          -> ninguna
+
+#21 esperado='ninguna'  sim1=0.645
+   Buenas tardes, ¿cómo está la cosa por Grau y Grau con Parinacochas, muy sucio el aire?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#22 esperado='ninguna'  sim1=0.657
+   Oye bot, ¿por la Panamericana Norte el aire está respirable o puro esmog de camión?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> pachacamac
+   MAL rag_piso          -> pachacamac
+
+#23 esperado='ninguna'  sim1=0.640
+   Habla, ¿el centro de Lima está en alerta ambiental hoy día o todo tranquilo?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#24 esperado='ninguna'  sim1=0.656
+   Oe, ¿por la zona de Faucett cerca al aeropuerto el aire se siente muy cargado?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> la molina
+   MAL rag_piso          -> la molina
+
+#28 esperado='ninguna'  sim1=0.654
+   Hola bot, ¿la calidad del aire por mi barrio va a empeorar más tarde o se mantiene bien?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#30 esperado='ninguna'  sim1=0.638
+   Oye, ¿el nivel de contaminación hoy en mi distrito puede afectar a personas con asma?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#32 esperado='ninguna'  sim1=0.641
+   Buenas, ¿hay alguna recomendación de salud por el aire feo hoy en Lima Este?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> la molina
+   MAL rag_piso          -> la molina
+
+#33 esperado='ninguna'  sim1=0.655
+   Hola, quiero salir a correr por el malecón de Miraflores, ¿cómo está el aire ahorita por a
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#34 esperado='san borja'  sim1=0.629
+   Oe, ¿la calidad del aire por el Pentagonito está fresca para hacer piques en la noche?
+   MAL lista_fija        -> ninguna
+   MAL lista_estaciones  -> ninguna
+   MAL lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> ninguna
+
+#35 esperado='ninguna'  sim1=0.637
+   Mano, ¿por la Costa Verde el aire está limpio para entrenar o hay mucho esmog acumulado?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> pachacamac
+   ok  rag_piso          -> ninguna
+
+#36 esperado='ninguna'  sim1=0.664
+   Oye bot, ¿a qué hora va a estar más limpio el aire hoy por San Isidro para salir a trotar?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#37 esperado='ninguna'  sim1=0.630
+   Buenas, ¿el nivel de contaminación en Lima hoy afecta el rendimiento para entrenar al aire
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#39 esperado='ninguna'  sim1=0.612
+   Habla, ¿por la Av. Arequipa se puede montar bici tranquilo o el aire está muy cochino?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> la molina
+   ok  rag_piso          -> ninguna
+
+Detalle guardado en /home/ubuntu/Grupo1_EcoPredict-NLQ/src/evaluation/hu02/preguntas_eval_resultados.csv

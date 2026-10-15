@@ -1,0 +1,12 @@
+id,tipo,esperado,sim1,id1,filtro_param,palabras_clave,rag_top1,rag_piso,hibrido,pregunta
+601,nombrado,177,0.734,177,177,177,177,177,177,en ate el pm25 ya supero el limite permitido por la ley?
+602,nombrado,177,0.795,177,177,177,177,177,177,hola una consulta que dice el eca del minam sobre el limite de pm25 en lima?
+603,general,176,0.686,176,ninguna,176,176,176,176,cuando se considera que la contaminacion del aire en lima es emergencia ambiental por ley?
+604,sin_respuesta,ninguna,0.651,179,ninguna,176,179,179,179,que norma regula la contaminacion que botan las combis y buses en lima?
+605,sin_respuesta,ninguna,0.671,176,ninguna,176,176,176,176,si una fabrica bota humo feo por mi casa en ate a que autoridad se le denuncia segun la ley?
+606,sin_respuesta,ninguna,0.689,177,ninguna,176,177,177,177,el limite legal de contaminacion en peru es igual al de la organizacion mundial de la salud o cambia?
+607,sin_respuesta,ninguna,0.662,175,ninguna,175,175,175,175,las municipalidades de lima estan obligadas por ley a medir la calidad del aire en sus distritos?
+608,sin_respuesta,ninguna,0.690,178,178,178,178,178,178,si el pm10 supera el limite permitido hay alguna multa para los carros o industrias?
+609,general,176,0.720,176,ninguna,176,176,176,176,que dice la ley peruana si el aire entra en nivel de alerta roja o peligroso?
+610,sin_respuesta,ninguna,0.645,177,ninguna,ninguna,177,ninguna,ninguna,quien fiscaliza que las fabricas en lima no superen los limites de emisiones del aire?
+611,sin_respuesta,ninguna,0.668,177,ninguna,176,177,177,177,hay alguna norma que prohiba hacer educacion fisica en los colegios de lima si el aire esta muy contaminado?

@@ -1,0 +1,249 @@
+Filas de normativa cargadas: 8 (ids ['175', '176', '177', '178', '179', '180', '181', '182'])
+Vectorizando 24 preguntas (usa caché si ya existe)...
+
+Aciertos por tipo de pregunta (PISO = 0.65); en sin_respuesta, acertar = 'ninguna'
+
+tipo            n  filtro_param    palabras_clave  rag_top1        rag_piso        hibrido       
+nombrado        0  0/0             0/0             0/0             0/0             0/0           
+indirecto       0  0/0             0/0             0/0             0/0             0/0           
+general         4  0/4             3/4             4/4             4/4             4/4           
+sin_respuesta  20  20/20           7/20            0/20            16/20           16/20         
+TOTAL          24  20/24           10/24           4/24            20/24           20/24         
+
+--- Preguntas donde algún método falla ---
+
+#201 [general] esperado=176  top1 vectorial=176 (sim 0.717)
+   ¿Quién avisa cuando el aire de Lima se pone peligroso?
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> ninguna
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#202 [sin_respuesta] esperado=ninguna  top1 vectorial=181 (sim 0.620)
+   ¿Cuánto contaminante puede botar una combi antes de que la manden al depósito?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 181
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#203 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.674)
+   ¿Hay un límite legal para la contaminación de los buses del Metropolitano?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 177
+   MAL rag_piso        -> 177
+   MAL hibrido         -> 177
+
+#204 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.695)
+   ¿El gobierno de acá usa los mismos parámetros de aire limpio que la OMS o son más permisiv
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 177
+   MAL rag_piso        -> 177
+   MAL hibrido         -> 177
+
+#205 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.585)
+   ¿Existe alguna norma que prohíba hacer piques de autos o carreras en zonas residenciales p
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#206 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.610)
+   ¿Hay alguna ley que obligue a las empresas de delivery a usar solo motos eléctricas si el 
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#207 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.700)
+   ¿Quién es la autoridad encargada de sancionar a los que contaminan el aire en Lima?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 176
+   MAL rag_piso        -> 176
+   MAL hibrido         -> 176
+
+#208 [general] esperado=175  top1 vectorial=175 (sim 0.738)
+   ¿Qué significan las siglas ECA que a veces mencionan en las noticias de medio ambiente?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 175
+   ok  rag_top1        -> 175
+   ok  rag_piso        -> 175
+   ok  hibrido         -> 175
+
+#209 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.596)
+   ¿Existe alguna multa para las pollerías o chicharronerías que botan mucho humo por su chim
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#210 [sin_respuesta] esperado=ninguna  top1 vectorial=175 (sim 0.595)
+   ¿Qué pasa legalmente si una fábrica contamina más de lo debido en una zona urbana?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 175
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#211 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.620)
+   ¿Existe una norma que restrinja el tráfico de camiones pesados en días donde hay mucha con
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 177
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#212 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.632)
+   ¿Hay alguna ley que exija poner medidores de aire limpios obligatorios en la puerta de los
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#213 [general] esperado=176  top1 vectorial=176 (sim 0.735)
+   ¿Qué entidad oficial emite las alertas de contingencia ambiental en el Perú?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#214 [sin_respuesta] esperado=ninguna  top1 vectorial=175 (sim 0.644)
+   ¿Qué diferencia hay entre la medición de CO2 y el índice de calidad del aire en la ley per
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 175
+   MAL rag_top1        -> 175
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#215 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.649)
+   ¿Qué porcentaje de emisiones contaminantes se le permite pasar a un vehículo en la revisió
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 177
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#216 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.596)
+   ¿Hay leyes específicas que obliguen a las fábricas a reducir operaciones si se supera el í
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#217 [sin_respuesta] esperado=ninguna  top1 vectorial=175 (sim 0.594)
+   ¿Qué norma regula la contaminación producida por la quema de basura en las afueras de la c
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 175
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#218 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.604)
+   ¿Existe alguna norma que obligue a los edificios corporativos a filtrar el aire exterior s
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#219 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.635)
+   ¿Hay algún reglamento que compense monetariamente o con días libres a los trabajadores exp
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#220 [general] esperado=176  top1 vectorial=176 (sim 0.769)
+   ¿Quién o qué entidad es la que decreta una alerta ambiental acá en Perú?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#221 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.646)
+   ¿Cuál es el límite legal de humo que puede botar un carro o un micro sin que lo multen?
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 177
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#222 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.630)
+   Si el aire en mi distrito está súper feo, ¿hay alguna ley que obligue a las fábricas a par
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#223 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.702)
+   ¿Qué niveles de aire limpio exige la OMS comparado con lo que pide el gobierno de Perú?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   MAL rag_top1        -> 177
+   MAL rag_piso        -> 177
+   MAL hibrido         -> 177
+
+#224 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.632)
+   ¿Hay alguna norma que obligue a los colegios a suspender clases al aire libre si el esmog 
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+--- Similitud del top-1 en preguntas sin respuesta cargada ---
+   0.620  (fila 181)  ¿Cuánto contaminante puede botar una combi antes de que la manden al d
+   0.674  (fila 177)  ¿Hay un límite legal para la contaminación de los buses del Metropolit
+   0.695  (fila 177)  ¿El gobierno de acá usa los mismos parámetros de aire limpio que la OM
+   0.585  (fila 176)  ¿Existe alguna norma que prohíba hacer piques de autos o carreras en z
+   0.610  (fila 176)  ¿Hay alguna ley que obligue a las empresas de delivery a usar solo mot
+   0.700  (fila 176)  ¿Quién es la autoridad encargada de sancionar a los que contaminan el 
+   0.596  (fila 176)  ¿Existe alguna multa para las pollerías o chicharronerías que botan mu
+   0.595  (fila 175)  ¿Qué pasa legalmente si una fábrica contamina más de lo debido en una 
+   0.620  (fila 177)  ¿Existe una norma que restrinja el tráfico de camiones pesados en días
+   0.632  (fila 176)  ¿Hay alguna ley que exija poner medidores de aire limpios obligatorios
+   0.644  (fila 175)  ¿Qué diferencia hay entre la medición de CO2 y el índice de calidad de
+   0.649  (fila 177)  ¿Qué porcentaje de emisiones contaminantes se le permite pasar a un ve
+   0.596  (fila 176)  ¿Hay leyes específicas que obliguen a las fábricas a reducir operacion
+   0.594  (fila 175)  ¿Qué norma regula la contaminación producida por la quema de basura en
+   0.604  (fila 176)  ¿Existe alguna norma que obligue a los edificios corporativos a filtra
+   0.635  (fila 176)  ¿Hay algún reglamento que compense monetariamente o con días libres a 
+   0.646  (fila 177)  ¿Cuál es el límite legal de humo que puede botar un carro o un micro s
+   0.630  (fila 176)  Si el aire en mi distrito está súper feo, ¿hay alguna ley que obligue 
+   0.702  (fila 177)  ¿Qué niveles de aire limpio exige la OMS comparado con lo que pide el 
+   0.632  (fila 176)  ¿Hay alguna norma que obligue a los colegios a suspender clases al air
+
+--- Barrido de piso (vectorial) ---
+ corte  errores aceptados  aciertos rechazados
+  0.60                 15                    0
+  0.61                 13                    0
+  0.62                 12                    0
+  0.63                 11                    0
+  0.64                  7                    0
+  0.65                  4                    0
+  0.66                  4                    0
+  0.67                  4                    0
+  0.68                  3                    0
+  0.69                  3                    0
+  0.70                  2                    0
+  0.71                  0                    0
+  0.72                  0                    1
+  0.73                  0                    1
+  0.74                  0                    3
+  0.75                  0                    3
+  0.76                  0                    3
+
+Detalle guardado en /home/ubuntu/Grupo1_EcoPredict-NLQ/src/evaluation/hu02/preguntas_normativa_ia_resultados.csv

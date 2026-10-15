@@ -1,0 +1,110 @@
+Zonas cargadas: 13
+  id  162 | distrito derivado: ate                          | ref: zona=Ate | 'Zona Ate, Lima. Estaciones: ATE, CERES (CRS), PARI'
+  id  163 | distrito derivado: carabayllo                   | ref: zona=Carabayllo | 'Zona Carabayllo, Lima. Estaciones: CARABAYLLO.'
+  id  164 | distrito derivado: lurigancho chosica           | ref: zona=Lurigancho-Chosica | 'Zona Lurigancho-Chosica, Lima. Estaciones: CAJAMAR'
+  id  165 | distrito derivado: puente piedra                | ref: zona=Puente Piedra | 'Zona Puente Piedra, Lima. Estaciones: PUENTE PIEDR'
+  id  166 | distrito derivado: villa maria del triunfo      | ref: zona=Villa María del Triunfo | 'Zona Villa María del Triunfo, Lima. Estaciones: VI'
+  id  167 | distrito derivado: san martin de porres         | ref: zona=San Martín de Porres | 'Zona San Martín de Porres, Lima. Estaciones: SAN M'
+  id  168 | distrito derivado: santa anita                  | ref: zona=Santa Anita | 'Zona Santa Anita, Lima. Estaciones: SANTA ANITA.'
+  id  169 | distrito derivado: san borja                    | ref: zona=San Borja | 'Zona San Borja, Lima. Estaciones: SAN BORJA.'
+  id  170 | distrito derivado: san juan de lurigancho       | ref: zona=San Juan de Lurigancho | 'Zona San Juan de Lurigancho, Lima. Estaciones: SAN'
+  id  171 | distrito derivado: jesus maria                  | ref: zona=Jesús María | 'Zona Jesús María, Lima. Estaciones: CAMPO DE MARTE'
+  id  172 | distrito derivado: surco                        | ref: zona=Surco | 'Zona Surco, Lima. Estaciones: US DIPLOMATIC POST: '
+  id  173 | distrito derivado: la molina                    | ref: zona=La Molina | 'Zona La Molina, Lima. Estaciones: PERU, LIMA, LA M'
+  id  174 | distrito derivado: pachacamac                   | ref: zona=Pachacámac | 'Zona Pachacámac, Lima. Estaciones: QUEBRADA VERDE,'
+
+Vectorizando 19 preguntas (usa caché si ya existe)...
+
+Archivo: preguntas_lugares_p4.csv
+Preguntas: 19 (10 con zona, 9 'ninguna')
+
+método             zona correcta  zona equivocada  falsos aceptados
+lista_fija                10/10             0/10              0/9  
+lista_estaciones          10/10             0/10              0/9  
+lista_alias               10/10             0/10              0/9  
+rag_top1                  10/10             0/10              9/9  
+rag_piso                   9/10             0/10              6/9  
+
+--- Preguntas donde algún método falla ---
+
+#504 esperado='ate'  sim1=0.636
+   en ate el pm25 ya supero el limite permitido por la ley?
+   ok  lista_fija        -> ate
+   ok  lista_estaciones  -> ate
+   ok  lista_alias       -> ate
+   ok  rag_top1          -> ate
+   MAL rag_piso          -> ninguna
+
+#510 esperado='ninguna'  sim1=0.670
+   oye en comas hay sensor del senamhi para ver la contaminacion?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#511 esperado='ninguna'  sim1=0.644
+   oe el aire por la av arequipa cerca a miraflores esta jodido por el trafico ahorita?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> surco
+   MAL rag_piso          -> surco
+
+#512 esperado='ninguna'  sim1=0.637
+   por el centro de lima la contaminacion es peligrosa para gente con asma?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#513 esperado='ninguna'  sim1=0.656
+   si voy por el rimac esta muy cargado el aire hoy en la tarde?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#514 esperado='ninguna'  sim1=0.645
+   en lince el aire esta mas limpio que en el callao o estan igual de mal?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#515 esperado='ninguna'  sim1=0.677
+   como esta la calidad del aire por chorrillos tirando para los pantanos de villa?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#516 esperado='ninguna'  sim1=0.656
+   oye por san miguel cerca a la marina hay mucha contaminacion de pm25 hoy?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   MAL rag_piso          -> san juan de lurigancho
+
+#517 esperado='ninguna'  sim1=0.583
+   por victoria el humo de los carros ya llega a niveles que hacen daño a los pulmones?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+#519 esperado='ninguna'  sim1=0.623
+   por que en invierno por la costa verde el aire se siente mas pesado y sucio?
+   ok  lista_fija        -> ninguna
+   ok  lista_estaciones  -> ninguna
+   ok  lista_alias       -> ninguna
+   MAL rag_top1          -> san juan de lurigancho
+   ok  rag_piso          -> ninguna
+
+Detalle guardado en /home/ubuntu/Grupo1_EcoPredict-NLQ/src/evaluation/hu02/preguntas_lugares_p4_resultados.csv

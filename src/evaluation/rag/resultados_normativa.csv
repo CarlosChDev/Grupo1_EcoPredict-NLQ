@@ -1,0 +1,25 @@
+id,tipo,esperado,sim1,id1,filtro_param,palabras_clave,rag_top1,rag_piso,hibrido,pregunta
+1,nombrado,178,0.763,178,178,178,178,178,178,¿Cuál es el límite anual de PM10 según la norma?
+2,nombrado,182,0.743,182,182,182,182,182,182,¿Cuántas veces al año se puede exceder el estándar de ozono?
+3,nombrado,181,0.722,181,181,181,181,181,181,¿Qué dice la norma sobre el monóxido de carbono en 8 horas?
+4,nombrado,179,0.753,179,179,179,179,179,179,¿Cuál es el estándar de dióxido de nitrógeno por hora?
+5,nombrado,180,0.765,180,180,180,180,180,180,¿Cuánto es el límite de SO2 en 24 horas?
+6,nombrado,177,0.745,177,177,177,177,177,177,¿Cuál es el valor máximo permitido de PM2.5 por día?
+7,indirecto,177,0.720,177,ninguna,182,177,177,177,¿Cuál es el límite diario de las partículas más finas del aire?
+8,indirecto,178,0.750,178,ninguna,empate,178,178,178,"¿Y para las partículas de 10 micras, cuánto se permite al año en promedio?"
+9,indirecto,181,0.678,181,ninguna,empate,181,181,181,¿Cuánto se permite en una hora del gas tóxico sin olor que sale de los autos mal calibrados?
+10,indirecto,179,0.675,179,ninguna,empate,179,179,179,¿Cuál es el límite anual del gas que sale de los motores diésel y tiñe el aire de marrón?
+11,indirecto,180,0.719,180,ninguna,182,180,180,180,¿Cuál es el máximo diario del gas de azufre que emiten las industrias?
+12,indirecto,182,0.662,182,ninguna,empate,182,182,182,¿Cuál es el límite del gas que a nivel del suelo irrita los pulmones y se forma con el sol?
+13,indirecto,177,0.725,177,ninguna,empate,177,177,177,¿Cuántos microgramos de partículas muy pequeñas se permiten por año?
+14,general,176,0.750,176,ninguna,176,176,176,176,¿Qué entidad decide si hay estado de alerta por mala calidad del aire?
+15,general,175,0.740,175,ninguna,175,175,175,175,¿Qué significa ECA?
+16,general,176,0.758,176,ninguna,176,176,176,176,¿Quién define los niveles de alerta por contaminación del aire?
+17,general,175,0.764,175,ninguna,175,175,175,175,¿Qué es un estándar de calidad ambiental del aire?
+18,general,176,0.767,176,ninguna,176,176,176,176,¿El Ministerio del Ambiente declara la alerta nacional por contaminación?
+19,general,175,0.746,175,ninguna,175,175,175,175,"Si el valor está por debajo del ECA, ¿significa que no hay riesgo para la salud?"
+20,sin_respuesta,ninguna,0.648,177,ninguna,ninguna,177,ninguna,ninguna,¿Cuál es el límite de benceno en el aire?
+21,sin_respuesta,ninguna,0.633,180,ninguna,175,180,ninguna,ninguna,¿Cuál es el estándar de sulfuro de hidrógeno?
+22,sin_respuesta,ninguna,0.645,176,ninguna,176,176,ninguna,ninguna,"Si hay alerta por contaminación, ¿qué me recomiendan hacer, usar mascarilla?"
+23,sin_respuesta,ninguna,0.673,177,ninguna,ninguna,177,177,177,¿Cuál es el límite de plomo en el aire?
+24,sin_respuesta,ninguna,0.696,175,ninguna,175,175,175,175,¿Cuál es el estándar de calidad ambiental para el agua?

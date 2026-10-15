@@ -1,0 +1,25 @@
+id,pregunta,esperado,tipo,autor
+1,"¿Cuál es el límite anual de PM10 según la norma?",178,nombrado,Claude
+2,"¿Cuántas veces al año se puede exceder el estándar de ozono?",182,nombrado,Claude
+3,"¿Qué dice la norma sobre el monóxido de carbono en 8 horas?",181,nombrado,Claude
+4,"¿Cuál es el estándar de dióxido de nitrógeno por hora?",179,nombrado,Claude
+5,"¿Cuánto es el límite de SO2 en 24 horas?",180,nombrado,Claude
+6,"¿Cuál es el valor máximo permitido de PM2.5 por día?",177,nombrado,Claude
+7,"¿Cuál es el límite diario de las partículas más finas del aire?",177,indirecto,Claude
+8,"¿Y para las partículas de 10 micras, cuánto se permite al año en promedio?",178,indirecto,Claude
+9,"¿Cuánto se permite en una hora del gas tóxico sin olor que sale de los autos mal calibrados?",181,indirecto,Claude
+10,"¿Cuál es el límite anual del gas que sale de los motores diésel y tiñe el aire de marrón?",179,indirecto,Claude
+11,"¿Cuál es el máximo diario del gas de azufre que emiten las industrias?",180,indirecto,Claude
+12,"¿Cuál es el límite del gas que a nivel del suelo irrita los pulmones y se forma con el sol?",182,indirecto,Claude
+13,"¿Cuántos microgramos de partículas muy pequeñas se permiten por año?",177,indirecto,Claude
+14,"¿Qué entidad decide si hay estado de alerta por mala calidad del aire?",176,general,Claude
+15,"¿Qué significa ECA?",175,general,Claude
+16,"¿Quién define los niveles de alerta por contaminación del aire?",176,general,Claude
+17,"¿Qué es un estándar de calidad ambiental del aire?",175,general,Claude
+18,"¿El Ministerio del Ambiente declara la alerta nacional por contaminación?",176,general,Claude
+19,"Si el valor está por debajo del ECA, ¿significa que no hay riesgo para la salud?",175,general,Claude
+20,"¿Cuál es el límite de benceno en el aire?",ninguna,sin_respuesta,Claude
+21,"¿Cuál es el estándar de sulfuro de hidrógeno?",ninguna,sin_respuesta,Claude
+22,"Si hay alerta por contaminación, ¿qué me recomiendan hacer, usar mascarilla?",ninguna,sin_respuesta,Claude
+23,"¿Cuál es el límite de plomo en el aire?",ninguna,sin_respuesta,Claude
+24,"¿Cuál es el estándar de calidad ambiental para el agua?",ninguna,sin_respuesta,Claude

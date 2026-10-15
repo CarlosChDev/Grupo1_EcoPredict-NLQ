@@ -1,0 +1,187 @@
+Filas de normativa cargadas: 8 (ids ['175', '176', '177', '178', '179', '180', '181', '182'])
+Vectorizando 24 preguntas (usa caché si ya existe)...
+
+Aciertos por tipo de pregunta (PISO = 0.65); en sin_respuesta, acertar = 'ninguna'
+
+tipo            n  filtro_param    palabras_clave  rag_top1        rag_piso        hibrido       
+nombrado        6  6/6             6/6             6/6             6/6             6/6           
+indirecto       7  0/7             0/7             7/7             7/7             7/7           
+general         6  0/6             6/6             6/6             6/6             6/6           
+sin_respuesta   5  5/5             2/5             0/5             3/5             3/5           
+TOTAL          24  11/24           14/24           19/24           22/24           22/24         
+
+--- Preguntas donde algún método falla ---
+
+#7 [indirecto] esperado=177  top1 vectorial=177 (sim 0.720)
+   ¿Cuál es el límite diario de las partículas más finas del aire?
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> 182
+   ok  rag_top1        -> 177
+   ok  rag_piso        -> 177
+   ok  hibrido         -> 177
+
+#8 [indirecto] esperado=178  top1 vectorial=178 (sim 0.750)
+   ¿Y para las partículas de 10 micras, cuánto se permite al año en promedio?
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   ok  rag_top1        -> 178
+   ok  rag_piso        -> 178
+   ok  hibrido         -> 178
+
+#9 [indirecto] esperado=181  top1 vectorial=181 (sim 0.678)
+   ¿Cuánto se permite en una hora del gas tóxico sin olor que sale de los autos mal calibrado
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   ok  rag_top1        -> 181
+   ok  rag_piso        -> 181
+   ok  hibrido         -> 181
+
+#10 [indirecto] esperado=179  top1 vectorial=179 (sim 0.675)
+   ¿Cuál es el límite anual del gas que sale de los motores diésel y tiñe el aire de marrón?
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   ok  rag_top1        -> 179
+   ok  rag_piso        -> 179
+   ok  hibrido         -> 179
+
+#11 [indirecto] esperado=180  top1 vectorial=180 (sim 0.719)
+   ¿Cuál es el máximo diario del gas de azufre que emiten las industrias?
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> 182
+   ok  rag_top1        -> 180
+   ok  rag_piso        -> 180
+   ok  hibrido         -> 180
+
+#12 [indirecto] esperado=182  top1 vectorial=182 (sim 0.662)
+   ¿Cuál es el límite del gas que a nivel del suelo irrita los pulmones y se forma con el sol
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   ok  rag_top1        -> 182
+   ok  rag_piso        -> 182
+   ok  hibrido         -> 182
+
+#13 [indirecto] esperado=177  top1 vectorial=177 (sim 0.725)
+   ¿Cuántos microgramos de partículas muy pequeñas se permiten por año?
+   MAL filtro_param    -> ninguna
+   MAL palabras_clave  -> empate
+   ok  rag_top1        -> 177
+   ok  rag_piso        -> 177
+   ok  hibrido         -> 177
+
+#14 [general] esperado=176  top1 vectorial=176 (sim 0.750)
+   ¿Qué entidad decide si hay estado de alerta por mala calidad del aire?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#15 [general] esperado=175  top1 vectorial=175 (sim 0.740)
+   ¿Qué significa ECA?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 175
+   ok  rag_top1        -> 175
+   ok  rag_piso        -> 175
+   ok  hibrido         -> 175
+
+#16 [general] esperado=176  top1 vectorial=176 (sim 0.758)
+   ¿Quién define los niveles de alerta por contaminación del aire?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#17 [general] esperado=175  top1 vectorial=175 (sim 0.764)
+   ¿Qué es un estándar de calidad ambiental del aire?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 175
+   ok  rag_top1        -> 175
+   ok  rag_piso        -> 175
+   ok  hibrido         -> 175
+
+#18 [general] esperado=176  top1 vectorial=176 (sim 0.767)
+   ¿El Ministerio del Ambiente declara la alerta nacional por contaminación?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#19 [general] esperado=175  top1 vectorial=175 (sim 0.746)
+   Si el valor está por debajo del ECA, ¿significa que no hay riesgo para la salud?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 175
+   ok  rag_top1        -> 175
+   ok  rag_piso        -> 175
+   ok  hibrido         -> 175
+
+#20 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.648)
+   ¿Cuál es el límite de benceno en el aire?
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 177
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#21 [sin_respuesta] esperado=ninguna  top1 vectorial=180 (sim 0.633)
+   ¿Cuál es el estándar de sulfuro de hidrógeno?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 175
+   MAL rag_top1        -> 180
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#22 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.645)
+   Si hay alerta por contaminación, ¿qué me recomiendan hacer, usar mascarilla?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 176
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#23 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.673)
+   ¿Cuál es el límite de plomo en el aire?
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 177
+   MAL rag_piso        -> 177
+   MAL hibrido         -> 177
+
+#24 [sin_respuesta] esperado=ninguna  top1 vectorial=175 (sim 0.696)
+   ¿Cuál es el estándar de calidad ambiental para el agua?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 175
+   MAL rag_top1        -> 175
+   MAL rag_piso        -> 175
+   MAL hibrido         -> 175
+
+--- Similitud del top-1 en preguntas sin respuesta cargada ---
+   0.648  (fila 177)  ¿Cuál es el límite de benceno en el aire?
+   0.633  (fila 180)  ¿Cuál es el estándar de sulfuro de hidrógeno?
+   0.645  (fila 176)  Si hay alerta por contaminación, ¿qué me recomiendan hacer, usar masca
+   0.673  (fila 177)  ¿Cuál es el límite de plomo en el aire?
+   0.696  (fila 175)  ¿Cuál es el estándar de calidad ambiental para el agua?
+
+--- Barrido de piso (vectorial) ---
+ corte  errores aceptados  aciertos rechazados
+  0.60                  5                    0
+  0.61                  5                    0
+  0.62                  5                    0
+  0.63                  5                    0
+  0.64                  4                    0
+  0.65                  2                    0
+  0.66                  2                    0
+  0.67                  2                    1
+  0.68                  1                    3
+  0.69                  1                    3
+  0.70                  0                    3
+  0.71                  0                    3
+  0.72                  0                    4
+  0.73                  0                    7
+  0.74                  0                    7
+  0.75                  0                   12
+  0.76                  0                   15
+
+Detalle guardado en /home/ubuntu/Grupo1_EcoPredict-NLQ/src/evaluation/hu02/resultados_normativa.csv
+Recuerda: son pocas preguntas y las escribió Claude, que conoce las 8 filas.
