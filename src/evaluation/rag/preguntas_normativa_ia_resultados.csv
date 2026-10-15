@@ -1,0 +1,25 @@
+id,tipo,esperado,sim1,id1,filtro_param,palabras_clave,rag_top1,rag_piso,hibrido,pregunta
+201,general,176,0.717,176,ninguna,ninguna,176,176,176,¿Quién avisa cuando el aire de Lima se pone peligroso?
+202,sin_respuesta,ninguna,0.620,181,ninguna,176,181,ninguna,ninguna,¿Cuánto contaminante puede botar una combi antes de que la manden al depósito?
+203,sin_respuesta,ninguna,0.674,177,ninguna,176,177,177,177,¿Hay un límite legal para la contaminación de los buses del Metropolitano?
+204,sin_respuesta,ninguna,0.695,177,ninguna,ninguna,177,177,177,¿El gobierno de acá usa los mismos parámetros de aire limpio que la OMS o son más permisivos?
+205,sin_respuesta,ninguna,0.585,176,ninguna,ninguna,176,ninguna,ninguna,¿Existe alguna norma que prohíba hacer piques de autos o carreras en zonas residenciales por el humo?
+206,sin_respuesta,ninguna,0.610,176,ninguna,176,176,ninguna,ninguna,¿Hay alguna ley que obligue a las empresas de delivery a usar solo motos eléctricas si el aire se contamina mucho?
+207,sin_respuesta,ninguna,0.700,176,ninguna,176,176,176,176,¿Quién es la autoridad encargada de sancionar a los que contaminan el aire en Lima?
+208,general,175,0.738,175,ninguna,175,175,175,175,¿Qué significan las siglas ECA que a veces mencionan en las noticias de medio ambiente?
+209,sin_respuesta,ninguna,0.596,176,ninguna,ninguna,176,ninguna,ninguna,¿Existe alguna multa para las pollerías o chicharronerías que botan mucho humo por su chimenea hacia las casas vecinas?
+210,sin_respuesta,ninguna,0.595,175,ninguna,176,175,ninguna,ninguna,¿Qué pasa legalmente si una fábrica contamina más de lo debido en una zona urbana?
+211,sin_respuesta,ninguna,0.620,177,ninguna,176,177,ninguna,ninguna,¿Existe una norma que restrinja el tráfico de camiones pesados en días donde hay mucha contaminación en Lima?
+212,sin_respuesta,ninguna,0.632,176,ninguna,empate,176,ninguna,ninguna,¿Hay alguna ley que exija poner medidores de aire limpios obligatorios en la puerta de los colegios?
+213,general,176,0.735,176,ninguna,176,176,176,176,¿Qué entidad oficial emite las alertas de contingencia ambiental en el Perú?
+214,sin_respuesta,ninguna,0.644,175,ninguna,175,175,ninguna,ninguna,¿Qué diferencia hay entre la medición de CO2 y el índice de calidad del aire en la ley peruana?
+215,sin_respuesta,ninguna,0.649,177,ninguna,176,177,ninguna,ninguna,¿Qué porcentaje de emisiones contaminantes se le permite pasar a un vehículo en la revisión técnica?
+216,sin_respuesta,ninguna,0.596,176,ninguna,ninguna,176,ninguna,ninguna,¿Hay leyes específicas que obliguen a las fábricas a reducir operaciones si se supera el índice de peligro?
+217,sin_respuesta,ninguna,0.594,175,ninguna,176,175,ninguna,ninguna,¿Qué norma regula la contaminación producida por la quema de basura en las afueras de la ciudad?
+218,sin_respuesta,ninguna,0.604,176,ninguna,empate,176,ninguna,ninguna,¿Existe alguna norma que obligue a los edificios corporativos a filtrar el aire exterior si supera cierto nivel de toxicidad?
+219,sin_respuesta,ninguna,0.635,176,ninguna,176,176,ninguna,ninguna,¿Hay algún reglamento que compense monetariamente o con días libres a los trabajadores expuestos al aire libre cuando hay alerta roja de contaminación?
+220,general,176,0.769,176,ninguna,176,176,176,176,¿Quién o qué entidad es la que decreta una alerta ambiental acá en Perú?
+221,sin_respuesta,ninguna,0.646,177,ninguna,ninguna,177,ninguna,ninguna,¿Cuál es el límite legal de humo que puede botar un carro o un micro sin que lo multen?
+222,sin_respuesta,ninguna,0.630,176,ninguna,ninguna,176,ninguna,ninguna,"Si el aire en mi distrito está súper feo, ¿hay alguna ley que obligue a las fábricas a parar?"
+223,sin_respuesta,ninguna,0.702,177,ninguna,empate,177,177,177,¿Qué niveles de aire limpio exige la OMS comparado con lo que pide el gobierno de Perú?
+224,sin_respuesta,ninguna,0.632,176,ninguna,ninguna,176,ninguna,ninguna,¿Hay alguna norma que obligue a los colegios a suspender clases al aire libre si el esmog está muy alto?

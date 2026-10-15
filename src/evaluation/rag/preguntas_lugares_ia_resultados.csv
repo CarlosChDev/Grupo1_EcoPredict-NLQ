@@ -1,0 +1,27 @@
+id,esperado,sim1,lista_fija,lista_estaciones,lista_alias,rag_top1,rag_piso,pregunta
+101,ninguna,0.665,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Qué tal el aire por Miraflores ahorita?
+102,ninguna,0.636,ninguna,ninguna,ninguna,san juan de lurigancho,ninguna,"Mañana temprano voy a correr a la Vía Expresa por Barranco, ¿está muy cargado el esmog?"
+103,ninguna,0.681,ninguna,ninguna,ninguna,la molina,la molina,¿Cómo está la calidad del aire cerca a la PUCP?
+104,ninguna,0.679,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,"Oye, ¿por mi zona hay mucha contaminación a esta hora?"
+105,san borja,0.713,san borja,san borja,san borja,san borja,san borja,"¿Qué tal se respira por San Borja, por el Pentagonito?"
+106,ninguna,0.677,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Está feo el aire por la Av. Arequipa hoy?
+107,ninguna,0.635,ninguna,ninguna,ninguna,santa anita,ninguna,¿Cómo va el aire por la zona comercial de Gamarra?
+108,ninguna,0.640,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,"Buenas tardes, ¿cómo se encuentra la calidad del aire por Los Olivos el día de hoy?"
+109,ninguna,0.647,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,Quisiera saber si por la zona del Parque de la Reserva el aire está adecuado para llevar a mis hijos a pasear.
+110,ninguna,0.653,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Cómo está la contaminación por la Av. Abancay en el Cercado?
+111,jesus maria,0.683,jesus maria,jesus maria,jesus maria,jesus maria,jesus maria,¿Está respirable el aire cerca al Hospital Rebagliati en Jesús María?
+112,ninguna,0.659,ninguna,ninguna,ninguna,surco,surco,¿Hay mucho esmog cerca del mercado central de Surquillo?
+113,ninguna,0.642,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Cómo se encuentra el aire por mi distrito hoy?
+114,ate,0.660,ate,ate,ate,ate,ate,¿Hay reporte de contaminación fuerte cerca a la zona industrial de Ate Vitarte?
+115,ninguna,0.614,ninguna,ninguna,ninguna,la molina,ninguna,¿Qué tal está la calidad del ambiente por el malecón de Chorrillos?
+116,ninguna,0.649,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Cómo está el reporte de contaminación por la zona financiera de San Isidro?
+117,ninguna,0.646,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Qué tal la calidad del aire cerca a la estación Central del Metropolitano?
+118,ninguna,0.667,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Se sabe cómo está el aire por la Av. Brasil a la altura de Pueblo Libre?
+119,ninguna,0.596,ninguna,ninguna,ninguna,san juan de lurigancho,ninguna,¿Cómo amaneció la calidad del aire por la Marina en San Miguel?
+120,ninguna,0.672,ninguna,ninguna,ninguna,san juan de lurigancho,san juan de lurigancho,¿Qué niveles de contaminación registra el aire por mi barrio actualmente?
+121,ninguna,0.636,ninguna,ninguna,ninguna,san juan de lurigancho,ninguna,¿Cómo está la polución por el centro comercial Plaza Norte?
+122,ninguna,0.598,ninguna,ninguna,ninguna,pachacamac,ninguna,¿Hay buen aire por la Costa Verde a la altura de Magdalena para salir a caminar?
+123,la molina,0.727,la molina,la molina,la molina,la molina,la molina,¿Cómo está el aire por La Molina hoy?
+124,jesus maria,0.669,ninguna,jesus maria,jesus maria,jesus maria,jesus maria,"Oye, ¿se puede salir a correr al Campo de Marte o hay mucha contaminación a esta hora?"
+125,san martin de porres,0.717,san martin de porres,san martin de porres,san martin de porres,san martin de porres,san martin de porres,¿Qué tal la calidad del aire en la zona universitaria por San Martín de Porres?
+126,ninguna,0.616,ninguna,ninguna,ninguna,san juan de lurigancho,ninguna,¿Cómo está la contaminación cerca al Parque Kennedy?

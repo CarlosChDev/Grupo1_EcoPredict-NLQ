@@ -1,0 +1,93 @@
+Documentos norma/salud con embedding: 8 (ids 175, 176, 177, 178, 179, 180, 181, 182)
+Juez: groq · top-5 · piso de comparación 0.65
+
+Archivo: preguntas_normativa.csv · 24 preguntas (19 con respuesta, 5 'ninguna')
+método           acierta (con resp.)  id equivocado  rechazado (con resp.)  falsos aceptados
+rag_piso          19/19           0/19             0/19           2/5  
+rag + juez        18/19           0/19             1/19           0/5  
+  tokens del juez: 17271
+
+--- donde rag_piso y juez no coinciden, o alguno falla ---
+#18 esperado=176  [176:0.767 177:0.648 175:0.639 181:0.639 178:0.638]
+   ¿El Ministerio del Ambiente declara la alerta nacional por contaminación?
+   ok  rag_piso   -> 176
+   MAL rag+juez   -> ninguna   (Ningún fragmento indica que el Ministerio del Ambiente declara la alerta nacional; el fragmento 176 señala que es el Min)
+#23 esperado=ninguna  [177:0.673 178:0.658 181:0.654 179:0.652 182:0.648]
+   ¿Cuál es el límite de plomo en el aire?
+   MAL rag_piso   -> 177
+   ok  rag+juez   -> ninguna   (Ningún fragmento menciona límite de plomo en el aire)
+#24 esperado=ninguna  [175:0.696 177:0.65 182:0.645 178:0.638 179:0.632]
+   ¿Cuál es el estándar de calidad ambiental para el agua?
+   MAL rag_piso   -> 175
+   ok  rag+juez   -> ninguna   (Los fragmentos solo tratan estándares de aire, no de agua.)
+
+Detalle guardado en preguntas_normativa_juez_groq.csv
+
+Archivo: preguntas_normativa_ia.csv · 24 preguntas (4 con respuesta, 20 'ninguna')
+método           acierta (con resp.)  id equivocado  rechazado (con resp.)  falsos aceptados
+rag_piso           4/4            0/4              0/4            4/20 
+rag + juez         4/4            0/4              0/4            0/20 
+  tokens del juez: 17022
+
+--- donde rag_piso y juez no coinciden, o alguno falla ---
+#203 esperado=ninguna  [177:0.674 179:0.667 178:0.662 175:0.661 180:0.654]
+   ¿Hay un límite legal para la contaminación de los buses del Metropolitano?
+   MAL rag_piso   -> 177
+   ok  rag+juez   -> ninguna   (Ningún fragmento menciona límites legales específicos para la contaminación de los buses del Metropolitano)
+#204 esperado=ninguna  [177:0.695 176:0.691 175:0.686 178:0.684 182:0.681]
+   ¿El gobierno de acá usa los mismos parámetros de aire limpio que la OMS o son más permisiv
+   MAL rag_piso   -> 177
+   ok  rag+juez   -> ninguna   (Los fragmentos solo indican los valores peruanos y no comparan con los parámetros de la OMS)
+#207 esperado=ninguna  [176:0.7 177:0.651 178:0.647 175:0.643 182:0.64]
+   ¿Quién es la autoridad encargada de sancionar a los que contaminan el aire en Lima?
+   MAL rag_piso   -> 176
+   ok  rag+juez   -> ninguna   (Ningún fragmento indica la autoridad encargada de sancionar)
+#223 esperado=ninguna  [177:0.702 178:0.696 182:0.688 175:0.68 176:0.673]
+   ¿Qué niveles de aire limpio exige la OMS comparado con lo que pide el gobierno de Perú?
+   MAL rag_piso   -> 177
+   ok  rag+juez   -> ninguna   (Ningún fragmento menciona los niveles exigidos por la OMS para comparar con los del gobierno peruano)
+
+Detalle guardado en preguntas_normativa_ia_juez_groq.csv
+
+Archivo: preguntas_normativa_p4.csv · 11 preguntas (4 con respuesta, 7 'ninguna')
+método           acierta (con resp.)  id equivocado  rechazado (con resp.)  falsos aceptados
+rag_piso           4/4            0/4              0/4            6/7  
+rag + juez         2/4            0/4              2/4            2/7  
+  tokens del juez: 8334
+
+--- donde rag_piso y juez no coinciden, o alguno falla ---
+#601 esperado=177  [177:0.734 178:0.695 180:0.672 181:0.661 182:0.656]
+   en ate el pm25 ya supero el limite permitido por la ley?
+   ok  rag_piso   -> 177
+   MAL rag+juez   -> ninguna   (Los fragmentos solo indican los límites legales, no datos de superación en Ate)
+#604 esperado=ninguna  [179:0.651 177:0.648 175:0.648 181:0.644 178:0.642]
+   que norma regula la contaminacion que botan las combis y buses en lima?
+   MAL rag_piso   -> 179
+   MAL rag+juez   -> 175   (Menciona el D.S. 003-2017-MINAM que establece la normativa de calidad del aire)
+#605 esperado=ninguna  [176:0.671 175:0.624 178:0.609 181:0.603 177:0.602]
+   si una fabrica bota humo feo por mi casa en ate a que autoridad se le denuncia segun la le
+   MAL rag_piso   -> 176
+   MAL rag+juez   -> 176   (Indica que el Ministerio de Salud es la autoridad competente para temas de contaminación del aire)
+#606 esperado=ninguna  [177:0.689 182:0.683 175:0.679 178:0.677 176:0.677]
+   el limite legal de contaminacion en peru es igual al de la organizacion mundial de la salu
+   MAL rag_piso   -> 177
+   ok  rag+juez   -> ninguna   (Los fragmentos solo indican los límites peruanos y no comparan con la OMS)
+#607 esperado=ninguna  [175:0.662 176:0.66 177:0.656 178:0.647 182:0.646]
+   las municipalidades de lima estan obligadas por ley a medir la calidad del aire en sus dis
+   MAL rag_piso   -> 175
+   ok  rag+juez   -> ninguna   (Ningún fragmento indica una obligación legal para las municipalidades de Lima de medir la calidad del aire en sus distri)
+#608 esperado=ninguna  [178:0.69 177:0.645 181:0.627 179:0.621 176:0.614]
+   si el pm10 supera el limite permitido hay alguna multa para los carros o industrias?
+   MAL rag_piso   -> 178
+   ok  rag+juez   -> ninguna   (Los fragmentos solo indican límites de PM10, no mencionan multas)
+#609 esperado=176  [176:0.72 177:0.663 175:0.659 178:0.653 181:0.653]
+   que dice la ley peruana si el aire entra en nivel de alerta roja o peligroso?
+   ok  rag_piso   -> 176
+   MAL rag+juez   -> ninguna   (Ningún fragmento indica qué disposiciones se aplican cuando el aire alcanza alerta roja)
+#611 esperado=ninguna  [177:0.668 176:0.659 178:0.656 175:0.65 179:0.643]
+   hay alguna norma que prohiba hacer educacion fisica en los colegios de lima si el aire est
+   MAL rag_piso   -> 177
+   ok  rag+juez   -> ninguna   (Ninguno de los fragmentos menciona una norma que prohíba la educación física en colegios por alta contaminación)
+
+Detalle guardado en preguntas_normativa_p4_juez_groq.csv
+
