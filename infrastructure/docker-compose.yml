@@ -6,7 +6,7 @@ services:
   # Base de datos: guarda (a) el estado interno de n8n y (b) el histórico del proyecto
   # ---------------------------------------------------------------------------
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16-bookworm
     container_name: aire_postgres
     restart: unless-stopped
     environment:
@@ -97,7 +97,7 @@ volumes:
   n8n_data:
     name: aire_n8n_data
   postgres_data:
-    name: aire_postgres_data
+    name: aire_postgres_data_pgv
 
 networks:
   eco_network:
