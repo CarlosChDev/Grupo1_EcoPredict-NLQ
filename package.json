@@ -12,6 +12,6 @@
     "build:all": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^10.0.6"
   }
 }
