@@ -23,7 +23,7 @@ jobs:
     steps:
       # This is also needed for push events, where paths-filter uses git.
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Detect changed files
         id: filter
@@ -50,7 +50,7 @@ jobs:
 
       - name: Checkout repository
         if: ${{ needs.changes.outputs.ai == 'true' || needs.changes.outputs.global == 'true' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Python
         if: ${{ needs.changes.outputs.ai == 'true' || needs.changes.outputs.global == 'true' }}
