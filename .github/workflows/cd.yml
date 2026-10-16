@@ -17,7 +17,7 @@ jobs:
   compose-validation:
     name: Compose Validation
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -32,7 +32,6 @@ jobs:
             "src/n8n-workflows"
             "src/database/migrations"
             "infrastructure/docker-compose.yml"
-            ".env.example"
             "infrastructure/nginx/default.conf"
           )
 
@@ -43,9 +42,9 @@ jobs:
             fi
           done
 
-          echo "Required files validated."
+          echo "All required paths exist."
 
-      - name: Set up Docker Compose test environment
+      - name: Create test environment
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -65,91 +64,79 @@ jobs:
           TELEGRAM_BOT_TOKEN=test_token
           EOF
 
+          chmod 600 "$RUNNER_TEMP/ecopredict-test.env"
+
       - name: Validate Docker Compose configuration
-        shell: bash
         run: |
           set -Eeuo pipefail
-
           docker compose \
             --project-name ecopredict-ci \
             --env-file "$RUNNER_TEMP/ecopredict-test.env" \
             -f infrastructure/docker-compose.yml \
             config -q
 
-          echo "Docker Compose configuration is valid."
-
-      - name: Pull service images
-        shell: bash
+      - name: Pull required images
         run: |
           set -Eeuo pipefail
-
           docker compose \
             --project-name ecopredict-ci \
             --env-file "$RUNNER_TEMP/ecopredict-test.env" \
             -f infrastructure/docker-compose.yml \
-            pull
+            pull postgres n8n
 
       - name: Start PostgreSQL and n8n
-        shell: bash
         run: |
           set -Eeuo pipefail
-
           docker compose \
             --project-name ecopredict-ci \
             --env-file "$RUNNER_TEMP/ecopredict-test.env" \
             -f infrastructure/docker-compose.yml \
             up -d postgres n8n
 
-      - name: Wait for PostgreSQL and n8n
+      - name: Wait for PostgreSQL
         shell: bash
         run: |
           set -Eeuo pipefail
 
-          COMPOSE=(
-            docker compose
-            --project-name ecopredict-ci
-            --env-file "$RUNNER_TEMP/ecopredict-test.env"
-            -f infrastructure/docker-compose.yml
-          )
-
-          postgres_ready=false
-          for attempt in $(seq 1 30); do
-            if "${COMPOSE[@]}" exec -T postgres \
-              pg_isready -U ecopredict_test -d ecopredict_test; then
-              postgres_ready=true
-              break
+          for i in {1..30}; do
+            if docker compose \
+              --project-name ecopredict-ci \
+              --env-file "$RUNNER_TEMP/ecopredict-test.env" \
+              -f infrastructure/docker-compose.yml \
+              exec -T postgres pg_isready -U ecopredict_test -d ecopredict_test; then
+              echo "PostgreSQL is ready."
+              exit 0
             fi
-            sleep 2
+            sleep 5
           done
 
-          if [[ "$postgres_ready" != "true" ]]; then
-            echo "::error::PostgreSQL did not become ready."
-            "${COMPOSE[@]}" logs postgres
-            exit 1
-          fi
+          echo "::error::PostgreSQL did not become ready."
+          exit 1
 
-          n8n_ready=false
-          for attempt in $(seq 1 45); do
-            if curl -fsS http://localhost:5678/healthz >/dev/null; then
-              n8n_ready=true
-              break
+      - name: Wait for n8n
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5678/healthz >/dev/null; then
+              echo "n8n is healthy."
+              exit 0
             fi
-            sleep 2
+            sleep 5
           done
 
-          if [[ "$n8n_ready" != "true" ]]; then
-            echo "::error::n8n did not become ready."
-            "${COMPOSE[@]}" logs n8n
-            exit 1
-          fi
-
-          echo "PostgreSQL and n8n are ready."
+          echo "::error::n8n did not become healthy."
+          docker compose \
+            --project-name ecopredict-ci \
+            --env-file "$RUNNER_TEMP/ecopredict-test.env" \
+            -f infrastructure/docker-compose.yml \
+            logs n8n
+          exit 1
 
       - name: Validate Nginx configuration
-        shell: bash
         run: |
           set -Eeuo pipefail
-
           docker compose \
             --project-name ecopredict-ci \
             --env-file "$RUNNER_TEMP/ecopredict-test.env" \
@@ -157,51 +144,32 @@ jobs:
             run --rm --no-deps aire_nginx nginx -t
 
       - name: Start all infrastructure services
-        shell: bash
         run: |
           set -Eeuo pipefail
-
           docker compose \
             --project-name ecopredict-ci \
             --env-file "$RUNNER_TEMP/ecopredict-test.env" \
             -f infrastructure/docker-compose.yml \
             up -d
 
-      - name: Verify Nginx reverse proxy
+      - name: Verify Nginx proxy
         shell: bash
         run: |
           set -Eeuo pipefail
 
-          COMPOSE=(
-            docker compose
-            --project-name ecopredict-ci
-            --env-file "$RUNNER_TEMP/ecopredict-test.env"
-            -f infrastructure/docker-compose.yml
-          )
-
-          "${COMPOSE[@]}" exec -T aire_nginx nginx -t
-
-          proxy_ready=false
-          for attempt in $(seq 1 30); do
-            if curl -sS -o /dev/null \
-              --max-time 5 http://localhost/; then
-              proxy_ready=true
-              break
+          for i in {1..12}; do
+            if curl --fail --silent http://localhost/ >/dev/null; then
+              echo "Nginx proxy is responding."
+              exit 0
             fi
-            sleep 2
+            sleep 5
           done
 
-          if [[ "$proxy_ready" != "true" ]]; then
-            echo "::error::Nginx reverse proxy did not respond."
-            "${COMPOSE[@]}" logs aire_nginx n8n
-            exit 1
-          fi
-
-          echo "Nginx reverse proxy is responding."
+          echo "::error::Nginx proxy did not respond successfully."
+          exit 1
 
       - name: Show service status
         if: always()
-        shell: bash
         run: |
           docker compose \
             --project-name ecopredict-ci \
@@ -209,36 +177,24 @@ jobs:
             -f infrastructure/docker-compose.yml \
             ps || true
 
-      - name: Show logs if validation fails
-        if: failure()
+      - name: Cleanup test environment
+        if: always()
         shell: bash
         run: |
           docker compose \
             --project-name ecopredict-ci \
             --env-file "$RUNNER_TEMP/ecopredict-test.env" \
             -f infrastructure/docker-compose.yml \
-            logs --no-color || true
+            down --volumes --remove-orphans || true
 
-      - name: Clean up test environment
-        if: always()
-        shell: bash
-        run: |
-          if [[ -f "$RUNNER_TEMP/ecopredict-test.env" ]]; then
-            docker compose \
-              --project-name ecopredict-ci \
-              --env-file "$RUNNER_TEMP/ecopredict-test.env" \
-              -f infrastructure/docker-compose.yml \
-              down --volumes --remove-orphans || true
-
-            rm -f "$RUNNER_TEMP/ecopredict-test.env"
-          fi
+          rm -f "$RUNNER_TEMP/ecopredict-test.env"
 
   deploy-oci:
     name: Deploy Infrastructure to OCI
-    runs-on: ubuntu-latest
     needs: compose-validation
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Configure SSH
@@ -253,18 +209,18 @@ jobs:
         run: |
           set -Eeuo pipefail
 
-          mkdir -p "$HOME/.ssh"
-          chmod 700 "$HOME/.ssh"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
 
           if [[ -z "$OCI_KNOWN_HOSTS" ]]; then
             echo "::error::GitHub variable OCI_KNOWN_HOSTS is empty."
             exit 1
           fi
 
-          printf '%s\n' "$OCI_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 600 "$HOME/.ssh/known_hosts"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
-      - name: Deploy to OCI
+      - name: Deploy to OCI via SSH
         shell: bash
         env:
           OCI_HOST: ${{ secrets.OCI_HOST }}
@@ -273,21 +229,19 @@ jobs:
           set -Eeuo pipefail
 
           if [[ -z "$OCI_HOST" || -z "$OCI_USER" ]]; then
-            echo "::error::OCI_HOST or OCI_USER is not configured."
+            echo "::error::OCI_HOST or OCI_USER secret is empty."
             exit 1
           fi
 
           ssh \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=yes \
-            "$OCI_USER@$OCI_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+            "$OCI_USER@$OCI_HOST" 'bash -se' <<'REMOTE'
           set -Eeuo pipefail
 
-          REPO_DIR="/home/ubuntu/Grupo1_EcoPredict-NLQ"
-          cd "$REPO_DIR"
+          cd /home/ubuntu/Grupo1_EcoPredict-NLQ
 
-          echo "Fetching latest main..."
-          git fetch --prune origin
+          git fetch origin main
           git checkout main
           git reset --hard origin/main
 
@@ -298,84 +252,63 @@ jobs:
             -f infrastructure/docker-compose.yml
           )
 
-          echo "Validating Compose configuration..."
+          # Validate production configuration before applying changes.
           "${COMPOSE[@]}" config -q
 
-          echo "Pulling infrastructure images..."
-          "${COMPOSE[@]}" pull
-
-          echo "Starting PostgreSQL and n8n..."
+          # Pull updated images and start core services.
+          "${COMPOSE[@]}" pull postgres n8n
           "${COMPOSE[@]}" up -d postgres n8n
 
-          echo "Waiting for PostgreSQL..."
-          postgres_ready=false
-
-          for attempt in $(seq 1 30); do
+          # Wait for PostgreSQL health.
+          for i in {1..30}; do
             if docker inspect \
               --format '{{.State.Health.Status}}' aire_postgres 2>/dev/null \
               | grep -qx healthy; then
-              postgres_ready=true
+              echo "PostgreSQL is healthy."
               break
             fi
-            sleep 2
+
+            if [[ "$i" -eq 30 ]]; then
+              echo "ERROR: PostgreSQL did not become healthy."
+              docker logs --tail 100 aire_postgres || true
+              exit 1
+            fi
+
+            sleep 5
           done
 
-          if [[ "$postgres_ready" != "true" ]]; then
-            echo "ERROR: PostgreSQL did not become healthy."
-            "${COMPOSE[@]}" logs postgres
-            exit 1
-          fi
-
-          echo "Validating Nginx configuration..."
+          # Validate Nginx configuration.
           "${COMPOSE[@]}" run --rm --no-deps aire_nginx nginx -t
 
-          echo "Starting/updating all infrastructure services..."
+          # Apply the complete Compose configuration.
           "${COMPOSE[@]}" up -d --remove-orphans
 
-          echo "Validating active Nginx configuration..."
+          # Reload Nginx if its container supports it.
           "${COMPOSE[@]}" exec -T aire_nginx nginx -t
-
-          echo "Reloading Nginx..."
           "${COMPOSE[@]}" exec -T aire_nginx nginx -s reload
 
-          echo "Waiting for n8n..."
-          n8n_ready=false
-
-          for attempt in $(seq 1 45); do
-            if curl -fsS --max-time 5 \
-              http://localhost:5678/healthz >/dev/null; then
-              n8n_ready=true
+          # Wait for n8n health.
+          for i in {1..30}; do
+            if curl --fail --silent http://localhost:5678/healthz >/dev/null; then
+              echo "n8n is healthy."
               break
             fi
-            sleep 2
+
+            if [[ "$i" -eq 30 ]]; then
+              echo "ERROR: n8n did not become healthy."
+              docker logs --tail 100 aire_n8n || true
+              exit 1
+            fi
+
+            sleep 5
           done
 
-          if [[ "$n8n_ready" != "true" ]]; then
-            echo "ERROR: n8n did not become ready."
-            "${COMPOSE[@]}" logs n8n
+          # Verify the Nginx proxy.
+          if ! curl --fail --silent http://localhost/ >/dev/null; then
+            echo "ERROR: Nginx proxy verification failed."
             exit 1
           fi
 
-          echo "Checking Nginx reverse proxy..."
-          proxy_ready=false
-
-          for attempt in $(seq 1 15); do
-            if curl -sS -o /dev/null --max-time 5 \
-              http://localhost/; then
-              proxy_ready=true
-              break
-            fi
-            sleep 2
-          done
-
-          if [[ "$proxy_ready" != "true" ]]; then
-            echo "ERROR: Nginx reverse proxy is not responding."
-            "${COMPOSE[@]}" logs aire_nginx n8n
-            exit 1
-          fi
-
-          echo "Final infrastructure status:"
           "${COMPOSE[@]}" ps
-
-          echo "OCI infrastructure deployment completed successfully."
-          REMOTE_SCRIPT
+          echo "OCI deployment completed successfully."
+          REMOTE
