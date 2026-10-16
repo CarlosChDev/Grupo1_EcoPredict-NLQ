@@ -1,0 +1,201 @@
+{
+  "name": "Vectorizar documentos_rag",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "95034a82-03ff-4e95-88e5-f1dea2dac563",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        448,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "50b25bca-ef42-4414-89ed-58fb1c2f6dcf",
+      "name": "Todos los dias 7:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Textos que todavia no tienen vector (los nuevos o los que se dejaron en NULL para re-vectorizar)\nSELECT id, contenido\nFROM documentos_rag\nWHERE embedding IS NULL\n  AND contenido IS NOT NULL\n  AND length(trim(contenido)) > 0\nORDER BY id\nLIMIT 100;",
+        "options": {}
+      },
+      "id": "43ee6e09-31e0-4903-8fdd-f4f161915411",
+      "name": "Leer filas sin vector",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        352
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'models/gemini-embedding-001', content: { parts: [{ text: $json.contenido }] }, taskType: 'RETRIEVAL_DOCUMENT', outputDimensionality: 768 }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          },
+          "timeout": 20000
+        }
+      },
+      "id": "38829a2a-b048-41c0-ba75-7bf8e7dd27a9",
+      "name": "Gemini embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        976,
+        352
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "W82e8l13QyyGleVf",
+          "name": "gemini"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "Si un texto falla se salta (salida Error) y queda sin vector: la siguiente corrida lo vuelve a intentar."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Una fila por item: toma el vector que devolvio Gemini y lo deja listo para guardar.\nconst id = $('Leer filas sin vector').item.json.id;\nconst v = $json.embedding && $json.embedding.values;\nif (!Array.isArray(v) || v.length !== 768 || v.some((x) => typeof x !== 'number' || !Number.isFinite(x))) {\n  throw new Error('Vector invalido para el documento ' + id + ' (longitud ' + (Array.isArray(v) ? v.length : 'n/a') + ')');\n}\nreturn { json: { id, vector: '[' + v.join(',') + ']' } };"
+      },
+      "id": "424c2709-8085-45f3-9151-709c08b4a4cd",
+      "name": "Armar UPDATE",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        320
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE documentos_rag SET embedding = $2::vector WHERE id = $1::bigint RETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [$json.id, $json.vector] }}"
+        }
+      },
+      "id": "2332b11a-be38-4901-811a-d4c2c07f6374",
+      "name": "Guardar vector",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1488,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Leer filas sin vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Todos los dias 7:00": {
+      "main": [
+        [
+          {
+            "node": "Leer filas sin vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer filas sin vector": {
+      "main": [
+        [
+          {
+            "node": "Gemini embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini embedding": {
+      "main": [
+        [
+          {
+            "node": "Armar UPDATE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar UPDATE": {
+      "main": [
+        [
+          {
+            "node": "Guardar vector",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2c9d9f33-94c4-494b-9282-acd828c87e85",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "dFhVb0Lh2ldINy1Z",
+  "tags": []
+}

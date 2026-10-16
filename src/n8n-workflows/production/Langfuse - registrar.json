@@ -1,0 +1,155 @@
+{
+  "name": "IA-ops-langfuse",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "1467a3df-2bce-4b29-8e69-93fb584f3d57",
+      "name": "Cuando lo llama otro flujo",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d8758198-0181-4e7b-9dc2-3d87d5d766e5",
+      "name": "Prueba manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Llamada de ejemplo para probar el sub-workflow con \"Execute workflow\".\nconst ahora = Date.now();\nreturn [{ json: {\n  flujo: 'B', paso: 'prueba_manual', proveedor: 'groq', ejecucion: $execution.id,\n  inicio: new Date(ahora - 900).toISOString(), fin: new Date(ahora).toISOString(),\n  prompt: 'Prueba desde n8n: ¿cómo está el aire en Ate?',\n  respuesta: { model: 'llama-3.3-70b-versatile',\n    choices: [{ message: { content: 'Respuesta de prueba' } }],\n    usage: { prompt_tokens: 25, completion_tokens: 5, total_tokens: 30 } }\n} }];"
+      },
+      "id": "0a13b82e-3aae-40ee-9ad0-9ca37a36e973",
+      "name": "Ejemplo Groq",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// ============================================================================\n// Nodo Code \"Armar span OTLP\" (modo: Run Once for Each Item)\n// Sub-workflow \"Langfuse - Registrar llamada\"\n//\n// Recibe UNA llamada (a Groq, Gemini o Telegram) y la convierte en un span\n// OpenTelemetry que Langfuse entiende. El nodo siguiente lo manda por HTTP.\n//\n// Entrada esperada ($json):\n//   flujo       'A' | 'B' | 'HU01' | 'HU02'\n//   paso        'intencion' | 'respuesta' | 'analisis_anomalia' | 'embedding_consulta' | 'telegram_envio' ...\n//   proveedor   'groq' | 'gemini' | 'telegram'\n//   tipo        'generation' (defecto) | 'embedding' | 'span'\n//   ejecucion   $execution.id del flujo que llama\n//   inicio      ISO, justo antes de llamar a la API\n//   fin         ISO, justo después (si falta, ahora)\n//   prompt      texto u objeto que se mandó (opcional)\n//   respuesta   respuesta cruda de la API (opcional)\n//   error       mensaje de error si la llamada falló (opcional)\n//   modelo      nombre del modelo, si la respuesta no lo trae (opcional)\n//   es_fallback true si es Gemini respondiendo porque Groq falló (opcional)\n//   extra       objeto con metadatos adicionales (opcional)\n// ============================================================================\n\n// <<< CAMBIA ESTO por la URL de tu Langfuse (sin / al final) >>>\nconst LANGFUSE_HOST = 'https://us.cloud.langfuse.com';\nconst ENTORNO = 'produccion';\nconst MAX_TEXTO = 20000; // recorta prompts/respuestas muy largos\n\nconst e = $json;\n\n// ---------- utilidades ----------\nconst hex = (n) => {\n  let s = '';\n  for (let i = 0; i < n; i++) s += Math.floor(Math.random() * 16).toString(16);\n  return s;\n};\nconst nanos = (iso) => {\n  const ms = Date.parse(iso);\n  return String(Number.isFinite(ms) ? ms : Date.now()) + '000000';\n};\nconst texto = (v) => {\n  if (v === null || v === undefined) return '';\n  const s = typeof v === 'string' ? v : JSON.stringify(v);\n  return s.length > MAX_TEXTO ? s.slice(0, MAX_TEXTO) + '…[recortado]' : s;\n};\nconst num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);\n\n// ---------- leer la respuesta según el proveedor ----------\nconst r = e.respuesta && typeof e.respuesta === 'object' ? e.respuesta : {};\nlet modelo = e.modelo || null;\nlet salida = null;\nconst uso = {};\n\nif (e.proveedor === 'groq') {\n  // API compatible con OpenAI: choices[0].message.content y usage.*_tokens\n  modelo = modelo || r.model || null;\n  salida = r.choices?.[0]?.message?.content ?? null;\n  if (num(r.usage?.prompt_tokens) !== null) uso.input = r.usage.prompt_tokens;\n  if (num(r.usage?.completion_tokens) !== null) uso.output = r.usage.completion_tokens;\n} else if (e.proveedor === 'gemini') {\n  // generateContent: candidates[0].content.parts[].text y usageMetadata\n  // embedContent: embedding.values (sin conteo de tokens)\n  modelo = modelo || r.modelVersion || null;\n  if (Array.isArray(r.embedding?.values)) {\n    salida = `vector(${r.embedding.values.length})`;\n  } else {\n    const partes = r.candidates?.[0]?.content?.parts;\n    salida = Array.isArray(partes) ? partes.map((p) => p.text ?? '').join('') : null;\n  }\n  const u = r.usageMetadata || {};\n  if (num(u.promptTokenCount) !== null) uso.input = u.promptTokenCount;\n  if (num(u.candidatesTokenCount) !== null) uso.output = u.candidatesTokenCount;\n  // los tokens de \"razonamiento\" de Gemini 2.5 van aparte (cada token en un solo grupo)\n  if (num(u.thoughtsTokenCount) !== null && u.thoughtsTokenCount > 0) uso.output_reasoning = u.thoughtsTokenCount;\n} else if (e.proveedor === 'telegram') {\n  salida = r.ok === undefined ? null : { ok: r.ok, description: r.description ?? null };\n}\n\n// ¿falló? (error explícito o respuesta de Telegram con ok:false)\nlet error = e.error ? texto(e.error) : null;\nif (!error && e.proveedor === 'telegram' && r.ok === false) error = texto(r.description || 'Telegram ok:false');\nif (!error && r.error) error = texto(r.error.message || r.error);\n\n// ---------- atributos del span ----------\nconst tipo = e.tipo || (e.proveedor === 'telegram' ? 'span' : 'generation');\nconst flujo = String(e.flujo || 'desconocido');\nconst paso = String(e.paso || 'llamada');\nconst proveedor = String(e.proveedor || 'desconocido');\nconst ejecucion = String(e.ejecucion ?? '');\n\nconst attrs = [];\nconst add = (k, v) => {\n  if (v === null || v === undefined || v === '') return;\n  attrs.push({ key: k, value: { stringValue: String(v) } });\n};\nconst addArray = (k, arr) =>\n  attrs.push({ key: k, value: { arrayValue: { values: arr.map((x) => ({ stringValue: String(x) })) } } });\n\nadd('langfuse.trace.name', `Flujo ${flujo}`);\naddArray('langfuse.trace.tags', [`flujo:${flujo}`, `proveedor:${proveedor}`, `paso:${paso}`]);\nadd('langfuse.trace.metadata.n8n_execution', ejecucion);\nadd('langfuse.environment', ENTORNO);\nadd('langfuse.observation.type', tipo);\nadd('langfuse.observation.model.name', modelo);\nadd('langfuse.observation.input', e.prompt === undefined ? null : texto(e.prompt));\nadd('langfuse.observation.output', salida === null ? null : texto(salida));\nif (Object.keys(uso).length) add('langfuse.observation.usage_details', JSON.stringify(uso));\nadd('langfuse.observation.level', error ? 'ERROR' : 'DEFAULT');\nadd('langfuse.observation.status_message', error);\nadd('langfuse.observation.metadata.proveedor', proveedor);\nadd('langfuse.observation.metadata.paso', paso);\nadd('langfuse.observation.metadata.flujo', flujo);\nadd('langfuse.observation.metadata.es_fallback', e.es_fallback ? 'true' : 'false');\nfor (const [k, v] of Object.entries(e.extra || {})) add(`langfuse.observation.metadata.${k}`, texto(v));\n\n// Una traza por ejecución de n8n: el mismo traceId agrupa intención + respuesta.\n// (32 caracteres hex; la letra del flujo + el id numérico de la ejecución)\nconst prefijo = { A: 'a', B: 'b', HU01: 'c', HU02: 'd' }[flujo] || 'e';\nconst traceId = /^\\d+$/.test(ejecucion)\n  ? (prefijo + '0' + ejecucion).padStart(32, '0').slice(-32)\n  : hex(32);\n\nconst inicio = e.inicio || new Date().toISOString();\nconst fin = e.fin || new Date().toISOString();\n\nconst span = {\n  traceId,\n  spanId: hex(16),\n  name: `${proveedor}-${paso}`,\n  kind: 1,\n  startTimeUnixNano: nanos(inicio),\n  endTimeUnixNano: nanos(fin),\n  attributes: attrs,\n  status: error ? { code: 2, message: error } : { code: 1 },\n};\n\nreturn {\n  json: {\n    url: `${LANGFUSE_HOST}/api/public/otel/v1/traces`,\n    otlp: {\n      resourceSpans: [\n        {\n          resource: { attributes: [{ key: 'service.name', value: { stringValue: 'ecopredict-n8n' } }] },\n          scopeSpans: [{ scope: { name: 'ecopredict-langfuse' }, spans: [span] }],\n        },\n      ],\n    },\n    resumen: { traceId, nombre: span.name, modelo, uso, error, latencia_ms: Date.parse(fin) - Date.parse(inicio) },\n  },\n};\n"
+      },
+      "id": "9a1208fc-d2c7-432e-a0df-5ac82a3a8eda",
+      "name": "Armar span OTLP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-langfuse-ingestion-version",
+              "value": "4"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.otlp) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "35cf855a-2a0d-4f37-af98-c60c053ad508",
+      "name": "Enviar a Langfuse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "26TzTlyVi6BX7YUZ",
+          "name": "langfuse"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cuando lo llama otro flujo": {
+      "main": [
+        [
+          {
+            "node": "Armar span OTLP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prueba manual": {
+      "main": [
+        [
+          {
+            "node": "Ejemplo Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejemplo Groq": {
+      "main": [
+        [
+          {
+            "node": "Armar span OTLP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar span OTLP": {
+      "main": [
+        [
+          {
+            "node": "Enviar a Langfuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "47596062-a0b5-4f4f-ad74-07ad4b928289",
+  "meta": {
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "SyWDMmhoQ7tBOyHV",
+  "tags": []
+}

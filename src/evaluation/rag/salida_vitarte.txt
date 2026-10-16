@@ -1,0 +1,62 @@
+Zonas cargadas: 13
+  id  162 | distrito derivado: ate                          | ref: zona=Ate | 'Zona Ate, Lima. Estaciones: ATE, CERES (CRS), PARI'
+  id  163 | distrito derivado: carabayllo                   | ref: zona=Carabayllo | 'Zona Carabayllo, Lima. Estaciones: CARABAYLLO.'
+  id  164 | distrito derivado: lurigancho chosica           | ref: zona=Lurigancho-Chosica | 'Zona Lurigancho-Chosica, Lima. Estaciones: CAJAMAR'
+  id  165 | distrito derivado: puente piedra                | ref: zona=Puente Piedra | 'Zona Puente Piedra, Lima. Estaciones: PUENTE PIEDR'
+  id  166 | distrito derivado: villa maria del triunfo      | ref: zona=Villa María del Triunfo | 'Zona Villa María del Triunfo, Lima. Estaciones: VI'
+  id  167 | distrito derivado: san martin de porres         | ref: zona=San Martín de Porres | 'Zona San Martín de Porres, Lima. Estaciones: SAN M'
+  id  168 | distrito derivado: santa anita                  | ref: zona=Santa Anita | 'Zona Santa Anita, Lima. Estaciones: SANTA ANITA.'
+  id  169 | distrito derivado: san borja                    | ref: zona=San Borja | 'Zona San Borja, Lima. Estaciones: SAN BORJA.'
+  id  170 | distrito derivado: san juan de lurigancho       | ref: zona=San Juan de Lurigancho | 'Zona San Juan de Lurigancho, Lima. Estaciones: SAN'
+  id  171 | distrito derivado: jesus maria                  | ref: zona=Jesús María | 'Zona Jesús María, Lima. Estaciones: CAMPO DE MARTE'
+  id  172 | distrito derivado: surco                        | ref: zona=Surco | 'Zona Surco, Lima. Estaciones: US DIPLOMATIC POST: '
+  id  173 | distrito derivado: la molina                    | ref: zona=La Molina | 'Zona La Molina, Lima. Estaciones: PERU, LIMA, LA M'
+  id  174 | distrito derivado: pachacamac                   | ref: zona=Pachacámac | 'Zona Pachacámac, Lima. Estaciones: QUEBRADA VERDE,'
+
+=== PARTE 1: ranking de zonas por consulta (sim. coseno) ===
+
+'Vitarte'  -> Ate queda en el puesto 2 de 13
+   0.620  jesus maria
+   0.595  ate  <-- Ate
+   0.594  santa anita
+   0.592  san borja
+   0.591  puente piedra
+
+'¿Cómo está el aire en Vitarte?'  -> Ate queda en el puesto 7 de 13
+   0.667  san juan de lurigancho
+   0.647  la molina
+   0.639  santa anita
+   0.639  jesus maria
+   0.631  san martin de porres
+
+'aire en Vitarte, Ate'  -> Ate queda en el puesto 1 de 13
+   0.668  ate  <-- Ate
+   0.666  jesus maria
+   0.662  la molina
+   0.661  santa anita
+   0.658  san martin de porres
+
+'calidad del aire Vitarte Lima'  -> Ate queda en el puesto 12 de 13
+   0.690  san juan de lurigancho
+   0.667  la molina
+   0.664  santa anita
+   0.662  jesus maria
+   0.659  san martin de porres
+
+=== PARTE 2: variantes del texto de Ate (solo en memoria) ===
+
+Control: coseno entre el vector guardado y el recalculado del texto original = 1.0000 (debería ser ~1.0)
+
+Consulta 'Vitarte'; mejor zona rival: jesus maria (0.620)
+   0.595  pierde Ate con texto «original (recalculado)»
+   0.652  GANA   Ate con texto «original + mención de Vitarte»
+   0.656  GANA   Ate con texto «solo 'Ate'»
+   0.794  GANA   Ate con texto «'Ate, Vitarte'»
+
+Consulta '¿Cómo está el aire en Vitarte?'; mejor zona rival: san juan de lurigancho (0.667)
+   0.625  pierde Ate con texto «original (recalculado)»
+   0.661  pierde Ate con texto «original + mención de Vitarte»
+   0.604  pierde Ate con texto «solo 'Ate'»
+   0.744  GANA   Ate con texto «'Ate, Vitarte'»
+
+Lectura: si solo gana la variante que menciona Vitarte, el problema es que el texto no contiene el nombre popular, y eso se resuelve con un alias.

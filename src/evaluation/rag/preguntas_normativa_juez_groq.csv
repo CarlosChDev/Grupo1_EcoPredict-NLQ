@@ -1,0 +1,25 @@
+id,pregunta,esperado,candidatos,esperado_en_candidatos,rag_piso,juez,motivo_juez
+1,¿Cuál es el límite anual de PM10 según la norma?,178,178:0.763 177:0.714 179:0.684 181:0.666 182:0.649,si,178,178,Indica el límite anual de PM10 como 50 µg/m³
+2,¿Cuántas veces al año se puede exceder el estándar de ozono?,182,182:0.743 177:0.671 180:0.671 179:0.666 178:0.656,si,182,182,Indica que el estándar de ozono no debe excederse más de 24 veces al año.
+3,¿Qué dice la norma sobre el monóxido de carbono en 8 horas?,181,181:0.722 182:0.636 177:0.624 179:0.607 178:0.607,si,181,181,Establece un límite de 10000 µg/m³ para el monóxido de carbono en promedio móvil de 8 horas
+4,¿Cuál es el estándar de dióxido de nitrógeno por hora?,179,179:0.753 180:0.67 181:0.669 182:0.666 177:0.664,si,179,179,Respuesta encontrada en el fragmento 179
+5,¿Cuánto es el límite de SO2 en 24 horas?,180,180:0.765 177:0.678 179:0.673 182:0.669 181:0.649,si,180,180,Establece límite de 250 µg/m³ en 24 horas
+6,¿Cuál es el valor máximo permitido de PM2.5 por día?,177,177:0.745 178:0.693 180:0.669 182:0.667 179:0.663,si,177,177,Indica el límite de 50 µg/m³ como promedio de 24 horas
+7,¿Cuál es el límite diario de las partículas más finas del aire?,177,177:0.72 178:0.701 179:0.666 182:0.658 180:0.655,si,177,177,Indica el límite diario de PM2.5 (50 µg/m³ como promedio de 24 h)
+8,"¿Y para las partículas de 10 micras, cuánto se permite al año en promedio?",178,178:0.75 177:0.708 181:0.671 179:0.671 182:0.654,si,178,178,Indica la media aritmética anual de 50 µg/m³ para PM10
+9,¿Cuánto se permite en una hora del gas tóxico sin olor que sale de los autos mal calibrados?,181,181:0.678 179:0.633 177:0.628 180:0.627 182:0.625,si,181,181,Define el límite permitido de CO (gas sin olor) en 1 hora
+10,¿Cuál es el límite anual del gas que sale de los motores diésel y tiñe el aire de marrón?,179,179:0.675 177:0.663 178:0.651 180:0.646 181:0.643,si,179,179,Indica el límite anual del dióxido de nitrógeno (NO2)
+11,¿Cuál es el máximo diario del gas de azufre que emiten las industrias?,180,180:0.719 182:0.641 179:0.635 177:0.633 181:0.62,si,180,180,Indica el límite diario de SO2 de 250 µg/m³
+12,¿Cuál es el límite del gas que a nivel del suelo irrita los pulmones y se forma con el sol?,182,182:0.662 180:0.632 177:0.623 181:0.621 179:0.621,si,182,182,El fragmento 182 indica el límite de ozono a nivel del suelo
+13,¿Cuántos microgramos de partículas muy pequeñas se permiten por año?,177,177:0.725 178:0.701 179:0.671 180:0.657 181:0.653,si,177,177,Indica el límite anual de PM2.5 como 25 µg/m³
+14,¿Qué entidad decide si hay estado de alerta por mala calidad del aire?,176,176:0.75 175:0.633 177:0.606 182:0.605 178:0.597,si,176,176,Indica que el Ministerio de Salud es la autoridad competente para declarar los estados de alerta
+15,¿Qué significa ECA?,175,175:0.74 177:0.683 179:0.68 180:0.679 178:0.677,si,175,175,Define el significado de ECA
+16,¿Quién define los niveles de alerta por contaminación del aire?,176,176:0.758 175:0.68 177:0.655 182:0.65 178:0.649,si,176,176,Indica que el Ministerio de Salud define los niveles de alerta
+17,¿Qué es un estándar de calidad ambiental del aire?,175,175:0.764 177:0.684 182:0.678 178:0.676 179:0.669,si,175,175,Define qué es un estándar de calidad ambiental del aire
+18,¿El Ministerio del Ambiente declara la alerta nacional por contaminación?,176,176:0.767 177:0.648 175:0.639 181:0.639 178:0.638,si,176,ninguna,Ningún fragmento indica que el Ministerio del Ambiente declara la alerta nacional; el fragmento 176 señala que es el Min
+19,"Si el valor está por debajo del ECA, ¿significa que no hay riesgo para la salud?",175,175:0.746 177:0.696 178:0.685 179:0.681 182:0.678,si,175,175,Define que el ECA es el nivel que no representa riesgo significativo para la salud
+20,¿Cuál es el límite de benceno en el aire?,ninguna,177:0.648 182:0.646 179:0.644 175:0.638 181:0.635,si,ninguna,ninguna,Ningún fragmento menciona el límite de benceno
+21,¿Cuál es el estándar de sulfuro de hidrógeno?,ninguna,180:0.633 175:0.619 177:0.59 179:0.582 182:0.582,si,ninguna,ninguna,Ningún fragmento menciona sulfuro de hidrógeno
+22,"Si hay alerta por contaminación, ¿qué me recomiendan hacer, usar mascarilla?",ninguna,176:0.645 177:0.605 178:0.597 175:0.592 181:0.592,si,ninguna,ninguna,Ningún fragmento indica una recomendación específica como usar mascarilla durante una alerta de contaminación
+23,¿Cuál es el límite de plomo en el aire?,ninguna,177:0.673 178:0.658 181:0.654 179:0.652 182:0.648,si,177,ninguna,Ningún fragmento menciona límite de plomo en el aire
+24,¿Cuál es el estándar de calidad ambiental para el agua?,ninguna,175:0.696 177:0.65 182:0.645 178:0.638 179:0.632,si,175,ninguna,"Los fragmentos solo tratan estándares de aire, no de agua."

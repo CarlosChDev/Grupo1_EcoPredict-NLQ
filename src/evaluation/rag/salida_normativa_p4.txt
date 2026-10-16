@@ -1,0 +1,116 @@
+Filas de normativa cargadas: 8 (ids ['175', '176', '177', '178', '179', '180', '181', '182'])
+Vectorizando 11 preguntas (usa caché si ya existe)...
+
+Aciertos por tipo de pregunta (PISO = 0.65); en sin_respuesta, acertar = 'ninguna'
+
+tipo            n  filtro_param    palabras_clave  rag_top1        rag_piso        hibrido       
+nombrado        2  2/2             2/2             2/2             2/2             2/2           
+indirecto       0  0/0             0/0             0/0             0/0             0/0           
+general         2  0/2             2/2             2/2             2/2             2/2           
+sin_respuesta   7  6/7             1/7             0/7             1/7             1/7           
+TOTAL          11  8/11            5/11            4/11            5/11            5/11          
+
+--- Preguntas donde algún método falla ---
+
+#603 [general] esperado=176  top1 vectorial=176 (sim 0.686)
+   cuando se considera que la contaminacion del aire en lima es emergencia ambiental por ley?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#604 [sin_respuesta] esperado=ninguna  top1 vectorial=179 (sim 0.651)
+   que norma regula la contaminacion que botan las combis y buses en lima?
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 179
+   MAL rag_piso        -> 179
+   MAL hibrido         -> 179
+
+#605 [sin_respuesta] esperado=ninguna  top1 vectorial=176 (sim 0.671)
+   si una fabrica bota humo feo por mi casa en ate a que autoridad se le denuncia segun la le
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 176
+   MAL rag_piso        -> 176
+   MAL hibrido         -> 176
+
+#606 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.689)
+   el limite legal de contaminacion en peru es igual al de la organizacion mundial de la salu
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 177
+   MAL rag_piso        -> 177
+   MAL hibrido         -> 177
+
+#607 [sin_respuesta] esperado=ninguna  top1 vectorial=175 (sim 0.662)
+   las municipalidades de lima estan obligadas por ley a medir la calidad del aire en sus dis
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 175
+   MAL rag_top1        -> 175
+   MAL rag_piso        -> 175
+   MAL hibrido         -> 175
+
+#608 [sin_respuesta] esperado=ninguna  top1 vectorial=178 (sim 0.690)
+   si el pm10 supera el limite permitido hay alguna multa para los carros o industrias?
+   MAL filtro_param    -> 178
+   MAL palabras_clave  -> 178
+   MAL rag_top1        -> 178
+   MAL rag_piso        -> 178
+   MAL hibrido         -> 178
+
+#609 [general] esperado=176  top1 vectorial=176 (sim 0.720)
+   que dice la ley peruana si el aire entra en nivel de alerta roja o peligroso?
+   MAL filtro_param    -> ninguna
+   ok  palabras_clave  -> 176
+   ok  rag_top1        -> 176
+   ok  rag_piso        -> 176
+   ok  hibrido         -> 176
+
+#610 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.645)
+   quien fiscaliza que las fabricas en lima no superen los limites de emisiones del aire?
+   ok  filtro_param    -> ninguna
+   ok  palabras_clave  -> ninguna
+   MAL rag_top1        -> 177
+   ok  rag_piso        -> ninguna
+   ok  hibrido         -> ninguna
+
+#611 [sin_respuesta] esperado=ninguna  top1 vectorial=177 (sim 0.668)
+   hay alguna norma que prohiba hacer educacion fisica en los colegios de lima si el aire est
+   ok  filtro_param    -> ninguna
+   MAL palabras_clave  -> 176
+   MAL rag_top1        -> 177
+   MAL rag_piso        -> 177
+   MAL hibrido         -> 177
+
+--- Similitud del top-1 en preguntas sin respuesta cargada ---
+   0.651  (fila 179)  que norma regula la contaminacion que botan las combis y buses en lima
+   0.671  (fila 176)  si una fabrica bota humo feo por mi casa en ate a que autoridad se le 
+   0.689  (fila 177)  el limite legal de contaminacion en peru es igual al de la organizacio
+   0.662  (fila 175)  las municipalidades de lima estan obligadas por ley a medir la calidad
+   0.690  (fila 178)  si el pm10 supera el limite permitido hay alguna multa para los carros
+   0.645  (fila 177)  quien fiscaliza que las fabricas en lima no superen los limites de emi
+   0.668  (fila 177)  hay alguna norma que prohiba hacer educacion fisica en los colegios de
+
+--- Barrido de piso (vectorial) ---
+ corte  errores aceptados  aciertos rechazados
+  0.60                  7                    0
+  0.61                  7                    0
+  0.62                  7                    0
+  0.63                  7                    0
+  0.64                  7                    0
+  0.65                  6                    0
+  0.66                  5                    0
+  0.67                  3                    0
+  0.68                  2                    0
+  0.69                  1                    1
+  0.70                  0                    1
+  0.71                  0                    1
+  0.72                  0                    1
+  0.73                  0                    2
+  0.74                  0                    3
+  0.75                  0                    3
+  0.76                  0                    3
+
+Detalle guardado en /home/ubuntu/Grupo1_EcoPredict-NLQ/src/evaluation/hu02/preguntas_normativa_p4_resultados.csv

@@ -1,0 +1,37 @@
+id,pregunta,esperado,autor
+1,"Oye, ¿qué tal está el aire por San Martín de Porres ahorita? ¿Se siente muy cargado o tranqui?",San Martín de Porres,Franco
+2,"Mano, ¿por la Av. Universitaria la contaminación está insoportable o se puede caminar normal?",ninguna,Franco
+4,"Oe, ¿el aire por mi zona está feo como para usar mascarilla o estoy exagerando?",ninguna,Franco
+5,"¿Dónde está más contaminado ahorita, por Lima Norte o por el Centro?",ninguna,Franco
+6,"Oye bot, ¿se puede respirar bien por Los Olivos o está pura polvareda?",ninguna,Franco
+7,"Habla, ¿hay alguna alerta de esmog por acá cerca o todo piola?",ninguna,Franco
+9,"Hola, ¿cómo está la calidad del aire por la zona financiera de San Isidro hoy?",ninguna,Valeria
+10,"Oye, voy a ir a trabajar a un café en Miraflores, ¿el ambiente por allá está muy cargado?",ninguna,Valeria
+11,"Buenas, ¿por Javier Prado el tráfico ha hecho que el aire se ponga muy pesado hoy?",ninguna,Valeria
+12,"Hola bot, ¿puedo abrir la ventana de mi depa en Surco o hay mucho polvo flotando?",Surco,Valeria
+13,"Oye, ¿por la Av. Aramburú la contaminación está más alta de lo normal ahorita?",ninguna,Valeria
+14,"Buenas tardes, ¿el aire por San Borja está limpio como para salir a almorzar fuera?",San Borja,Valeria
+15,"Oe, ¿cómo viene el reporte del aire por la zona de Corpac para esta tarde?",ninguna,Valeria
+16,"Hola, ¿el aire por el Golf de San Isidro está piola o está lleno de esmog?",ninguna,Valeria
+17,"Habla causa, ¿por la Av. Abancay y el Centro el aire está muy cochinazo hoy o pasa nada?",ninguna,Don Lucho
+18,"Buenas, ¿por la Av. Argentina y el Callao la contaminación está brava ahorita?",ninguna,Don Lucho
+19,"Oye, ¿por la Vía Expresa hay mucho humo feo acumulado a esta hora?",ninguna,Don Lucho
+20,"Habla, ¿por el puente Nuevo en El Agustino el aire está muy pesado para andar con la ventana abierta?",ninguna,Don Lucho
+21,"Buenas tardes, ¿cómo está la cosa por Grau y Grau con Parinacochas, muy sucio el aire?",ninguna,Don Lucho
+22,"Oye bot, ¿por la Panamericana Norte el aire está respirable o puro esmog de camión?",ninguna,Don Lucho
+23,"Habla, ¿el centro de Lima está en alerta ambiental hoy día o todo tranquilo?",ninguna,Don Lucho
+24,"Oe, ¿por la zona de Faucett cerca al aeropuerto el aire se siente muy cargado?",ninguna,Don Lucho
+25,"Buenas tardes, mi hijo sufre de alergias, ¿el aire por La Molina está peligroso hoy día?",La Molina,Lucía
+26,"Hola, ¿el ambiente por los parques de Surco está bien como para llevar a los niños a jugar?",Surco,Lucía
+27,"Buenas, ¿hay mucho polen o polvo en el aire por San Borja esta tarde?",San Borja,Lucía
+28,"Hola bot, ¿la calidad del aire por mi barrio va a empeorar más tarde o se mantiene bien?",ninguna,Lucía
+29,"Buenas noches, ¿por la zona de Ate el aire está muy pesado para sacar a pasear al bebé?",Ate,Lucía
+30,"Oye, ¿el nivel de contaminación hoy en mi distrito puede afectar a personas con asma?",ninguna,Lucía
+32,"Buenas, ¿hay alguna recomendación de salud por el aire feo hoy en Lima Este?",ninguna,Lucía
+33,"Hola, quiero salir a correr por el malecón de Miraflores, ¿cómo está el aire ahorita por allá?",ninguna,Renato
+34,"Oe, ¿la calidad del aire por el Pentagonito está fresca para hacer piques en la noche?",San Borja,Renato
+35,"Mano, ¿por la Costa Verde el aire está limpio para entrenar o hay mucho esmog acumulado?",ninguna,Renato
+36,"Oye bot, ¿a qué hora va a estar más limpio el aire hoy por San Isidro para salir a trotar?",ninguna,Renato
+37,"Buenas, ¿el nivel de contaminación en Lima hoy afecta el rendimiento para entrenar al aire libre?",ninguna,Renato
+39,"Habla, ¿por la Av. Arequipa se puede montar bici tranquilo o el aire está muy cochino?",ninguna,Renato
+40,"Mano, ¿me conviene entrenar al aire libre hoy por La Molina o mejor le doy en gimnasio cerrado?",La Molina,Renato
