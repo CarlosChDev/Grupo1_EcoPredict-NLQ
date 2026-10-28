@@ -1,0 +1,1678 @@
+{
+  "name": "Workflow D",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "bae360c8-428f-4341-8e40-d042f4a69fe1",
+      "name": "Todos los días 06:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n  SELECT 1 FROM mediciones_aire\n  WHERE ingerido_en >= date_trunc('day', now() AT TIME ZONE 'America/Lima') AT TIME ZONE 'America/Lima'\n) AS ingestado_hoy;",
+        "options": {}
+      },
+      "id": "452a7ca4-539b-47a6-8010-2489f3596415",
+      "name": "Verificar ingesta de hoy",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -208,
+        -48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "edfda651-0c67-5201-9b90-269fee518708",
+              "leftValue": "={{ $json.ingestado_hoy }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5e2bb322-1795-4132-8cf0-6d7f1988bada",
+      "name": "¿Llegó la ingesta de hoy?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10,
+        "unit": "minutes"
+      },
+      "id": "a5958ad5-776a-45be-a383-39c5edbd60b2",
+      "name": "Esperar 10 min",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        144
+      ],
+      "webhookId": "9147513e-279f-56ef-8f1c-74aca2f19c9d"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n  SELECT 1 FROM mediciones_aire\n  WHERE ingerido_en >= date_trunc('day', now() AT TIME ZONE 'America/Lima') AT TIME ZONE 'America/Lima'\n) AS ingestado_hoy;",
+        "options": {}
+      },
+      "id": "0d34f628-809d-4286-822c-b3722a1a7a86",
+      "name": "Verificar ingesta (reintento)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        512,
+        144
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "029110c9-6b68-5f44-9e7a-b28c83611d1d",
+              "leftValue": "={{ $json.ingestado_hoy }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f12c5473-2f0e-4134-a65a-6db27e076181",
+      "name": "¿Llegó la ingesta? (reintento)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "La ingesta del Flujo A no llegó hoy; no se agregó nada. Revisar el Flujo A."
+      },
+      "id": "de547e1c-8274-4988-9a1d-6cf4a96bd847",
+      "name": "Error: la ingesta no llegó",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO analitica_diaria (fecha, distrito, parametro, promedio, maximo, minimo,\n                              n_mediciones, n_estaciones, horas_con_dato, limite_eca, excede_eca)\nSELECT (m.medido_en AT TIME ZONE 'America/Lima')::date, e.zona, m.parametro,\n       AVG(m.valor), MAX(m.valor), MIN(m.valor), COUNT(*), COUNT(DISTINCT e.id),\n       COUNT(DISTINCT date_trunc('hour', m.medido_en)), l.limite,\n       (AVG(m.valor) > l.limite)\nFROM mediciones_aire m\nJOIN estaciones e ON e.id = m.estacion_id\nJOIN (VALUES ('pm25', 50.0), ('pm10', 100.0)) AS l(parametro, limite) ON l.parametro = m.parametro\nWHERE m.valor IS NOT NULL AND m.unidad = 'µg/m³' AND e.zona IS NOT NULL\n  AND m.medido_en >= (date_trunc('day', now() AT TIME ZONE 'America/Lima') - interval '3 days') AT TIME ZONE 'America/Lima'\nGROUP BY 1,2,3,l.limite\nON CONFLICT (fecha, distrito, parametro) DO UPDATE SET\n  promedio = EXCLUDED.promedio, maximo = EXCLUDED.maximo, minimo = EXCLUDED.minimo,\n  n_mediciones = EXCLUDED.n_mediciones, n_estaciones = EXCLUDED.n_estaciones,\n  horas_con_dato = EXCLUDED.horas_con_dato, excede_eca = EXCLUDED.excede_eca,\n  calculado_en = now()\nRETURNING fecha, distrito, parametro, excede_eca;",
+        "options": {}
+      },
+      "id": "75bf1df3-851e-4a57-90e0-89461a1ec5c9",
+      "name": "Agregar y guardar en analitica_diaria",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1312,
+        -176
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const filas = $input.all().map(i => i.json).filter(f => f.fecha);\nreturn [{\n  json: {\n    ok: true,\n    filasActualizadas: filas.length,\n    distritos: new Set(filas.map(f => f.distrito)).size,\n    diasExcedidos: filas.filter(f => f.excede_eca).length,\n    ejecutadoEn: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "9abd8a94-78dc-4f8a-8e33-8b54dbbcbd8a",
+      "name": "Resumir resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'Falló la agregación diaria del Flujo D: ' + JSON.stringify($json).slice(0, 300) }}"
+      },
+      "id": "e33436a1-5d93-450a-9b9a-8ecd92071e85",
+      "name": "Error: falló la agregación",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1696,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1"
+            }
+          ]
+        }
+      },
+      "id": "1bda2e4a-9f8f-480a-a320-4c333b4dbf06",
+      "name": "Lunes 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -448,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH sem AS (\n  SELECT (date_trunc('week', now() AT TIME ZONE 'America/Lima')::date - 7) AS ini\n),\nd AS (\n  SELECT fecha, parametro, promedio, maximo, excede_eca,\n         regexp_replace(translate(lower(distrito), 'áéíóúüñ', 'aeiouun'), '[^a-z0-9]+', '-', 'g') AS id\n  FROM analitica_diaria\n)\nSELECT sem.ini::text AS semana_inicio, d.id, d.parametro,\n       COUNT(*) FILTER (WHERE d.fecha >= sem.ini)                          AS dias,\n       AVG(d.promedio) FILTER (WHERE d.fecha >= sem.ini)                   AS promedio,\n       MAX(d.maximo) FILTER (WHERE d.fecha >= sem.ini)                     AS maximo,\n       COUNT(*) FILTER (WHERE d.fecha >= sem.ini AND d.excede_eca)         AS excedidos,\n       COUNT(*) FILTER (WHERE d.fecha < sem.ini)                           AS dias_anterior,\n       AVG(d.promedio) FILTER (WHERE d.fecha < sem.ini)                    AS anterior\nFROM d, sem\nWHERE d.fecha >= sem.ini - 7 AND d.fecha <= sem.ini + 6\nGROUP BY sem.ini, d.id, d.parametro\nHAVING COUNT(*) FILTER (WHERE d.fecha >= sem.ini) > 0\nORDER BY d.id, d.parametro;",
+        "options": {}
+      },
+      "id": "21c1a6b5-e725-4eaf-8b22-9e2284475654",
+      "name": "Datos de la semana",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        784
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Parte 2 · paso 1: arma, por distrito, los agregados de la semana y el prompt. La IA solo ve estos números.\nconst filas = $input.all().map((i) => i.json).filter((f) => f && f.id);\nif (!filas.length) return [];\n\nconst MIN_DIAS = 4;                       // mínimo de días con dato en la semana para redactar\nconst MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\nconst ini = filas[0].semana_inicio, fin = addDays(ini, 6);\nconst [, m1, d1] = ini.split('-').map(Number), [, m2, d2] = fin.split('-').map(Number);\nconst rango = m1 === m2 ? `del ${d1} al ${d2} de ${MESES[m2 - 1]}` : `del ${d1} de ${MESES[m1 - 1]} al ${d2} de ${MESES[m2 - 1]}`;\nconst ETQ = { pm25: 'PM2.5', pm10: 'PM10' };\nconst f = (x) => String(x).replace('.', ',');   // cifras con coma decimal, como se escriben en español\n\nconst porDistrito = {};\nfor (const f of filas) (porDistrito[f.id] = porDistrito[f.id] || []).push(f);\n\nconst SISTEMA = 'Eres el redactor del panel de analítica de calidad del aire de EcoPredict (Lima, Perú). '\n  + 'Resume la semana de un distrito en 3 o 4 oraciones, en español claro para ciudadanos.'\n  + '\\nREGLAS OBLIGATORIAS:'\n  + '\\n1. Usa SOLO las cifras del bloque DATOS, tal como están escritas. No calcules, no redondees ni agregues otras cifras.'\n  + '\\n2. No inventes causas, fuentes de contaminación ni pronósticos.'\n  + '\\n3. Si el promedio diario superó el límite, aclara que es una comparación referencial con el límite de 24 horas del ECA, no un incumplimiento formal.'\n  + '\\n4. Si hubo pocos días con dato, dilo.'\n  + '\\n5. No menciones tablas, consultas ni código. No cites números de decreto ni años. Un solo párrafo, sin viñetas.'\n  + '\\n6. El promedio y la lectura más alta son de ESTA semana. De la semana anterior solo se conoce la variación en %, no la menciones como si fuera un promedio.'\n  + '\\n7. La lectura más alta es un valor puntual, NO un promedio diario: no la compares con el límite y llámala siempre \"lectura más alta\", nunca \"máximo diario\".';\n\nconst salida = [];\nfor (const [id, rows] of Object.entries(porDistrito)) {\n  const diasMax = Math.max(...rows.map((r) => Number(r.dias)));\n  if (diasMax < MIN_DIAS) continue;       // muy pocos datos: no se redacta nada\n\n  const datos = {};\n  const permitidos = new Set([0, 1, 2, 3, 4, 5, 6, 7, 24, 50, 100, d1, d2]);\n  const add = (x) => { if (x !== null && Number.isFinite(x)) { permitidos.add(x); permitidos.add(Math.round(x)); } };\n  for (const r of rows) {\n    const prom = r1(Number(r.promedio)), max = r1(Number(r.maximo));\n    const antExacto = Number(r.dias_anterior) >= MIN_DIAS ? Number(r.anterior) : null;\n    let variacionPct = null, tendencia = null;\n    if (antExacto !== null && antExacto !== 0) {\n      // se calcula con los promedios SIN redondear, igual que el endpoint comparativo (evita 4,3 vs 4,2)\n      variacionPct = r1(((Number(r.promedio) - antExacto) / antExacto) * 100);\n      tendencia = Math.abs(variacionPct) < 5 ? 'estable' : (variacionPct > 0 ? 'sube' : 'baja');\n    }\n    // El promedio de la semana anterior NO se le da a la IA ni se permite en el texto: solo la variación.\n    datos[r.parametro] = { promedio: prom, maximo: max, diasConDato: Number(r.dias), diasExcedidos: Number(r.excedidos),\n                           limite: LIMITES[r.parametro], variacionPct, tendencia };\n    [prom, max, variacionPct === null ? null : Math.abs(variacionPct), Number(r.dias), Number(r.excedidos)].forEach(add);\n  }\n\n  const lineas = ['pm25', 'pm10'].filter((par) => datos[par]).map((par) => [par, datos[par]]).map(([par, d]) =>\n    `- ${ETQ[par]}: promedio ${f(d.promedio)} µg/m³; lectura más alta ${f(d.maximo)}; días con dato ${d.diasConDato} de 7; `\n    + `días con promedio sobre el límite (${d.limite}) ${d.diasExcedidos}; `\n    + (d.tendencia === null ? 'comparación con la semana anterior: sin datos suficientes'\n        : `comparación con la semana anterior: variación ${f(d.variacionPct)} % (tendencia: ${d.tendencia})`));\n  const usuario = `Distrito: ${nombreDe(id)}\\nSemana: ${rango}\\nDATOS:\\n${lineas.join('\\n')}\\n\\nRedacta el resumen.`;\n\n  salida.push({ json: {\n    id, nombre: nombreDe(id), semana_inicio: ini, semana_fin: fin, rango, datos, permitidos: [...permitidos],\n    lf_inicio: new Date().toISOString(),\n    groq_payload: {\n      model: 'openai/gpt-oss-120b', temperature: 0.2, max_tokens: 800,\n      messages: [{ role: 'system', content: SISTEMA }, { role: 'user', content: usuario }],\n    },\n    gemini_payload: {\n      contents: [{ parts: [{ text: `${SISTEMA}\\n\\n${usuario}` }] }],\n      generationConfig: { temperature: 0.2, maxOutputTokens: 500 },\n    },\n  } });\n}\nreturn salida;"
+      },
+      "id": "1b6eee50-b8a7-4860-8583-13eb6cba36a8",
+      "name": "Preparar prompts (por distrito)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.groq_payload) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "0f47b0c6-ff8b-4cfb-83a0-0b12b8d1914a",
+      "name": "Groq: redactar resumen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        736
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xQ6xTb8lQwdwHQuq",
+          "name": "groq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.gemini_payload) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a06056c2-bf25-4403-97a1-49437d2b6248",
+      "name": "Gemini: respaldo resumen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        976
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "W82e8l13QyyGleVf",
+          "name": "gemini"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\nconst prep = $('Preparar prompts (por distrito)').item.json;\nreturn { json: {\n  flujo: 'D', paso: 'resumen_semanal', proveedor: 'groq',\n  ejecucion: $execution.id,\n  inicio: prep.lf_inicio,\n  fin: new Date().toISOString(),\n  prompt: prep.groq_payload?.messages,\n  respuesta: $json,\n  error: $json.error ? ($json.error.message ?? String($json.error)) : undefined,\n} };\n"
+      },
+      "id": "e85bc76f-a75d-49dc-88db-84c9c30c2562",
+      "name": "LF · Groq resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        512
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\nconst prep = $('Preparar prompts (por distrito)').item.json;\nreturn { json: {\n  flujo: 'D', paso: 'resumen_semanal', proveedor: 'groq',\n  ejecucion: $execution.id,\n  inicio: prep.lf_inicio,\n  fin: new Date().toISOString(),\n  prompt: prep.groq_payload?.messages,\n  error: $json.error?.message ?? (typeof $json.error === 'string' ? $json.error : null) ?? 'La llamada falló',\n} };\n"
+      },
+      "id": "c267c519-f312-483c-bfeb-ea58d7b187dd",
+      "name": "LF · Groq resumen (fallo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        704
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\nconst prep = $('Preparar prompts (por distrito)').item.json;\nreturn { json: {\n  flujo: 'D', paso: 'resumen_semanal', proveedor: 'gemini',\n  es_fallback: true,\n  ejecucion: $execution.id,\n  inicio: prep.lf_inicio,\n  fin: new Date().toISOString(),\n  prompt: prep.gemini_payload?.contents?.[0]?.parts?.[0]?.text,\n  respuesta: $json,\n  error: $json.error ? ($json.error.message ?? String($json.error)) : undefined,\n} };\n"
+      },
+      "id": "148afee4-718e-453f-b2a8-d2481d533397",
+      "name": "LF · Gemini resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        1136
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "SyWDMmhoQ7tBOyHV",
+          "mode": "list",
+          "cachedResultName": "IA-ops-langfuse"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "3c2978a2-ea4b-4b46-9613-f78fa7b6da93",
+      "name": "Registrar en Langfuse",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        624
+      ],
+      "onError": "continueRegularOutput",
+      "notes": "Sub-workflow «IA-ops-langfuse». Sin esperar respuesta; si falla, el resumen se guarda igual."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Parte 2 · paso 2: valida el texto de la IA. Sin SQL, sin cifras ajenas a los agregados y largo razonable.\n// Si algo falla (o ambos proveedores fallaron) se guarda un texto armado con plantilla, sin IA.\nconst prep = $('Preparar prompts (por distrito)').item.json;\nconst r = $json;\n\nlet texto = null, modelo = 'ninguno';\nif (r.choices && r.choices[0]) { texto = r.choices[0].message?.content ?? null; modelo = 'groq:' + (r.model || 'desconocido'); }\nelse if (r.candidates && r.candidates[0]) {\n  texto = (r.candidates[0].content?.parts || []).map((p) => p.text || '').join('');\n  modelo = 'gemini:' + (r.modelVersion || 'desconocido');\n}\n\nconst f = (x) => String(x).replace('.', ',');\nconst plantilla = () => {\n  const frases = ['pm25', 'pm10'].filter((par) => prep.datos[par]).map((par, i) => {\n    const d = prep.datos[par];\n    const et = par === 'pm25' ? 'PM2.5' : 'PM10';\n    const ini = i === 0\n      ? `${prep.rango.charAt(0).toUpperCase() + prep.rango.slice(1)}, el ${et} de ${prep.nombre}`\n      : `El ${et}`;\n    let s = `${ini} tuvo un promedio de ${f(d.promedio)} µg/m³ (${d.diasConDato} días con dato) y una lectura más alta de ${f(d.maximo)} µg/m³`;\n    s += d.diasExcedidos > 0\n      ? `; el promedio diario superó el límite de referencia de ${d.limite} µg/m³ en ${d.diasExcedidos} ${d.diasExcedidos === 1 ? 'día' : 'días'}.`\n      : `; no superó el límite de referencia de ${d.limite} µg/m³.`;\n    if (d.tendencia) s += ` Frente a la semana anterior ${d.tendencia === 'estable' ? 'se mantuvo estable' : (d.tendencia === 'sube' ? 'subió' : 'bajó') + ' ' + f(Math.abs(d.variacionPct)) + ' %'}.`;\n    return s;\n  });\n  return frases.join(' ');\n};\n\nlet motivo = '';\nlet limpio = String(texto ?? '').replace(/\\*\\*|__|`|^#+\\s*/gm, '').replace(/\\s+/g, ' ').trim();\nif (!limpio) motivo = 'sin texto de la IA';\nelse if (limpio.length < 40 || limpio.length > 1200) motivo = 'largo fuera de rango';\nelse if (/\\b(select|insert|update|delete|drop|truncate|alter|create|union|join|where)\\b|--|analitica_/i.test(limpio)) motivo = 'contiene SQL o nombres internos';\nelse {\n  const sinUnidades = limpio.replace(/[µμ]g\\s?\\/\\s?m[³3]/gi, '').replace(/PM\\s?2[.,]?5/gi, '').replace(/PM\\s?10/gi, '');\n  const nums = (sinUnidades.match(/\\d+(?:[.,]\\d+)?/g) || []).map((s) => Number(s.replace(',', '.')));\n  const ajenos = nums.filter((x) => !prep.permitidos.some((a) => Math.abs(a - x) < 0.051));\n  if (ajenos.length) motivo = 'cifras que no están en los agregados: ' + ajenos.slice(0, 3).join(', ');\n}\n\nconst usaIA = motivo === '';\nreturn { json: {\n  semana_inicio: prep.semana_inicio,\n  distrito: prep.id,\n  resumen: usaIA ? limpio : plantilla(),\n  modelo: usaIA ? modelo : 'plantilla',\n  motivo_plantilla: motivo,\n} };"
+      },
+      "id": "ab7c4389-65db-4e15-a77c-52d76085e661",
+      "name": "Validar y armar resumen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO analitica_insights (semana_inicio, distrito, resumen, modelo)\nVALUES ($1::date, $2, $3, $4)\nON CONFLICT (semana_inicio, distrito) DO UPDATE SET\n  resumen = EXCLUDED.resumen, modelo = EXCLUDED.modelo, generado_en = now()\nRETURNING semana_inicio, distrito, modelo;",
+        "options": {
+          "queryReplacement": "={{ [ $json.semana_inicio, $json.distrito, $json.resumen, $json.modelo ] }}"
+        }
+      },
+      "id": "b6442931-04cf-4a77-9f1f-7d57d24e77ac",
+      "name": "Guardar en analitica_insights",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1472,
+        832
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "analitica/comparativo",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d5439c80-ffd4-43d1-a5cb-c196a24e65a4",
+      "name": "GET /analitica/comparativo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        1776
+      ],
+      "webhookId": "e8c96909-12f6-5a2f-addf-712aed599598",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Valida los parámetros de GET /analitica/comparativo (contrato v0.1).\nconst q = $input.first().json.query || {};\nconst fail = (mensaje) => [{ json: { valida: false, status: 400, body: { ok: false, codigo: 'PARAMETRO_INVALIDO', mensaje } } }];\n\nconst crudo = String(q.distritos ?? '').trim();\nif (!crudo) return fail('El parámetro distritos es obligatorio (ids separados por coma, por ejemplo ate,santa-anita).');\nconst distritos = [...new Set(crudo.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean))];\nif (distritos.length === 0) return fail('El parámetro distritos es obligatorio (ids separados por coma, por ejemplo ate,santa-anita).');\nif (distritos.length > 5) return fail('Se pueden comparar como máximo 5 distritos.');\nconst desconocidos = distritos.filter((d) => !NOMBRES[d]);\nif (desconocidos.length) return fail('Distrito no reconocido: ' + desconocidos.slice(0, 3).join(', ') + '.');\n\nconst dias = Number(q.dias);\nif (![7, 30].includes(dias)) return fail('El parámetro dias debe ser 7 o 30.');\n\nconst par = String(q.parametro ?? '').trim().toLowerCase();\nif (par && !['pm25', 'pm10'].includes(par)) return fail('El parámetro parametro debe ser pm25 o pm10.');\nconst parametros = par ? [par] : ['pm25', 'pm10'];\n\nreturn [{ json: { valida: true, distritos, dias, parametros } }];\n"
+      },
+      "id": "7d1d7468-57f6-4cf8-8a62-f1901b3e95ec",
+      "name": "Validar parámetros (comparativo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        1776
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8da2cb34-3a1d-55b4-9f26-47ee2f4fd317",
+              "leftValue": "={{ $json.valida }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "32dd5bc5-e17f-44cc-9fa3-c61f2ed6adf9",
+      "name": "¿Parámetros válidos? (comparativo)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        1776
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH fin AS (\n  SELECT MAX(fecha) AS hasta FROM analitica_diaria\n),\nd AS (\n  SELECT fecha, parametro, promedio, maximo, excede_eca,\n         regexp_replace(translate(lower(distrito), 'áéíóúüñ', 'aeiouun'), '[^a-z0-9]+', '-', 'g') AS id\n  FROM analitica_diaria\n),\nsel AS (\n  SELECT d.* FROM d, fin\n  WHERE d.id = ANY(string_to_array($1, ','))\n    AND d.parametro = ANY(string_to_array($2, ','))\n    AND d.fecha > fin.hasta - ($3::int * 2)\n    AND d.fecha <= fin.hasta\n),\nult AS (\n  SELECT id, MAX(fecha) AS ultimo FROM d\n  WHERE id = ANY(string_to_array($1, ',')) GROUP BY id\n)\nSELECT\n  (SELECT hasta FROM fin)::text AS hasta,\n  COALESCE((SELECT json_agg(json_build_object(\n      'fecha', fecha::text, 'id', id, 'parametro', parametro,\n      'promedio', promedio, 'maximo', maximo, 'excede', excede_eca) ORDER BY fecha) FROM sel), '[]'::json) AS filas,\n  COALESCE((SELECT json_agg(json_build_object('id', id, 'ultimo', ultimo::text)) FROM ult), '[]'::json) AS ultimos;",
+        "options": {
+          "queryReplacement": "={{ [ $json.distritos.join(','), $json.parametros.join(','), String($json.dias) ] }}"
+        }
+      },
+      "id": "7842a245-57d0-4902-8310-802bb7cbc4ca",
+      "name": "Consultar comparativo",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        352,
+        1712
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Arma la respuesta de /analitica/comparativo a partir de las filas diarias.\nconst p = $('Validar parámetros (comparativo)').first().json;\nconst r = $input.first().json;\nconst filas = asJson(r.filas);\nconst ultimos = asJson(r.ultimos);\nconst hasta = r.hasta || null;\nconst dias = p.dias;\nconst MIN = Math.ceil(dias / 2);   // 4 de 7, 15 de 30\n\nconst desde = hasta ? addDays(hasta, -(dias - 1)) : null;\nconst antHasta = hasta ? addDays(hasta, -dias) : null;\nconst antDesde = hasta ? addDays(hasta, -(2 * dias - 1)) : null;\nconst fechas = hasta ? Array.from({ length: dias }, (_, i) => addDays(desde, i)) : [];\n\nconst distritos = p.distritos.map((id) => {\n  const propias = filas.filter((f) => f.id === id);\n  const act = propias.filter((f) => f.fecha >= desde && f.fecha <= hasta);\n  const ant = propias.filter((f) => f.fecha >= antDesde && f.fecha <= antHasta);\n  const diasDistrito = new Set(act.map((f) => f.fecha)).size;\n\n  if (!hasta || diasDistrito < MIN) {\n    const u = ultimos.find((x) => x.id === id);\n    return { id, nombre: nombreDe(id), datosSuficientes: false, ultimoDato: u ? u.ultimo : null, parametros: null, serie: [] };\n  }\n\n  const parametros = {};\n  for (const par of p.parametros) {\n    const a = act.filter((f) => f.parametro === par);\n    const b = ant.filter((f) => f.parametro === par);\n    const prom = avg(a.map((f) => f.promedio));\n    const prev = b.length >= MIN ? avg(b.map((f) => f.promedio)) : null;\n    let variacionPct = null, tendencia = null;\n    if (prom !== null && prev !== null && prev !== 0) {\n      variacionPct = r1(((prom - prev) / prev) * 100);\n      tendencia = Math.abs(variacionPct) < 5 ? 'estable' : (variacionPct > 0 ? 'sube' : 'baja');\n    }\n    parametros[par] = {\n      unidad: UNIDAD,\n      promedio: r1(prom),\n      anterior: r1(prev),\n      variacionPct,\n      tendencia,\n      diasConDato: a.length,\n      diasExcedidos: a.filter((f) => f.excede).length,\n      limiteEca: LIMITES[par],\n    };\n  }\n\n  const serie = fechas.map((fecha) => {\n    const punto = { fecha };\n    for (const par of p.parametros) {\n      const f = act.find((x) => x.fecha === fecha && x.parametro === par);\n      punto[par] = f ? r1(f.promedio) : null;\n    }\n    return punto;\n  });\n\n  return { id, nombre: nombreDe(id), datosSuficientes: true, parametros, serie };\n});\n\nreturn [{\n  json: {\n    status: 200,\n    body: {\n      ok: true,\n      generadoEn: ahoraLima(),\n      dias,\n      periodo: hasta ? { desde, hasta } : null,\n      periodoAnterior: hasta ? { desde: antDesde, hasta: antHasta } : null,\n      distritos,\n    },\n  },\n}];\n"
+      },
+      "id": "a71cd71d-0e92-4d2e-9f1e-e76cbd36b143",
+      "name": "Armar respuesta (comparativo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Convierte un fallo de la base de datos en 503 (no responde) o 500 (fallo inesperado).\n// Al ciudadano no se le devuelve el detalle técnico.\nconst e = $input.first().json.error || {};\nconst detalle = String(e.message || e.description || JSON.stringify(e)).slice(0, 300);\nconst caido = /ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EHOSTUNREACH|ECONNRESET|timeout|terminating connection|starting up|shutting down|too many connections/i.test(detalle);\nconsole.log('Flujo D · error de consulta: ' + detalle);\nreturn [{\n  json: caido\n    ? { status: 503, body: { ok: false, codigo: 'SERVICIO_NO_DISPONIBLE', mensaje: 'El servicio de analítica no está disponible por ahora. Intenta de nuevo en unos minutos.' } }\n    : { status: 500, body: { ok: false, codigo: 'ERROR_INTERNO', mensaje: 'No se pudo obtener la analítica. Intenta de nuevo más tarde.' } },\n}];\n"
+      },
+      "id": "d83887ef-ec26-4931-98ac-35961ca6859a",
+      "name": "Clasificar error (comparativo)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        1840
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "b11a03d7-12ea-4efa-81a8-409372582fe0",
+      "name": "Responder (comparativo)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        944,
+        1760
+      ]
+    },
+    {
+      "parameters": {
+        "path": "analitica/ranking-eca",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "234a545d-a95f-447a-b58d-bc1e5cfc77de",
+      "name": "GET /analitica/ranking-eca",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        2160
+      ],
+      "webhookId": "b66302fd-a8f1-5877-80be-639e7bb89694",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Valida los parámetros de GET /analitica/ranking-eca (contrato v0.1).\nconst q = $input.first().json.query || {};\nconst fail = (mensaje) => [{ json: { valida: false, status: 400, body: { ok: false, codigo: 'PARAMETRO_INVALIDO', mensaje } } }];\n\nconst dias = Number(q.dias);\nif (![7, 30].includes(dias)) return fail('El parámetro dias debe ser 7 o 30.');\n\nconst par = String(q.parametro ?? 'pm25').trim().toLowerCase() || 'pm25';\nif (!['pm25', 'pm10'].includes(par)) return fail('El parámetro parametro debe ser pm25 o pm10.');\n\nreturn [{ json: { valida: true, dias, parametro: par } }];\n"
+      },
+      "id": "d42e1505-5662-49c5-a158-5785afc60de4",
+      "name": "Validar parámetros (ranking)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        2160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "30775670-4b44-519f-856d-1b904fbb08f6",
+              "leftValue": "={{ $json.valida }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "263bfc7c-3182-456c-ad37-699154c9eca4",
+      "name": "¿Parámetros válidos? (ranking)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        2160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH fin AS (\n  SELECT MAX(fecha) AS hasta FROM analitica_diaria\n),\nt AS (\n  SELECT regexp_replace(translate(lower(distrito), 'áéíóúüñ', 'aeiouun'), '[^a-z0-9]+', '-', 'g') AS id,\n         fecha, promedio, maximo, excede_eca\n  FROM analitica_diaria\n  WHERE parametro = $1\n)\nSELECT\n  (SELECT hasta FROM fin)::text AS hasta,\n  COALESCE((SELECT json_agg(x) FROM (\n    SELECT t.id,\n           COUNT(*)                              AS dias_con_dato,\n           COUNT(*) FILTER (WHERE t.excede_eca)  AS dias_excedidos,\n           AVG(t.promedio)                       AS promedio,\n           MAX(t.maximo)                         AS maximo\n    FROM t, fin\n    WHERE t.fecha > fin.hasta - $2::int AND t.fecha <= fin.hasta\n    GROUP BY t.id\n  ) x), '[]'::json) AS filas;",
+        "options": {
+          "queryReplacement": "={{ [ $json.parametro, String($json.dias) ] }}"
+        }
+      },
+      "id": "6dac97d8-c334-42b6-ac77-0d03b432f5b7",
+      "name": "Consultar ranking",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        352,
+        2096
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Arma la respuesta de /analitica/ranking-eca.\nconst p = $('Validar parámetros (ranking)').first().json;\nconst r = $input.first().json;\nconst filas = asJson(r.filas);\nconst MIN = Math.ceil(p.dias / 2);\n\nconst elegibles = filas\n  .filter((f) => Number(f.dias_con_dato) >= MIN)\n  .sort((a, b) => (Number(b.dias_excedidos) - Number(a.dias_excedidos)) || (Number(b.promedio) - Number(a.promedio)));\n\nconst ranking = elegibles.map((f, i) => ({\n  posicion: i + 1,\n  distrito: { id: f.id, nombre: nombreDe(f.id) },\n  diasExcedidos: Number(f.dias_excedidos),\n  diasConDato: Number(f.dias_con_dato),\n  promedio: r1(Number(f.promedio)),\n  maximo: r1(Number(f.maximo)),\n}));\n\nconst enRanking = new Set(elegibles.map((f) => f.id));\nconst sinDatosSuficientes = Object.keys(NOMBRES).filter((id) => !enRanking.has(id));\n\nreturn [{\n  json: {\n    status: 200,\n    body: {\n      ok: true,\n      generadoEn: ahoraLima(),\n      dias: p.dias,\n      parametro: p.parametro,\n      unidad: UNIDAD,\n      limiteEca: LIMITES[p.parametro],\n      criterio: 'referencial',\n      ranking,\n      sinDatosSuficientes,\n    },\n  },\n}];\n"
+      },
+      "id": "d2a5305d-c34c-4cae-a7ae-d8080fb6ae63",
+      "name": "Armar respuesta (ranking)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Convierte un fallo de la base de datos en 503 (no responde) o 500 (fallo inesperado).\n// Al ciudadano no se le devuelve el detalle técnico.\nconst e = $input.first().json.error || {};\nconst detalle = String(e.message || e.description || JSON.stringify(e)).slice(0, 300);\nconst caido = /ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EHOSTUNREACH|ECONNRESET|timeout|terminating connection|starting up|shutting down|too many connections/i.test(detalle);\nconsole.log('Flujo D · error de consulta: ' + detalle);\nreturn [{\n  json: caido\n    ? { status: 503, body: { ok: false, codigo: 'SERVICIO_NO_DISPONIBLE', mensaje: 'El servicio de analítica no está disponible por ahora. Intenta de nuevo en unos minutos.' } }\n    : { status: 500, body: { ok: false, codigo: 'ERROR_INTERNO', mensaje: 'No se pudo obtener la analítica. Intenta de nuevo más tarde.' } },\n}];\n"
+      },
+      "id": "e12f4637-cdba-4e04-9e09-fd9692cfc6b8",
+      "name": "Clasificar error (ranking)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        2224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "4eb8f213-6708-4206-9d27-948702fe7ecf",
+      "name": "Responder (ranking)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        944,
+        2144
+      ]
+    },
+    {
+      "parameters": {
+        "path": "analitica/patron-horario",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f7394290-1a9d-440d-abd0-449a40127057",
+      "name": "GET /analitica/patron-horario",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        2544
+      ],
+      "webhookId": "2c5975ae-a008-5173-af63-62ca5b837dad",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\nconst REQUIERE_PERIODO = true;\n// Valida los parámetros de GET /analitica/resumen-ia (distrito) y, con dias/parametro, de /analitica/patron-horario.\nconst q = $input.first().json.query || {};\nconst fail = (mensaje) => [{ json: { valida: false, status: 400, body: { ok: false, codigo: 'PARAMETRO_INVALIDO', mensaje } } }];\n\nconst distrito = String(q.distrito ?? '').trim().toLowerCase();\nif (!distrito) return fail('El parámetro distrito es obligatorio (por ejemplo ate).');\nif (!NOMBRES[distrito]) return fail('Distrito no reconocido: ' + distrito.slice(0, 40) + '.');\n\nif (!REQUIERE_PERIODO) return [{ json: { valida: true, distrito } }];\n\nconst dias = Number(q.dias);\nif (![7, 30].includes(dias)) return fail('El parámetro dias debe ser 7 o 30.');\nconst parametro = String(q.parametro ?? 'pm25').trim().toLowerCase() || 'pm25';\nif (!['pm25', 'pm10'].includes(parametro)) return fail('El parámetro parametro debe ser pm25 o pm10.');\nreturn [{ json: { valida: true, distrito, dias, parametro } }];\n"
+      },
+      "id": "a53149b5-3196-42ec-bec2-76724f4e10cd",
+      "name": "Validar parámetros (patron)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        2544
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "abe96a78-95ed-5d36-b4db-fea323e3264e",
+              "leftValue": "={{ $json.valida }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "30005067-56ab-4dac-ba79-51f63ed315ab",
+      "name": "¿Parámetros válidos? (patron)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        2544
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH fin AS (\n  SELECT MAX(fecha) AS hasta FROM analitica_diaria\n)\nSELECT\n  (SELECT hasta FROM fin)::text AS hasta,\n  COALESCE((SELECT json_agg(x ORDER BY x.hora) FROM (\n    SELECT extract(hour FROM m.medido_en AT TIME ZONE 'America/Lima')::int AS hora,\n           AVG(m.valor) AS promedio, COUNT(*) AS n\n    FROM mediciones_aire m\n    JOIN estaciones e ON e.id = m.estacion_id, fin\n    WHERE regexp_replace(translate(lower(e.zona), 'áéíóúüñ', 'aeiouun'), '[^a-z0-9]+', '-', 'g') = $1\n      AND m.parametro = $2 AND m.unidad = 'µg/m³' AND m.valor IS NOT NULL\n      AND m.medido_en >= ((fin.hasta - ($3::int - 1))::timestamp AT TIME ZONE 'America/Lima')\n      AND m.medido_en <  ((fin.hasta + 1)::timestamp AT TIME ZONE 'America/Lima')\n    GROUP BY 1\n  ) x), '[]'::json) AS horas;",
+        "options": {
+          "queryReplacement": "={{ [ $json.distrito, $json.parametro, String($json.dias) ] }}"
+        }
+      },
+      "id": "b30fb3c7-7647-4352-9d5f-d54103e514cb",
+      "name": "Consultar patron",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        352,
+        2480
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Arma la respuesta de /analitica/patron-horario: 24 posiciones (hora de Lima).\nconst p = $('Validar parámetros (patron)').first().json;\nconst r = $input.first().json;\nconst filas = asJson(r.horas);\nconst horas = Array.from({ length: 24 }, (_, h) => {\n  const f = filas.find((x) => Number(x.hora) === h);\n  return { hora: h, promedio: f ? r1(Number(f.promedio)) : null, n: f ? Number(f.n) : 0 };\n});\n// Suficiente: al menos 12 de las 24 horas con 3 o más lecturas.\nconst datosSuficientes = horas.filter((x) => x.n >= 3).length >= 12;\nlet horaCritica = null;\nif (datosSuficientes) {\n  const c = horas.filter((x) => x.promedio !== null).sort((a, b) => b.promedio - a.promedio)[0];\n  horaCritica = c ? { hora: c.hora, promedio: c.promedio } : null;\n}\nreturn [{ json: { status: 200, body: {\n  ok: true, generadoEn: ahoraLima(),\n  distrito: { id: p.distrito, nombre: nombreDe(p.distrito) },\n  dias: p.dias, parametro: p.parametro, unidad: UNIDAD, zonaHoraria: 'America/Lima',\n  datosSuficientes, horas, horaCritica,\n} } }];\n"
+      },
+      "id": "e4c4a993-b2c5-40d1-953d-e56b61c14386",
+      "name": "Armar respuesta (patron)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        2416
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Convierte un fallo de la base de datos en 503 (no responde) o 500 (fallo inesperado).\n// Al ciudadano no se le devuelve el detalle técnico.\nconst e = $input.first().json.error || {};\nconst detalle = String(e.message || e.description || JSON.stringify(e)).slice(0, 300);\nconst caido = /ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EHOSTUNREACH|ECONNRESET|timeout|terminating connection|starting up|shutting down|too many connections/i.test(detalle);\nconsole.log('Flujo D · error de consulta: ' + detalle);\nreturn [{\n  json: caido\n    ? { status: 503, body: { ok: false, codigo: 'SERVICIO_NO_DISPONIBLE', mensaje: 'El servicio de analítica no está disponible por ahora. Intenta de nuevo en unos minutos.' } }\n    : { status: 500, body: { ok: false, codigo: 'ERROR_INTERNO', mensaje: 'No se pudo obtener la analítica. Intenta de nuevo más tarde.' } },\n}];\n"
+      },
+      "id": "d09c2633-8b3e-48f9-8984-493c3896f02a",
+      "name": "Clasificar error (patron)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        2592
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "d677a937-e4fa-401f-9731-63e55965d30e",
+      "name": "Responder (patron)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        944,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "path": "analitica/resumen-ia",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c7a03ae2-c884-4ed6-ab28-df8d13ea7485",
+      "name": "GET /analitica/resumen-ia",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        2912
+      ],
+      "webhookId": "e41f94be-817e-506d-9db4-dd987e7569ef",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\nconst REQUIERE_PERIODO = false;\n// Valida los parámetros de GET /analitica/resumen-ia (distrito) y, con dias/parametro, de /analitica/patron-horario.\nconst q = $input.first().json.query || {};\nconst fail = (mensaje) => [{ json: { valida: false, status: 400, body: { ok: false, codigo: 'PARAMETRO_INVALIDO', mensaje } } }];\n\nconst distrito = String(q.distrito ?? '').trim().toLowerCase();\nif (!distrito) return fail('El parámetro distrito es obligatorio (por ejemplo ate).');\nif (!NOMBRES[distrito]) return fail('Distrito no reconocido: ' + distrito.slice(0, 40) + '.');\n\nif (!REQUIERE_PERIODO) return [{ json: { valida: true, distrito } }];\n\nconst dias = Number(q.dias);\nif (![7, 30].includes(dias)) return fail('El parámetro dias debe ser 7 o 30.');\nconst parametro = String(q.parametro ?? 'pm25').trim().toLowerCase() || 'pm25';\nif (!['pm25', 'pm10'].includes(parametro)) return fail('El parámetro parametro debe ser pm25 o pm10.');\nreturn [{ json: { valida: true, distrito, dias, parametro } }];\n"
+      },
+      "id": "d0b77f02-d830-44f8-9af8-80777ea9c5f0",
+      "name": "Validar parámetros (resumen)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        2912
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b7b821e0-2107-55d6-9f57-ec7d8f8ecb4c",
+              "leftValue": "={{ $json.valida }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "26f6b15b-6071-4532-b958-fa26d608844d",
+      "name": "¿Parámetros válidos? (resumen)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        2912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT semana_inicio::text AS semana_inicio, resumen, modelo,\n       to_char(generado_en AT TIME ZONE 'America/Lima', 'YYYY-MM-DD\"T\"HH24:MI:SS') || '-05:00' AS generado_en\nFROM analitica_insights\nWHERE distrito = $1\nORDER BY semana_inicio DESC\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [ $json.distrito ] }}"
+        }
+      },
+      "id": "5456740b-b03c-48f1-9702-09db154e70d6",
+      "name": "Consultar resumen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        352,
+        2864
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Arma la respuesta de /analitica/resumen-ia: lee el texto ya guardado; nunca llama a la IA.\nconst p = $('Validar parámetros (resumen)').first().json;\nconst r = $input.first().json;\nconst base = { ok: true, generadoEn: ahoraLima(), distrito: { id: p.distrito, nombre: nombreDe(p.distrito) } };\nif (!r || !r.resumen) {\n  return [{ json: { status: 200, body: { ...base, disponible: false, semana: null, resumen: null, modelo: null, resumenGeneradoEn: null } } }];\n}\nreturn [{ json: { status: 200, body: {\n  ...base, disponible: true,\n  semana: { inicio: r.semana_inicio, fin: addDays(r.semana_inicio, 6) },\n  resumen: r.resumen, modelo: r.modelo || null, resumenGeneradoEn: r.generado_en,\n} } }];\n"
+      },
+      "id": "8f19a59f-d452-4f89-8d48-1492cd5ff868",
+      "name": "Armar respuesta (resumen)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        2800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Convierte un fallo de la base de datos en 503 (no responde) o 500 (fallo inesperado).\n// Al ciudadano no se le devuelve el detalle técnico.\nconst e = $input.first().json.error || {};\nconst detalle = String(e.message || e.description || JSON.stringify(e)).slice(0, 300);\nconst caido = /ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EHOSTUNREACH|ECONNRESET|timeout|terminating connection|starting up|shutting down|too many connections/i.test(detalle);\nconsole.log('Flujo D · error de consulta: ' + detalle);\nreturn [{\n  json: caido\n    ? { status: 503, body: { ok: false, codigo: 'SERVICIO_NO_DISPONIBLE', mensaje: 'El servicio de analítica no está disponible por ahora. Intenta de nuevo en unos minutos.' } }\n    : { status: 500, body: { ok: false, codigo: 'ERROR_INTERNO', mensaje: 'No se pudo obtener la analítica. Intenta de nuevo más tarde.' } },\n}];\n"
+      },
+      "id": "9d10366f-45d1-450a-87e8-b211421867d2",
+      "name": "Clasificar error (resumen)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        2976
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "04592b4c-b38a-48ba-b279-a1947d94c492",
+      "name": "Responder (resumen)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        944,
+        2896
+      ]
+    },
+    {
+      "parameters": {
+        "path": "analitica/distritos",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "66b76af3-211f-440b-a197-74d4f1154f27",
+      "name": "GET /analitica/distritos",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        3296
+      ],
+      "webhookId": "ea7133c1-490d-5ede-96f3-8b51ed09cba2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ZYEcYtEuMlYiH0qx",
+          "name": "NLQ"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH fin AS (\n  SELECT MAX(fecha) AS hasta FROM analitica_diaria\n),\nd AS (\n  SELECT fecha, regexp_replace(translate(lower(distrito), 'áéíóúüñ', 'aeiouun'), '[^a-z0-9]+', '-', 'g') AS id\n  FROM analitica_diaria\n)\nSELECT\n  (SELECT hasta FROM fin)::text AS hasta,\n  COALESCE((SELECT json_agg(x ORDER BY x.id) FROM (\n    SELECT d.id,\n           COUNT(DISTINCT d.fecha)                                          AS dias_con_dato,\n           MIN(d.fecha)::text                                               AS primer,\n           MAX(d.fecha)::text                                               AS ultimo,\n           COUNT(DISTINCT d.fecha) FILTER (WHERE d.fecha > fin.hasta - 7)   AS d7,\n           COUNT(DISTINCT d.fecha) FILTER (WHERE d.fecha > fin.hasta - 30)  AS d30\n    FROM d, fin\n    GROUP BY d.id\n  ) x), '[]'::json) AS filas;",
+        "options": {}
+      },
+      "id": "0d8e546c-fe93-4ae4-b34c-eeafbc1e8681",
+      "name": "Consultar distritos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        3232
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "5D4ENCUhdCYbUghq",
+          "name": "Postgres account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Arma la respuesta de /analitica/distritos: cobertura de datos por distrito.\nconst r = $input.first().json;\nconst filas = asJson(r.filas);\nconst distritos = filas.map((f) => ({\n  id: f.id, nombre: nombreDe(f.id),\n  diasConDato: Number(f.dias_con_dato), primerDato: f.primer, ultimoDato: f.ultimo,\n  datosSuficientes7: Number(f.d7) >= 4, datosSuficientes30: Number(f.d30) >= 15,\n}));\nreturn [{ json: { status: 200, body: { ok: true, generadoEn: ahoraLima(), distritos } } }];\n"
+      },
+      "id": "e8ce3e6f-3732-4eff-8ebe-7058aa27c4e2",
+      "name": "Armar respuesta (distritos)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        3184
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const NOMBRES = {\n  'ate': 'Ate', 'carabayllo': 'Carabayllo', 'jesus-maria': 'Jesús María', 'la-molina': 'La Molina',\n  'lurigancho-chosica': 'Lurigancho-Chosica', 'pachacamac': 'Pachacámac', 'puente-piedra': 'Puente Piedra',\n  'san-borja': 'San Borja', 'san-juan-de-lurigancho': 'San Juan de Lurigancho',\n  'san-martin-de-porres': 'San Martín de Porres', 'santa-anita': 'Santa Anita', 'surco': 'Surco',\n  'villa-maria-del-triunfo': 'Villa María del Triunfo',\n};\nconst LIMITES = { pm25: 50, pm10: 100 };\nconst UNIDAD = 'µg/m³';\nconst addDays = (s, n) => { const d = new Date(s + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };\nconst r1 = (x) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Math.round(x * 10) / 10;\nconst avg = (a) => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;\nconst ahoraLima = () => new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 19) + '-05:00';\nconst nombreDe = (id) => NOMBRES[id] || id;\nconst asJson = (v) => (typeof v === 'string' ? JSON.parse(v) : (v || []));\n\n// Convierte un fallo de la base de datos en 503 (no responde) o 500 (fallo inesperado).\n// Al ciudadano no se le devuelve el detalle técnico.\nconst e = $input.first().json.error || {};\nconst detalle = String(e.message || e.description || JSON.stringify(e)).slice(0, 300);\nconst caido = /ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EHOSTUNREACH|ECONNRESET|timeout|terminating connection|starting up|shutting down|too many connections/i.test(detalle);\nconsole.log('Flujo D · error de consulta: ' + detalle);\nreturn [{\n  json: caido\n    ? { status: 503, body: { ok: false, codigo: 'SERVICIO_NO_DISPONIBLE', mensaje: 'El servicio de analítica no está disponible por ahora. Intenta de nuevo en unos minutos.' } }\n    : { status: 500, body: { ok: false, codigo: 'ERROR_INTERNO', mensaje: 'No se pudo obtener la analítica. Intenta de nuevo más tarde.' } },\n}];\n"
+      },
+      "id": "f8d81cf5-2273-449a-8c3f-5eb440bb14f8",
+      "name": "Clasificar error (distritos)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        3360
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      },
+      "id": "bc835695-2f6c-4256-a6a8-a848812b5938",
+      "name": "Responder (distritos)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        3280
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Todos los días 06:30": {
+      "main": [
+        [
+          {
+            "node": "Verificar ingesta de hoy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar ingesta de hoy": {
+      "main": [
+        [
+          {
+            "node": "¿Llegó la ingesta de hoy?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Llegó la ingesta de hoy?": {
+      "main": [
+        [
+          {
+            "node": "Agregar y guardar en analitica_diaria",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Esperar 10 min",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esperar 10 min": {
+      "main": [
+        [
+          {
+            "node": "Verificar ingesta (reintento)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar ingesta (reintento)": {
+      "main": [
+        [
+          {
+            "node": "¿Llegó la ingesta? (reintento)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Llegó la ingesta? (reintento)": {
+      "main": [
+        [
+          {
+            "node": "Agregar y guardar en analitica_diaria",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error: la ingesta no llegó",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agregar y guardar en analitica_diaria": {
+      "main": [
+        [
+          {
+            "node": "Resumir resultado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error: falló la agregación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lunes 07:00": {
+      "main": [
+        [
+          {
+            "node": "Datos de la semana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos de la semana": {
+      "main": [
+        [
+          {
+            "node": "Preparar prompts (por distrito)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar prompts (por distrito)": {
+      "main": [
+        [
+          {
+            "node": "Groq: redactar resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq: redactar resumen": {
+      "main": [
+        [
+          {
+            "node": "LF · Groq resumen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Validar y armar resumen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "LF · Groq resumen (fallo)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini: respaldo resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini: respaldo resumen": {
+      "main": [
+        [
+          {
+            "node": "LF · Gemini resumen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Validar y armar resumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LF · Groq resumen": {
+      "main": [
+        [
+          {
+            "node": "Registrar en Langfuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LF · Groq resumen (fallo)": {
+      "main": [
+        [
+          {
+            "node": "Registrar en Langfuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LF · Gemini resumen": {
+      "main": [
+        [
+          {
+            "node": "Registrar en Langfuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar y armar resumen": {
+      "main": [
+        [
+          {
+            "node": "Guardar en analitica_insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar comparativo": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar error (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta (comparativo)": {
+      "main": [
+        [
+          {
+            "node": "Responder (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar error (comparativo)": {
+      "main": [
+        [
+          {
+            "node": "Responder (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /analitica/comparativo": {
+      "main": [
+        [
+          {
+            "node": "Validar parámetros (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar parámetros (comparativo)": {
+      "main": [
+        [
+          {
+            "node": "¿Parámetros válidos? (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Parámetros válidos? (comparativo)": {
+      "main": [
+        [
+          {
+            "node": "Consultar comparativo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder (comparativo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar ranking": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar error (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta (ranking)": {
+      "main": [
+        [
+          {
+            "node": "Responder (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar error (ranking)": {
+      "main": [
+        [
+          {
+            "node": "Responder (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /analitica/ranking-eca": {
+      "main": [
+        [
+          {
+            "node": "Validar parámetros (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar parámetros (ranking)": {
+      "main": [
+        [
+          {
+            "node": "¿Parámetros válidos? (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Parámetros válidos? (ranking)": {
+      "main": [
+        [
+          {
+            "node": "Consultar ranking",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder (ranking)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar patron": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar error (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta (patron)": {
+      "main": [
+        [
+          {
+            "node": "Responder (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar error (patron)": {
+      "main": [
+        [
+          {
+            "node": "Responder (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /analitica/patron-horario": {
+      "main": [
+        [
+          {
+            "node": "Validar parámetros (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar parámetros (patron)": {
+      "main": [
+        [
+          {
+            "node": "¿Parámetros válidos? (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Parámetros válidos? (patron)": {
+      "main": [
+        [
+          {
+            "node": "Consultar patron",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder (patron)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar resumen": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar error (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta (resumen)": {
+      "main": [
+        [
+          {
+            "node": "Responder (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar error (resumen)": {
+      "main": [
+        [
+          {
+            "node": "Responder (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /analitica/resumen-ia": {
+      "main": [
+        [
+          {
+            "node": "Validar parámetros (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar parámetros (resumen)": {
+      "main": [
+        [
+          {
+            "node": "¿Parámetros válidos? (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Parámetros válidos? (resumen)": {
+      "main": [
+        [
+          {
+            "node": "Consultar resumen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder (resumen)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar distritos": {
+      "main": [
+        [
+          {
+            "node": "Armar respuesta (distritos)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Clasificar error (distritos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar respuesta (distritos)": {
+      "main": [
+        [
+          {
+            "node": "Responder (distritos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar error (distritos)": {
+      "main": [
+        [
+          {
+            "node": "Responder (distritos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET /analitica/distritos": {
+      "main": [
+        [
+          {
+            "node": "Consultar distritos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00df834a-5398-4756-8a26-bb0820073f4e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d45233d38306f80d59bda9c32d430d3788603cd220673cea3ce0f760b35faf02"
+  },
+  "id": "EJXuBlgP1sWzsocv",
+  "tags": []
+}
