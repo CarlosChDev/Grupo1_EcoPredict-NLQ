@@ -1,6 +1,10 @@
 name: LLMOps Observability
 
 on:
+  pull_request:
+    branches:
+      - main
+
   workflow_dispatch:
     inputs:
       window_hours:
@@ -8,8 +12,10 @@ on:
         required: false
         default: "24"
         type: string
+
   schedule:
     - cron: "17 6 * * *"
+
   workflow_run:
     workflows:
       - "CD - Pre-deployment Validation"
@@ -19,17 +25,46 @@ permissions:
   contents: read
 
 jobs:
+  validate-llmops:
+    name: LLMOps PR Validation
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install test dependency
+        run: python -m pip install pytest
+
+      - name: Validate Python syntax
+        run: python -m py_compile .github/scripts/langfuse_quality_gate.py
+
+      - name: Run Langfuse tests
+        run: python -m pytest src/ia-ops/tests/test_langfuse_quality_gate.py -v
+
   observe-langfuse:
     name: LLMOps Observability (observe-only)
-    # A post-CD observation is useful only after a successful deployment from main.
     if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'main')
+      github.event_name != 'pull_request' &&
+      (
+        github.event_name != 'workflow_run' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: llmops-production
+
     env:
       LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
       LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}

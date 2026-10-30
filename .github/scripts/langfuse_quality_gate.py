@@ -93,7 +93,7 @@ class LangfuseClient:
                     or any(not isinstance(row, dict) for row in data)
                 ):
                     raise LangfuseError(
-                        "Langfuse returned an invalid Metrics API response."
+                        "Langfuse returned an unexpected Metrics API response shape."
                     )
 
                 return data
@@ -124,11 +124,10 @@ class LangfuseClient:
                         "aggregations and filters."
                     ) from None
 
-                if exc.code == 401 or exc.code == 403:
+                if exc.code in (401, 403):
                     raise LangfuseError(
-                        f"Langfuse authentication or permissions error: "
-                        f"HTTP {exc.code}."
-                    ) from None
+                        f"Langfuse Metrics API returned HTTP {exc.code}."
+                ) from None
 
                 raise LangfuseError(
                     f"Langfuse Metrics API returned HTTP {exc.code}."
