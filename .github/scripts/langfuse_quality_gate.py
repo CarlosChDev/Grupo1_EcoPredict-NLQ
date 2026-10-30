@@ -223,7 +223,7 @@ def metric_query(
                 "aggregation": "p95",
             },
             {
-                "measure": "totalTokens",
+                "measure": "totalUsage",
                 "aggregation": "sum",
             },
             {
@@ -294,7 +294,7 @@ def build_summary(
             "observations": value(overall, "count_count"),
             "error_observations": value(errors, "count_count"),
             "p95_latency_ms": value(overall, "p95_latency"),
-            "total_tokens": value(overall, "sum_totalTokens"),
+            "total_tokens": value(overall, "sum_totalUsage"),
             "total_cost_usd": value(overall, "sum_totalCost"),
         },
 
