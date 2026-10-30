@@ -1,0 +1,73 @@
+name: LLMOps Observability
+
+on:
+  workflow_dispatch:
+    inputs:
+      window_hours:
+        description: "Historical window in hours for aggregate Langfuse metrics"
+        required: false
+        default: "24"
+        type: string
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_run:
+    workflows:
+      - "CD - Pre-deployment Validation"
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  observe-langfuse:
+    name: LLMOps Observability (observe-only)
+    # A post-CD observation is useful only after a successful deployment from main.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: llmops-production
+    env:
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL || 'https://us.cloud.langfuse.com' }}
+      LANGFUSE_ENVIRONMENT: produccion
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set observation window
+        id: window
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOURS="${{ inputs.window_hours || '24' }}"
+          if ! [[ "$HOURS" =~ ^[1-9][0-9]*$ ]]; then
+            echo "window_hours must be a positive integer." >&2
+            exit 1
+          fi
+          echo "hours=$HOURS" >> "$GITHUB_OUTPUT"
+
+      - name: Query sanitized Langfuse metrics
+        id: langfuse
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/langfuse_quality_gate.py \
+            --observe-only \
+            --window-hours "${{ steps.window.outputs.hours }}" \
+            --output "$RUNNER_TEMP/llmops-observability-summary.json" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload sanitized observation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: llmops-observability-summary
+          path: ${{ runner.temp }}/llmops-observability-summary.json
+          if-no-files-found: warn
+          retention-days: 14
