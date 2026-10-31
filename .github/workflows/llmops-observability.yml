@@ -4,6 +4,12 @@ on:
   pull_request:
     branches:
       - main
+      - Chavez
+
+    paths:
+      - ".github/scripts/langfuse_quality_gate.py"
+      - "src/ia-ops/tests/test_langfuse_quality_gate.py"
+      - ".github/workflows/llmops-observability.yml"
 
   workflow_dispatch:
     inputs:
@@ -27,7 +33,7 @@ permissions:
 jobs:
   validate-llmops:
     name: LLMOps PR Validation
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
