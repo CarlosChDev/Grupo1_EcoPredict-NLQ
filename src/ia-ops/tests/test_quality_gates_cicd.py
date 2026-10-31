@@ -1,14 +1,15 @@
 """
 =============================================================================
 EcoPredict & NLQ — Módulo de Aseguramiento de Calidad (QA / IA Ops)
-Sprint 3 — Tarea T22 (#182): Consolidación de Quality Gates en CI/CD y Dependabot (HT-09)
+Sprint 3 / Sprint 4 — Quality Gates en CI/CD y Prompt Injection (HT-04 / T2)
 =============================================================================
 Suite de pruebas automatizadas para auditar y certificar la configuración,
 reglas de bloqueo y políticas de seguridad de los Quality Gates en CI/CD:
 - Verificación de Workflows de GitHub Actions (ai-testing-ci, newman-ci, frontend-ci, sast, dast, cd)
-- Auditoría de Reglas de Dependabot (.github/dependabot.yml: ecosistemas npm, pip, github-actions)
+- Auditoría de Reglas de Dependabot y gestión de dependencias
 - Regla de Bloqueo Zero-Failures (Todos los Quality Gates deben ser estrictos y obligatorios)
 - Validación de matriz de compatibilidad de Python 3.12 y Node.js 20 en los runners de CI
+- Verificación de la suite de Prompt Injection en AI Testing CI (HT-04 / T2)
 - Verificación de Secrets y Guardrails de Inyección en los pipelines
 """
 
@@ -62,6 +63,23 @@ class TestQualityGatesCiCd:
         assert 'python-version: "3.12"' in contenido or "python-version: 3.12" in contenido
         assert "pytest src/ia-ops/tests" in contenido
         assert "continue-on-error: true" not in contenido, "El Quality Gate de IA no debe tolerar tests fallidos."
+
+    def test_ai_testing_ci_incorpora_suite_prompt_injection_estricta(self):
+        """Certifica que ai-testing-ci.yml ejecute la suite de IA y que test_prompt_injection.py esté activo (HT-04 / T2)."""
+        contenido = (WORKFLOWS_DIR / "ai-testing-ci.yml").read_text(encoding="utf-8")
+        assert "pytest src/ia-ops/tests" in contenido, (
+            "ai-testing-ci.yml debe incluir la ejecución de la suite de pruebas de IA"
+        )
+        assert "continue-on-error: true" not in contenido
+
+        # Verificar que el archivo de pruebas de inyección exista y contenga vectores de ataque
+        prompt_injection_file = REPO_ROOT / "src" / "ia-ops" / "tests" / "test_prompt_injection.py"
+        assert prompt_injection_file.is_file(), "El archivo test_prompt_injection.py no fue encontrado."
+        prompt_injection_code = prompt_injection_file.read_text(encoding="utf-8")
+        assert "PATRONES_SQL_PELIGROSOS" in prompt_injection_code
+        assert "FRASES_OVERRIDE" in prompt_injection_code
+        assert "PATRONES_EXFILTRACION" in prompt_injection_code
+        assert "PATRONES_XSS" in prompt_injection_code
 
     def test_newman_ci_valida_coleccion_oficial_con_timeout(self):
         """Valida que newman-ci.yml audite la colección de API y tenga timeout acotado."""
