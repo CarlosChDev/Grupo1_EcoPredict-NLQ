@@ -11,6 +11,7 @@ Esta carpeta centraliza los informes técnicos, evidencias y guías de ejecució
 ### 📌 [Sprint 4 (En Curso)](file:///C:/Users/johan/.gemini/antigravity/scratch/Grupo1_EcoPredict-NLQ/docs/qa/sprint4)
 * **[T02: Incorporación y Certificación de Prompt Injection en AI Testing CI (HT-04 / #219)](file:///C:/Users/johan/.gemini/antigravity/scratch/Grupo1_EcoPredict-NLQ/docs/qa/sprint4/informe_tecnico_t02_sprint4.md):** 38 pruebas unitarias contra amenazas OWASP LLM01, política de bloqueo Zero-Failures y Quality Gates de CI/CD.
 * **[T16: Certificación del BFF Serverless en Vercel para Flujo C (HT-13 / #222 / #241)](file:///C:/Users/johan/.gemini/antigravity/scratch/Grupo1_EcoPredict-NLQ/docs/qa/sprint4/informe_tecnico_t16_sprint4.md):** 25 pruebas unitarias auditando lista blanca (403 Forbidden), caché CDN (`s-maxage=300`, `stale-while-revalidate=600`), y resiliencia de 24 horas ante caídas de n8n (`stale-if-error=86400`).
+* **[T11: Pruebas de Contrato, Verificación de Agregados y Guardrails IA del Flujo D (HU-16 / #223 / #236)](file:///C:/Users/johan/.gemini/antigravity/scratch/Grupo1_EcoPredict-NLQ/docs/qa/sprint4/informe_tecnico_t11_sprint4.md):** 28 pruebas unitarias auditando contratos OpenAPI de 5 endpoints analíticos, consistencia estadística de agregados vs datos crudos, idempotencia de agregación (06:30), rol `nlq_reader` y guardrails anti-SQL / anti-alucinaciones en el resumen semanal con IA.
 
 ---
 
