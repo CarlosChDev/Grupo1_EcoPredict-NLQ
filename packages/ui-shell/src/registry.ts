@@ -38,7 +38,7 @@ export const microfrontends: MicrofrontendConfig[] = [
     id: "data-analytics",
     nombre: "Data Analytics",
     descripcion:
-      "Resumen por distrito con categoría ECA y tendencia, gráfico de PM2.5/PM10 de 24h, y alertas con sus factores.",
+      "Histórico por distrito: comparativo de 7/30 días, ranking de excedencias del ECA, patrón horario y resumen semanal redactado por IA.",
     icono: "📈",
     ruta: "/data-analytics",
     estado: "disponible",

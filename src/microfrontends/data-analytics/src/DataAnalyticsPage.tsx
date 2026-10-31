@@ -1,82 +1,52 @@
 import { useEffect, useState } from "react";
-import { AlertsPanel } from "./components/AlertsPanel";
-import { DistrictSummaryTable } from "./components/DistrictSummaryTable";
-import { PmTrendChart } from "./components/PmTrendChart";
-import { DataAnalyticsApiError, obtenerAlertas, obtenerEstaciones, obtenerSerieHoraria } from "./services/dataAnalyticsApi";
-import type { AlertaSistema, EstacionResumen, PuntoSerieHoraria } from "./types/analytics.types";
+import { DistrictComparison } from "./components/DistrictComparison";
+import { EcaRanking } from "./components/EcaRanking";
+import { HourlyPattern } from "./components/HourlyPattern";
+import { Esqueleto, PanelError, Segmentado } from "./components/Panel";
+import { WeeklyAiSummary } from "./components/WeeklyAiSummary";
+import { useRemoteData } from "./hooks/useRemoteData";
+import { obtenerDistritos } from "./services/dataAnalyticsApi";
+import type { DiasPeriodo, DistritoDisponible } from "./types/analytics.types";
+import { fechaCorta, fechaHoraLima } from "./utils/formato";
 import "./DataAnalyticsPage.css";
 
-type Estado =
-  | { tipo: "cargando" }
-  | { tipo: "error"; mensaje: string }
-  | { tipo: "listo"; estaciones: EstacionResumen[] };
+const OPCIONES_DIAS = [
+  { valor: 7 as const, etiqueta: "Últimos 7 días" },
+  { valor: 30 as const, etiqueta: "Últimos 30 días" },
+];
 
-type EstadoSerieHoraria =
-  | { tipo: "cargando" }
-  | { tipo: "error"; mensaje: string }
-  | { tipo: "listo"; serie: PuntoSerieHoraria[] };
-
-type EstadoAlertas =
-  | { tipo: "cargando" }
-  | { tipo: "error"; mensaje: string }
-  | { tipo: "listo"; alertas: AlertaSistema[] };
+/** Los primeros 3 distritos con datos de la última semana (o los 2 primeros, si no alcanza). */
+function seleccionInicial(distritos: DistritoDisponible[]): string[] {
+  const conDatos = distritos.filter((d) => d.datosSuficientes7).map((d) => d.id);
+  if (conDatos.length >= 2) return conDatos.slice(0, 3);
+  return distritos.slice(0, 2).map((d) => d.id);
+}
 
 /**
- * Microfrontend: Data Analytics (HU-03 — Panel de Analítica Ambiental, Fase 1).
+ * Microfrontend: Data Analytics (HU-23 — Panel de Analítica Ambiental, Fase 2).
  *
- * Reutiliza los webhooks de n8n que ya expone FLUJO C (los mismos que
- * consume Dashboard Ambiental) — no hay flujos nuevos que crear, solo una
- * vista distinta: resumen por distrito con categoría ECA y tendencia,
- * gráfico de PM2.5/PM10 de 24h, y alertas con sus factores (analisis_llm).
+ * Histórico y comparación entre distritos sobre los webhooks del flujo de
+ * analítica en n8n (`/webhook/analitica/...`). Cada bloque pide sus propios
+ * datos, así que si uno falla los demás siguen funcionando.
  */
 export function DataAnalyticsPage() {
-  const [estado, setEstado] = useState<Estado>({ tipo: "cargando" });
-  const [estadoSerie, setEstadoSerie] = useState<EstadoSerieHoraria>({ tipo: "cargando" });
-  const [estadoAlertas, setEstadoAlertas] = useState<EstadoAlertas>({ tipo: "cargando" });
+  const [dias, setDias] = useState<DiasPeriodo>(7);
+  const [seleccion, setSeleccion] = useState<string[]>([]);
+  const [estado, reintentar] = useRemoteData((signal) => obtenerDistritos(signal), "distritos");
 
   useEffect(() => {
-    let cancelado = false;
+    if (estado.tipo === "listo") setSeleccion(seleccionInicial(estado.datos.distritos));
+  }, [estado]);
 
-    obtenerEstaciones()
-      .then((respuesta) => {
-        if (!cancelado) setEstado({ tipo: "listo", estaciones: respuesta.estaciones });
-      })
-      .catch((err) => {
-        if (cancelado) return;
-        const mensaje = err instanceof DataAnalyticsApiError ? err.message : "Error inesperado al cargar estaciones.";
-        setEstado({ tipo: "error", mensaje });
-      });
-
-    obtenerSerieHoraria()
-      .then((respuesta) => {
-        if (!cancelado) setEstadoSerie({ tipo: "listo", serie: respuesta.serie });
-      })
-      .catch((err) => {
-        if (cancelado) return;
-        const mensaje =
-          err instanceof DataAnalyticsApiError ? err.message : "Error inesperado al cargar la serie horaria.";
-        setEstadoSerie({ tipo: "error", mensaje });
-      });
-
-    obtenerAlertas()
-      .then((respuesta) => {
-        if (!cancelado) setEstadoAlertas({ tipo: "listo", alertas: respuesta.alertas });
-      })
-      .catch((err) => {
-        if (cancelado) return;
-        const mensaje = err instanceof DataAnalyticsApiError ? err.message : "Error inesperado al cargar alertas.";
-        setEstadoAlertas({ tipo: "error", mensaje });
-      });
-
-    return () => {
-      cancelado = true;
-    };
-  }, []);
-
-  if (estado.tipo === "cargando") {
+  if (estado.tipo === "cargando" || (estado.tipo === "listo" && seleccion.length === 0 && estado.datos.distritos.length >= 2)) {
     return (
       <div className="data-analytics-page">
-        <div className="data-analytics-mock-banner">Cargando estaciones…</div>
+        <Esqueleto alto={56} />
+        <Esqueleto alto={320} />
+        <div className="data-analytics-grid">
+          <Esqueleto alto={360} />
+          <Esqueleto alto={360} />
+        </div>
       </div>
     );
   }
@@ -84,52 +54,49 @@ export function DataAnalyticsPage() {
   if (estado.tipo === "error") {
     return (
       <div className="data-analytics-page">
-        <div className="data-analytics-mock-banner">No se pudo cargar la analítica: {estado.mensaje}</div>
+        <PanelError titulo="No se pudo cargar la analítica" mensaje={estado.mensaje} onReintentar={reintentar} />
       </div>
     );
   }
 
-  if (estado.estaciones.length === 0) {
+  const { distritos, generadoEn } = estado.datos;
+  if (distritos.length < 2) {
     return (
       <div className="data-analytics-page">
-        <div className="data-analytics-mock-banner">No hay estaciones con mediciones registradas todavía.</div>
+        <p className="da-aviso">Se necesitan al menos 2 distritos con mediciones para mostrar la analítica.</p>
       </div>
     );
   }
+
+  const ultimoDato = distritos.reduce((max, d) => (d.ultimoDato > max ? d.ultimoDato : max), distritos[0].ultimoDato);
+  const seleccionados = seleccion
+    .map((id) => distritos.find((d) => d.id === id))
+    .filter((d): d is DistritoDisponible => d !== undefined);
 
   return (
     <div className="data-analytics-page">
-      <DistrictSummaryTable estaciones={estado.estaciones} />
-
-      <div className="data-analytics-bottom-grid">
-        {estadoSerie.tipo === "listo" ? (
-          <PmTrendChart serie={estadoSerie.serie} />
-        ) : (
-          <div className="card pm-trend-pendiente-card">
-            <div className="card-label">
-              <span className="small-icon">📈</span>
-              PM2.5 y PM10 · últimas 24 horas
-            </div>
-            <p className="pm-trend-pendiente-mensaje">
-              {estadoSerie.tipo === "cargando" ? "Cargando serie horaria…" : `No se pudo cargar: ${estadoSerie.mensaje}`}
-            </p>
-          </div>
-        )}
-
-        {estadoAlertas.tipo === "listo" ? (
-          <AlertsPanel alertas={estadoAlertas.alertas} />
-        ) : (
-          <div className="card pm-trend-pendiente-card">
-            <div className="card-label">
-              <span className="small-icon">⚠️</span>
-              Alertas y factores asociados
-            </div>
-            <p className="pm-trend-pendiente-mensaje">
-              {estadoAlertas.tipo === "cargando" ? "Cargando alertas…" : `No se pudo cargar: ${estadoAlertas.mensaje}`}
-            </p>
-          </div>
-        )}
+      <div className="da-encabezado">
+        <p>
+          Histórico y comparación entre distritos. Para el estado actual, ve al{" "}
+          <a href="/dashboard-ambiental">Dashboard</a>.
+        </p>
+        <div className="da-encabezado-acciones">
+          <span className="pill p-neutral" title={`Consultado ${fechaHoraLima(generadoEn)}`}>
+            <span className="dot" style={{ background: "var(--good)" }} />
+            Agregados al {fechaCorta(ultimoDato)}
+          </span>
+          <Segmentado opciones={OPCIONES_DIAS} valor={dias} onCambiar={setDias} etiquetaAria="Periodo" />
+        </div>
       </div>
+
+      <DistrictComparison distritos={distritos} seleccion={seleccion} onCambiarSeleccion={setSeleccion} dias={dias} />
+
+      <div className="data-analytics-grid">
+        <EcaRanking distritos={distritos} dias={dias} />
+        <HourlyPattern distritos={distritos} distritoInicial={seleccion[0]} dias={dias} />
+      </div>
+
+      <WeeklyAiSummary distritos={seleccionados} />
     </div>
   );
 }

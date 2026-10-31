@@ -40,7 +40,7 @@ def test_metric_query_uses_approved_aggregate_measures_only():
     assert query["metrics"] == [
         {"measure": "count", "aggregation": "count"},
         {"measure": "latency", "aggregation": "p95"},
-        {"measure": "totalUsage", "aggregation": "sum"},
+        {"measure": "totalTokens", "aggregation": "sum"},
         {"measure": "totalCost", "aggregation": "sum"},
     ]
     assert query["dimensions"] == []
@@ -49,7 +49,7 @@ def test_metric_query_uses_approved_aggregate_measures_only():
 
 def test_summary_preserves_only_available_aggregate_values():
     summary = gate.build_summary(
-        [{"count_count": 12, "p95_latency": 941, "sum_totalUsage": 2900}],
+        [{"count_count": 12, "p95_latency": 941, "sum_totalTokens": 2900}],
         [{"count_count": 2}],
         "2026-01-01T00:00:00Z",
         "2026-01-02T00:00:00Z",

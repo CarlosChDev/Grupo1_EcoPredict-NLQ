@@ -1,9 +1,21 @@
 name: LLMOps Observability
 
 on:
+  push:
+    branches:
+      - Chavez
+    paths:
+      - ".github/scripts/langfuse_quality_gate.py"
+      - "src/ia-ops/tests/test_langfuse_quality_gate.py"
+      - ".github/workflows/llmops-observability.yml"
+
   pull_request:
     branches:
       - main
+    paths:
+      - ".github/scripts/langfuse_quality_gate.py"
+      - "src/ia-ops/tests/test_langfuse_quality_gate.py"
+      - ".github/workflows/llmops-observability.yml"
 
   workflow_dispatch:
     inputs:
@@ -27,7 +39,9 @@ permissions:
 jobs:
   validate-llmops:
     name: LLMOps PR Validation
-    if: github.event_name == 'pull_request'
+    if: >-
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -52,14 +66,13 @@ jobs:
   observe-langfuse:
     name: LLMOps Observability (observe-only)
     if: >-
-      github.event_name != 'pull_request' &&
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
       (
-        github.event_name != 'workflow_run' ||
-        (
-          github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push' &&
-          github.event.workflow_run.head_branch == 'main'
-        )
+        github.event_name == 'workflow_run' &&
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_branch == 'main'
       )
     runs-on: ubuntu-latest
     timeout-minutes: 10
