@@ -1,0 +1,70 @@
+.da-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--ink-3);
+  font-family: var(--font-b);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.da-tag-ia {
+  border-color: color-mix(in srgb, var(--extreme) 50%, transparent);
+  color: var(--extreme);
+}
+
+.da-ia-nota {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--extreme) 30%, transparent);
+  background: color-mix(in srgb, var(--extreme) 10%, transparent);
+  color: var(--extreme);
+  font-size: 12.5px;
+}
+
+.da-iagrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.da-iac {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--extreme);
+  border-radius: var(--r);
+  background: var(--glass-2);
+}
+
+.da-iac-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.da-iac-h b {
+  font-size: 14px;
+}
+
+.da-iac p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.da-iac-f {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
+}
