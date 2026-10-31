@@ -1,34 +1,35 @@
-# Microfrontend: Data Analytics (HU-03 — Panel de Analítica Ambiental, Fase 1)
+# Microfrontend: Data Analytics (HU-23 — Panel de Analítica Ambiental, Fase 2)
 
 App independiente (Vite + React) que se monta en `/data-analytics` dentro
 del dominio del shell (ver `src/frontend-shell`).
 
-Reutiliza los **mismos webhooks de n8n (FLUJO C)** que ya consume
-`dashboard-ambiental` — la HU-03 no crea flujos nuevos, solo una vista
-distinta sobre los mismos datos:
+Histórico y comparación entre distritos — para el estado actual está el
+Dashboard Ambiental. Consume los webhooks del **flujo de analítica** en n8n
+(`/webhook/analitica/...`). Cada bloque pide sus propios datos, así que si
+uno falla los demás siguen funcionando:
 
-- **Resumen por distrito** (`DistrictSummaryTable`): PM2.5, PM10, categoría
-  ECA (peor nivel entre los parámetros medidos) e indicador de tendencia
-  (▲/▼ contra la lectura anterior) por estación, vía `GET /estaciones`.
-  > El esquema de `estaciones` no tiene un campo "distrito" — `zona` es el
-  > tipo de área (`industrial`/`residencial`/`urbana`), no un distrito de
-  > Lima. Esta tabla usa cada **estación** como proxy de la zona geográfica
-  > que representa, que es la granularidad real que expone hoy el backend.
-  > Si más adelante agregan un campo `distrito` real a `estaciones`, solo
-  > hay que sumar esa columna aquí.
-- **Gráfico de tendencia** (`PmTrendChart`): PM2.5/PM10 de las últimas 24h,
-  vía `GET /estaciones/serie-horaria`.
-- **Alertas y factores asociados** (`AlertsPanel`): `GET /alertas`. El
-  campo `mensaje` de cada alerta **es** la columna `analisis_llm` de
-  `alertas_anomalias` (o un mensaje generado si el LLM no escribió ninguno)
-  — por eso ya "reutiliza analisis_llm" tal como pide la HU, sin necesitar
-  un campo nuevo. Si no hay alertas, se muestra el estado vacío "Sin
-  alertas activas.".
+| Bloque | Componente | Webhook |
+| --- | --- | --- |
+| Lista de distritos (chips, selector) | `DataAnalyticsPage` | `GET /distritos` |
+| 1. Comparativo entre distritos (2 a 4) | `DistrictComparison` | `GET /comparativo?distritos=ate,santa-anita&dias=7` |
+| 2. Ranking de excedencias del ECA | `EcaRanking` | `GET /ranking-eca?parametro=pm25&dias=7` |
+| 3. Patrón horario | `HourlyPattern` | `GET /patron-horario?distrito=ate&parametro=pm25&dias=7` |
+| 4. Resumen interpretativo (IA) | `WeeklyAiSummary` | `GET /resumen-ia?distrito=ate` (una llamada por distrito) |
+
+- El selector **Últimos 7 / 30 días** afecta a los bloques 1 a 3; el
+  resumen de IA siempre es de la última semana generada.
+- Los distritos con pocos datos (`datosSuficientes7/30 = false`) se
+  muestran con borde punteado y se pueden elegir igual; el comparativo
+  indica "Sin datos suficientes" en su tarjeta.
+- Si `patron-horario` devuelve `datosSuficientes: false`, el gráfico
+  muestra las horas que sí tienen dato, pero no calcula la hora crítica.
+- Los gráficos son SVG propios (sin Chart.js) para cortar la línea en los
+  días/horas sin dato.
 
 ## Ejecutar en local
 
 ```bash
-cp .env.example .env   # o usa el .env ya presente con los valores de OCI
+cp .env.example .env   # y completa VITE_N8N_API_KEY
 npm install
 npm run dev   # http://localhost:5178/data-analytics/
 ```
@@ -38,9 +39,10 @@ Para la experiencia integrada (Sidebar navegando entre módulos), usa
 
 ## Variables de entorno
 
-Las mismas 3 que usa `dashboard-ambiental` (ver `.env.example`):
-`VITE_N8N_ESTACIONES_WEBHOOK_URL`, `VITE_N8N_SERIE_HORARIA_WEBHOOK_URL`,
-`VITE_N8N_ALERTAS_WEBHOOK_URL`, y opcionalmente `VITE_N8N_API_KEY`.
+- `VITE_N8N_ANALITICA_BASE_URL`: base de los webhooks, p.ej.
+  `http://144.22.203.51/webhook/analitica`. Usa el nginx del puerto 80
+  (agrega CORS); el puerto 5678 de n8n no está expuesto.
+- `VITE_N8N_API_KEY`: valor del header `X-API-Key` que exige n8n.
 
 ## Desplegar en Vercel
 

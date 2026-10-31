@@ -1,68 +1,110 @@
-import type { AlertasResponse, EstacionesResponse, SerieHorariaResponse } from "../types/analytics.types";
+import type {
+  ComparativoResponse,
+  DiasPeriodo,
+  DistritosResponse,
+  ParametroAnalitica,
+  PatronHorarioResponse,
+  RankingEcaResponse,
+  ResumenIaResponse,
+} from "../types/analytics.types";
 
-const WEBHOOK_URL = import.meta.env.VITE_N8N_ESTACIONES_WEBHOOK_URL;
-const SERIE_HORARIA_WEBHOOK_URL = import.meta.env.VITE_N8N_SERIE_HORARIA_WEBHOOK_URL;
-const ALERTAS_WEBHOOK_URL = import.meta.env.VITE_N8N_ALERTAS_WEBHOOK_URL;
+const BASE_URL = import.meta.env.VITE_N8N_ANALITICA_BASE_URL?.replace(/\/+$/, "");
 const API_KEY = import.meta.env.VITE_N8N_API_KEY;
 
 export class DataAnalyticsApiError extends Error {}
 
-async function pedirJson<T>(url: string | undefined, envVarFaltante: string, mensajeErrorGenerico: string): Promise<T> {
-  if (!url) {
-    throw new DataAnalyticsApiError(`${envVarFaltante} no está configurada. Revisa el archivo .env.`);
+type Parametros = Record<string, string | number>;
+
+/** Ruta legible del endpoint (sin host), para el pie de cada bloque. */
+export function describirEndpoint(ruta: string, parametros: Parametros = {}): string {
+  const query = new URLSearchParams(Object.entries(parametros).map(([k, v]) => [k, String(v)])).toString();
+  // URLSearchParams escapa las comas; se dejan legibles en la vista.
+  return `GET /analitica/${ruta}${query ? `?${query.replace(/%2C/g, ",")}` : ""}`;
+}
+
+async function pedirJson<T>(
+  ruta: string,
+  parametros: Parametros,
+  mensajeErrorGenerico: string,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (!BASE_URL) {
+    throw new DataAnalyticsApiError("VITE_N8N_ANALITICA_BASE_URL no está configurada. Revisa el archivo .env.");
   }
+
+  const url = new URL(`${BASE_URL}/${ruta}`);
+  for (const [clave, valor] of Object.entries(parametros)) url.searchParams.set(clave, String(valor));
 
   const headers: Record<string, string> = {};
   if (API_KEY) headers["X-API-Key"] = API_KEY;
 
   let res: Response;
   try {
-    res = await fetch(url, { headers });
-  } catch {
-    throw new DataAnalyticsApiError("No se pudo contactar al webhook de n8n. ¿Está levantado docker compose?");
+    res = await fetch(url, { headers, signal });
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    throw new DataAnalyticsApiError("No se pudo contactar al webhook de n8n.");
   }
 
   let json: unknown;
   try {
     json = await res.json();
   } catch {
-    throw new DataAnalyticsApiError("El webhook respondió con un cuerpo que no es JSON válido.");
+    throw new DataAnalyticsApiError(
+      res.ok ? "El webhook respondió con un cuerpo que no es JSON válido." : `${mensajeErrorGenerico} (${res.status})`,
+    );
   }
 
-  if (!res.ok) {
-    const mensaje = (json as { mensaje?: string } | null)?.mensaje ?? mensajeErrorGenerico;
-    throw new DataAnalyticsApiError(mensaje);
+  const cuerpo = json as { ok?: boolean; mensaje?: string } | null;
+  if (!res.ok || cuerpo?.ok === false) {
+    const sufijo = res.ok ? "" : ` (${res.status})`;
+    throw new DataAnalyticsApiError(`${cuerpo?.mensaje ?? mensajeErrorGenerico}${sufijo}`);
   }
 
   return json as T;
 }
 
-/**
- * Mismos webhooks que ya consume Dashboard Ambiental (FLUJO C) — la HU-03
- * no pide flujos nuevos, solo una vista distinta sobre los mismos datos.
- * Ver src/n8n-workflows/Flujo C.json.
- */
-export async function obtenerEstaciones(): Promise<EstacionesResponse> {
-  return pedirJson<EstacionesResponse>(
-    WEBHOOK_URL,
-    "VITE_N8N_ESTACIONES_WEBHOOK_URL",
-    "Error al consultar las estaciones.",
+/** Ver el flujo de analítica en n8n (`/webhook/analitica/...`). */
+export function obtenerDistritos(signal?: AbortSignal): Promise<DistritosResponse> {
+  return pedirJson("distritos", {}, "Error al consultar los distritos.", signal);
+}
+
+export function obtenerComparativo(
+  distritos: string[],
+  dias: DiasPeriodo,
+  signal?: AbortSignal,
+): Promise<ComparativoResponse> {
+  return pedirJson(
+    "comparativo",
+    { distritos: distritos.join(","), dias },
+    "Error al consultar el comparativo entre distritos.",
+    signal,
   );
 }
 
-export async function obtenerSerieHoraria(): Promise<SerieHorariaResponse> {
-  return pedirJson<SerieHorariaResponse>(
-    SERIE_HORARIA_WEBHOOK_URL,
-    "VITE_N8N_SERIE_HORARIA_WEBHOOK_URL",
-    "Error al consultar la serie horaria de PM2.5/PM10.",
+export function obtenerRankingEca(
+  parametro: ParametroAnalitica,
+  dias: DiasPeriodo,
+  signal?: AbortSignal,
+): Promise<RankingEcaResponse> {
+  return pedirJson("ranking-eca", { parametro, dias }, "Error al consultar el ranking de excedencias.", signal);
+}
+
+export function obtenerPatronHorario(
+  distrito: string,
+  parametro: ParametroAnalitica,
+  dias: DiasPeriodo,
+  signal?: AbortSignal,
+): Promise<PatronHorarioResponse> {
+  return pedirJson(
+    "patron-horario",
+    { distrito, parametro, dias },
+    "Error al consultar el patrón horario.",
+    signal,
   );
 }
 
-/** Alertas de la tabla `alertas_anomalias` — `mensaje` es la columna `analisis_llm`. */
-export async function obtenerAlertas(): Promise<AlertasResponse> {
-  return pedirJson<AlertasResponse>(
-    ALERTAS_WEBHOOK_URL,
-    "VITE_N8N_ALERTAS_WEBHOOK_URL",
-    "Error al consultar las alertas del sistema.",
-  );
+/** El webhook acepta un solo distrito por llamada. */
+export function obtenerResumenIa(distrito: string, signal?: AbortSignal): Promise<ResumenIaResponse> {
+  return pedirJson("resumen-ia", { distrito }, "Error al consultar el resumen de la semana.", signal);
 }

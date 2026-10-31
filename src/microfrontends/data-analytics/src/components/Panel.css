@@ -1,0 +1,176 @@
+.da-panel {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.da-panel-h {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 14px var(--pad) 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.da-panel-h h2 {
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.da-panel-num {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--track);
+  color: var(--ink-3);
+  font-family: var(--font-m);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.da-panel-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.da-panel-sub {
+  width: 100%;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.da-panel-b {
+  padding: 16px var(--pad);
+  flex: 1;
+  min-width: 0;
+}
+
+.da-panel-f {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding: 9px var(--pad);
+  border-top: 1px solid var(--border);
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+.da-panel-f code {
+  font-size: 11px;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* Control segmentado (7/30 días, PM2.5/PM10) */
+.da-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--glass-2);
+}
+
+.da-seg button {
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 6px 12px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.da-seg button + button {
+  border-left: 1px solid var(--border);
+}
+
+.da-seg button.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.da-seg button:active {
+  transform: none;
+}
+
+.da-seg-sm button {
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+
+/* Estados de carga y error */
+.da-sk-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.da-sk {
+  border-radius: var(--r-sm);
+  background: linear-gradient(90deg, var(--track) 0%, var(--border-strong) 50%, var(--track) 100%);
+  background-size: 200% 100%;
+  animation: da-brillo 1.2s infinite;
+}
+
+@keyframes da-brillo {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.da-err {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid color-mix(in srgb, var(--crit) 40%, transparent);
+  background: color-mix(in srgb, var(--crit) 10%, transparent);
+  color: var(--crit);
+  border-radius: var(--r);
+  padding: 14px 16px;
+}
+
+.da-err svg {
+  flex: none;
+}
+
+.da-err b {
+  font-size: 13px;
+}
+
+.da-err p {
+  margin: 4px 0 10px;
+  font-size: 12.5px;
+}
+
+.da-btn {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+
+.da-aviso {
+  border: 1px dashed color-mix(in srgb, var(--mod) 45%, transparent);
+  background: color-mix(in srgb, var(--mod) 10%, transparent);
+  color: var(--mod);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.da-vacio {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
