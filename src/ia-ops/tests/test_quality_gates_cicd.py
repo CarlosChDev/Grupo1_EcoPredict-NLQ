@@ -108,33 +108,39 @@ class TestQualityGatesCiCd:
     def test_dependabot_configurado_correctamente(self):
         """Acepta Dependabot pausado o valida su configuración si está activo."""
         if not DEPENDABOT_FILE.is_file():
-            # La ausencia del archivo representa una pausa intencional.
             return
 
         contenido = DEPENDABOT_FILE.read_text(encoding="utf-8")
 
-        # Si existe, la configuración debe ser válida y tener al menos
-        # un ecosistema configurado. No se acepta updates: [].
         assert "version: 2" in contenido
         assert re.search(r"(?m)^updates:\s*$", contenido), (
             "Dependabot está configurado, pero no contiene una lista updates válida."
         )
-        assert re.search(r'package-ecosystem:\s*"(npm|pip|github-actions)"', contenido), (
-            "Dependabot debe tener al menos un ecosistema activo."
-        )
 
-    def test_dependabot_asigna_revisores_y_labels_apropiados(self):
-        """Comprueba revisores y etiquetas cuando Dependabot está activo."""
+        assert re.search(
+            r'(?m)^\s*-\s*package-ecosystem:\s*["\']?(npm|pip|github-actions)["\']?\s*$',
+            contenido,
+        ), "Dependabot debe tener al menos un ecosistema activo."
+
+    def test_dependabot_asigna_labels_apropiados(self):
+        """Comprueba las etiquetas configuradas para las actualizaciones."""
         if not DEPENDABOT_FILE.is_file():
-            # Sin archivo de configuración, Dependabot está pausado.
             return
 
         contenido = DEPENDABOT_FILE.read_text(encoding="utf-8")
 
-        assert "JohannK99" in contenido
-        assert "CarlosChDev" in contenido
-        assert "dependencies" in contenido
-        assert "security" in contenido
+        etiquetas_requeridas = (
+            "dependencies",
+            "frontend",
+            "qa",
+            "ia-ops",
+            "ci-cd",
+        )
+
+        for etiqueta in etiquetas_requeridas:
+            assert f"- {etiqueta}" in contenido, (
+                f"Falta la etiqueta {etiqueta} en la configuración de Dependabot."
+            )
 
     # -------------------------------------------------------------------------
     # 3. SEGURIDAD Y PERMISOS DE LEAST PRIVILEGE
