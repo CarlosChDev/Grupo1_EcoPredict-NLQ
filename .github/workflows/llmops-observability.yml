@@ -18,7 +18,7 @@ on:
       window_hours:
         description: "Historical window in hours for aggregate Langfuse metrics"
         required: false
-        default: "24"
+        default: "2160"
         type: string
 
   schedule:
