@@ -1,0 +1,63 @@
+version: 2
+
+updates:
+  # Frontend - Monorepo npm
+  - package-ecosystem: npm
+    directory: /
+    target-branch: dependabot-integration
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Lima
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - frontend
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+
+  # IA Ops - Python
+  - package-ecosystem: pip
+    directory: /src/ia-ops
+    target-branch: dependabot-integration
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Lima
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - qa
+      - ia-ops
+    commit-message:
+      prefix: "chore(deps-qa)"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dependabot-integration
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Lima
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci-cd
+    commit-message:
+      prefix: "ci(actions)"
+    groups:
+      github-actions-dependencies:
+        patterns:
+          - "*"

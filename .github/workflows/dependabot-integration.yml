@@ -1,0 +1,57 @@
+name: Dependabot Integration
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - dependabot-integration
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dependabot-integration
+  cancel-in-progress: false
+
+jobs:
+  integrate:
+    name: Integrate Dependabot update
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Verify Dependabot pull request
+        env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          [[ "$PR_AUTHOR" == "dependabot[bot]" ]]
+          [[ "$PR_BASE" == "dependabot-integration" ]]
+          [[ "$PR_HEAD" == dependabot/* ]]
+          [[ "$PR_HEAD_REPO" == "$REPOSITORY" ]]
+
+          echo "Dependabot PR validated."
+
+      - name: Merge into integration branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          gh pr merge "$PR_NUMBER" \
+            --repo "$REPOSITORY" \
+            --merge
+
+          echo "Dependabot update integrated successfully."
