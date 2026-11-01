@@ -10,7 +10,7 @@ createRoot(document.getElementById("root")!).render(
       <PreferencesProvider>
         <AppLayout
           titulo="Data Analytics"
-          subtitulo="Resumen por distrito, tendencia de PM2.5/PM10 y alertas con sus factores"
+          subtitulo="Comparativo entre distritos, ranking de excedencias del ECA, patrón horario y resumen semanal"
           activeId="data-analytics"
         >
           <DataAnalyticsPage />

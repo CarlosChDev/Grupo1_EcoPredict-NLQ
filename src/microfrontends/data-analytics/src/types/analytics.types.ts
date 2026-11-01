@@ -1,88 +1,154 @@
 /**
- * Tipos de vista para Data Analytics (HU-03).
+ * Tipos de vista para Data Analytics (HU-23 — Panel de Analítica Ambiental, Fase 2).
  *
- * Calzan 1:1 con el mismo contrato que ya consume Dashboard Ambiental,
- * porque este microfrontend reutiliza los mismos webhooks de n8n (FLUJO C,
- * ver src/n8n-workflows/Flujo C.json) — no hay flujos nuevos que crear:
- * - GET /estaciones ("Formatear contrato de respuesta"): última medición
- *   (y la anterior, para el indicador de tendencia) por estación y parámetro.
- * - GET /estaciones/serie-horaria ("Formatear serie horaria"): promedio
- *   horario de PM2.5/PM10 de todas las estaciones en las últimas 24h.
- * - GET /alertas: alertas de la tabla `alertas_anomalias` — `mensaje` ES
- *   la columna `analisis_llm` (o un mensaje generado si el LLM no escribió
- *   ninguno), que es lo que pide reutilizar la HU-03.
+ * Calzan 1:1 con las respuestas de los webhooks de n8n del flujo de
+ * analítica (`/webhook/analitica/...`):
+ * - GET /distritos: distritos con datos y si alcanzan para 7 / 30 días.
+ * - GET /comparativo?distritos=a,b&dias=7: promedio del periodo vs. el
+ *   anterior y serie diaria por distrito (2 a 4 distritos).
+ * - GET /ranking-eca?parametro=pm25&dias=7: días sobre el ECA de 24 h.
+ * - GET /patron-horario?distrito=a&parametro=pm25&dias=7: promedio por hora.
+ * - GET /resumen-ia?distrito=a: texto semanal redactado por IA.
+ *
+ * Todas responden `{ ok: false, codigo, mensaje }` con HTTP 4xx/5xx al fallar.
  */
 
-export type ParametroCalidadAire = "pm25" | "pm10" | "no2" | "so2" | "o3" | "co";
+/** Los parámetros que agrega el flujo de analítica. */
+export type ParametroAnalitica = "pm25" | "pm10";
 
-export type NivelEstado = "bueno" | "moderado" | "malo";
+export type DiasPeriodo = 7 | 30;
 
-export interface MedicionParametro {
-  parametro: ParametroCalidadAire;
-  valor: number;
-  /** Valor de la lectura anterior (misma estación/parámetro), para el indicador de tendencia. */
-  valorAnterior?: number | null;
-  unidad: string;
-  medidoEn: string;
-}
+export type Tendencia = "sube" | "baja" | "estable";
 
-export interface Coordenadas {
-  lat: number;
-  lon: number;
-}
-
-/**
- * Una fila de `estaciones`. El esquema no tiene un campo "distrito" — `zona`
- * es el tipo de área ('industrial', 'residencial', 'urbana'), no un distrito
- * de Lima. La vista "Resumen por distrito" de la HU-03 usa la estación
- * (`nombre`) como proxy de la zona geográfica que representa.
- */
-export interface EstacionResumen {
-  id: number;
+export interface DistritoRef {
+  /** Slug que aceptan los webhooks, p.ej. "san-juan-de-lurigancho". */
+  id: string;
   nombre: string;
-  zona: string | null;
-  coordenadas: Coordenadas;
-  mediciones: MedicionParametro[];
 }
 
-/** Cuerpo tal cual lo responde el webhook GET /estaciones. */
-export interface EstacionesResponse {
-  estaciones: EstacionResumen[];
-  total_estaciones: number;
-  generado_en: string;
+export interface Periodo {
+  /** Fechas `YYYY-MM-DD` (hora de Lima). */
+  desde: string;
+  hasta: string;
 }
 
-/** Un punto horario de la serie PM2.5/PM10 de las últimas 24 horas (agregado de todas las estaciones). */
-export interface PuntoSerieHoraria {
-  hora: string;
+export interface ErrorRespuesta {
+  ok: false;
+  codigo: string;
+  mensaje: string;
+}
+
+/* ---------- GET /distritos ---------- */
+
+export interface DistritoDisponible extends DistritoRef {
+  diasConDato: number;
+  primerDato: string;
+  ultimoDato: string;
+  datosSuficientes7: boolean;
+  datosSuficientes30: boolean;
+}
+
+export interface DistritosResponse {
+  ok: true;
+  generadoEn: string;
+  distritos: DistritoDisponible[];
+}
+
+/* ---------- GET /comparativo ---------- */
+
+export interface ResumenParametro {
+  unidad: string;
+  promedio: number | null;
+  anterior: number | null;
+  variacionPct: number | null;
+  tendencia: Tendencia | null;
+  diasConDato: number;
+  diasExcedidos: number;
+  limiteEca: number;
+}
+
+export interface PuntoSerieDiaria {
+  fecha: string;
   pm25: number | null;
   pm10: number | null;
 }
 
-/** Cuerpo tal cual lo responde el webhook GET /estaciones/serie-horaria. */
-export interface SerieHorariaResponse {
-  serie: PuntoSerieHoraria[];
+export interface DistritoComparado extends DistritoRef {
+  datosSuficientes: boolean;
+  /** Solo viene cuando `datosSuficientes` es false. */
+  ultimoDato?: string | null;
+  parametros: Record<ParametroAnalitica, ResumenParametro> | null;
+  serie: PuntoSerieDiaria[];
 }
 
-export type TipoAlerta = "anomalia" | "sincronizacion";
-export type SeveridadAlerta = "info" | "baja" | "moderada" | "alta" | "critica";
-
-export interface AlertaSistema {
-  tipo: TipoAlerta;
-  severidad: SeveridadAlerta;
-  titulo: string;
-  /** `analisis_llm` de `alertas_anomalias` (o un mensaje generado si viene vacío). */
-  mensaje: string;
-  estacion: string | null;
-  parametro: ParametroCalidadAire | null;
-  valor: number | null;
-  umbral: number | null;
-  evento_en: string;
+export interface ComparativoResponse {
+  ok: true;
+  generadoEn: string;
+  dias: DiasPeriodo;
+  periodo: Periodo;
+  periodoAnterior: Periodo;
+  distritos: DistritoComparado[];
 }
 
-/** Cuerpo tal cual lo responde el webhook GET /alertas. */
-export interface AlertasResponse {
-  alertas: AlertaSistema[];
-  total_alertas: number;
-  generado_en: string;
+/* ---------- GET /ranking-eca ---------- */
+
+export interface FilaRanking {
+  posicion: number;
+  distrito: DistritoRef;
+  diasExcedidos: number;
+  diasConDato: number;
+  promedio: number;
+  /** Lectura más alta del periodo (no el promedio diario más alto). */
+  maximo: number;
+}
+
+export interface RankingEcaResponse {
+  ok: true;
+  generadoEn: string;
+  dias: DiasPeriodo;
+  parametro: ParametroAnalitica;
+  unidad: string;
+  limiteEca: number;
+  criterio: string;
+  ranking: FilaRanking[];
+  /** Ids de distritos que no entran al ranking por falta de datos. */
+  sinDatosSuficientes: string[];
+}
+
+/* ---------- GET /patron-horario ---------- */
+
+export interface PuntoHorario {
+  /** 0–23, hora de Lima. */
+  hora: number;
+  promedio: number | null;
+  /** Mediciones que entran en el promedio de esa hora. */
+  n: number;
+}
+
+export interface PatronHorarioResponse {
+  ok: true;
+  generadoEn: string;
+  distrito: DistritoRef;
+  dias: DiasPeriodo;
+  parametro: ParametroAnalitica;
+  unidad: string;
+  zonaHoraria: string;
+  datosSuficientes: boolean;
+  horas: PuntoHorario[];
+  /** null mientras no haya datos suficientes. */
+  horaCritica: number | { hora: number; promedio?: number | null } | null;
+}
+
+/* ---------- GET /resumen-ia ---------- */
+
+export interface ResumenIaResponse {
+  ok: true;
+  generadoEn: string;
+  distrito: DistritoRef;
+  disponible: boolean;
+  semana: { inicio: string; fin: string } | null;
+  resumen: string | null;
+  /** p.ej. "groq:openai/gpt-oss-120b". */
+  modelo: string | null;
+  resumenGeneradoEn: string | null;
 }
