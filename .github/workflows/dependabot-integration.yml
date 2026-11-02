@@ -1,7 +1,7 @@
 name: Dependabot Integration
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -52,6 +52,7 @@ jobs:
 
           gh pr merge "$PR_NUMBER" \
             --repo "$REPOSITORY" \
-            --merge
+            --merge \
+            --delete-branch
 
           echo "Dependabot update integrated successfully."
