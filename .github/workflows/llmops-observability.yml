@@ -12,17 +12,13 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - ".github/scripts/langfuse_quality_gate.py"
-      - "src/ia-ops/tests/test_langfuse_quality_gate.py"
-      - ".github/workflows/llmops-observability.yml"
 
   workflow_dispatch:
     inputs:
       window_hours:
         description: "Historical window in hours for aggregate Langfuse metrics"
         required: false
-        default: "24"
+        default: "2160"
         type: string
 
   schedule:
