@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  // 2. Validación de lista blanca usando allowedRoutes
+  // 2. Validación de lista blanca usando allowedRoutes (sin negar mal el Object.hasOwn)
   if (!Object.hasOwn(allowedRoutes, ruta)) {
     return res.status(403).json({
       error: 'Acceso denegado',
