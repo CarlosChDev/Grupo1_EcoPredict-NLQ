@@ -1,6 +1,16 @@
 export default async function handler(req, res) {
-  // 1. Lista blanca de rutas permitidas según el Sprint 4 (HT-07)
-  const allowedRoutes = ['estaciones', 'serie-horaria', 'alertas'];
+  // 1. Lista blanca de rutas permitidas (Flujo C y Flujo D - Analítica)
+  const allowedRoutes = [
+    'estaciones', 
+    'serie-horaria', 
+    'alertas',
+    'analitica/comparativo',
+    'analitica/ranking-eca',
+    'analitica/patron-horario',
+    'analitica/resumen-ia',
+    'analitica/distritos'
+  ];
+  
   const { ruta } = req.query;
 
   if (!allowedRoutes.includes(ruta)) {
@@ -21,7 +31,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Error de configuración en las variables de entorno del servidor serverless.' });
     }
 
-    // 3. Petición segura hacia el Flujo C en n8n
+    // 3. Petición segura hacia n8n en OCI
     const response = await fetch(`${n8nBaseUrl}/${ruta}`, {
       method: req.method,
       headers: {
