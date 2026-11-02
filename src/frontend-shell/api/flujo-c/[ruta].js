@@ -6,6 +6,13 @@ const allowedRoutes = {
   'estaciones': 'estaciones',
   'serie-horaria': 'estaciones/serie-horaria',
   'alertas': 'alertas',
+
+  // Rutas directas que está pidiendo el cliente de Analítica
+  'distritos': 'analitica/distritos',
+  'comparativo': 'analitica/comparativo',
+  'ranking-eca': 'analitica/ranking-eca',
+  'patron-horario': 'analitica/patron-horario',
+  'resumen-ia': 'analitica/resumen-ia',
   
   // Rutas de Analítica mapeadas de forma plana para evitar conflictos de múltiples segmentos
   'analitica-comparativo': 'analitica/comparativo',
