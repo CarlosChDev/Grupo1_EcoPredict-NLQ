@@ -27,7 +27,7 @@ import pytest
 # =============================================================================
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-VERCEL_FUNCTION_PATH = REPO_ROOT / "src" / "frontend-shell" / "api" / "flujo-c" / "[ruta].js"
+VERCEL_FUNCTION_PATH = REPO_ROOT / "src" / "frontend-shell" / "api" / "flujo-c" / "[...ruta].js"
 
 RUTAS_LISTA_BLANCA = ["estaciones", "serie-horaria", "alertas"]
 
