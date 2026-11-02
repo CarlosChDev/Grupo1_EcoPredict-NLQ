@@ -2,18 +2,20 @@
 // Archivo: src/frontend-shell/api/flujo-c/[ruta].js
 
 const allowedRoutes = {
+  // Rutas del Dashboard (intactas y sin alterar)
   'estaciones': 'estaciones',
   'serie-horaria': 'estaciones/serie-horaria',
   'alertas': 'alertas',
-  'analitica/comparativo': 'analitica/comparativo',
-  'analitica/ranking-eca': 'analitica/ranking-eca',
-  'analitica/patron-horario': 'analitica/patron-horario',
-  'analitica/resumen-ia': 'analitica/resumen-ia',
-  'analitica/distritos': 'analitica/distritos',
+  
+  // Rutas de Analítica mapeadas de forma plana para evitar conflictos de múltiples segmentos
+  'analitica-comparativo': 'analitica/comparativo',
+  'analitica-ranking-eca': 'analitica/ranking-eca',
+  'analitica-patron-horario': 'analitica/patron-horario',
+  'analitica-resumen-ia': 'analitica/resumen-ia',
+  'analitica-distritos': 'analitica/distritos',
 };
 
 export default async function handler(req, res) {
-  // Manejo de ruta compatible con [ruta].js estándar o catch-all si Vercel lo pasa como string/arreglo
   const { ruta: rutaQuery, ...queryParams } = req.query;
   const ruta = Array.isArray(rutaQuery) 
     ? rutaQuery.join('/') 
@@ -25,7 +27,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  // 2. Validación de lista blanca usando allowedRoutes (sin negar mal el Object.hasOwn)
+  // 2. Validación de lista blanca usando allowedRoutes
   if (!Object.hasOwn(allowedRoutes, ruta)) {
     return res.status(403).json({
       error: 'Acceso denegado',
