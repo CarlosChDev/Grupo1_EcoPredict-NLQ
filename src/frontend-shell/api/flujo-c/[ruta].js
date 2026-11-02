@@ -1,5 +1,5 @@
 // BFF serverless (Vercel) delante de n8n: Flujo C (estaciones) y Flujo D (analítica).
-// Archivo: src/frontend-shell/api/flujo-c/[...ruta].js
+// Archivo: src/frontend-shell/api/flujo-c/[ruta].js
 
 const RUTAS = {
   'estaciones': 'estaciones',
@@ -13,9 +13,11 @@ const RUTAS = {
 };
 
 export default async function handler(req, res) {
-  // Con [...ruta] Vercel entrega un arreglo y lo unimos con '/'
+  // Manejo de ruta compatible con [ruta].js estándar o catch-all si Vercel lo pasa como string/arreglo
   const { ruta: rutaQuery, ...queryParams } = req.query;
-  const ruta = Array.isArray(rutaQuery) ? rutaQuery.join('/') : rutaQuery;
+  const ruta = Array.isArray(rutaQuery) 
+    ? rutaQuery.join('/') 
+    : (typeof rutaQuery === 'string' ? rutaQuery : '');
 
   // 1. Solo se permiten peticiones GET
   if (req.method !== 'GET') {
@@ -23,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  // 2. Validación de lista blanca
+  // 2. Validación de lista blanca (Object.hasOwn previene manipulación de prototipos)
   if (!Object.hasOwn(RUTAS, ruta)) {
     return res.status(403).json({
       error: 'Acceso denegado',
