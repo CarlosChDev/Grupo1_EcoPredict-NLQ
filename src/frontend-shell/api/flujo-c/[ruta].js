@@ -1,7 +1,7 @@
 // BFF serverless (Vercel) delante de n8n: Flujo C (estaciones) y Flujo D (analítica).
 // Archivo: src/frontend-shell/api/flujo-c/[ruta].js
 
-const RUTAS = {
+const allowedRoutes = {
   'estaciones': 'estaciones',
   'serie-horaria': 'estaciones/serie-horaria',
   'alertas': 'alertas',
@@ -25,8 +25,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  // 2. Validación de lista blanca (Object.hasOwn previene manipulación de prototipos)
-  if (!Object.hasOwn(RUTAS, ruta)) {
+  // 2. Validación de lista blanca usando allowedRoutes
+  if (!Object.hasOwn(allowedRoutes, ruta)) {
     return res.status(403).json({
       error: 'Acceso denegado',
       message: 'Ruta no autorizada en la lista blanca del BFF.',
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     // Reconstruir los query parameters (ej. ?distritos=...&dias=7) para pasarlos a n8n
     const searchParams = new URLSearchParams(queryParams);
     const queryString = searchParams.toString();
-    const targetUrl = `${n8nBaseUrl.replace(/\/$/, '')}/${RUTAS[ruta]}${queryString ? `?${queryString}` : ''}`;
+    const targetUrl = `${n8nBaseUrl.replace(/\/$/, '')}/${allowedRoutes[ruta]}${queryString ? `?${queryString}` : ''}`;
 
     // 3. Petición segura hacia n8n con la key a nivel de servidor
     const response = await fetch(targetUrl, {
