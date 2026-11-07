@@ -1,0 +1,68 @@
+name: Restore OCI from Cloudflare R2
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_name:
+        description: 'Exact encrypted R2 object name (ecopredict-...tar.gz.gpg)'
+        required: true
+        type: string
+      confirmation:
+        description: 'Type RESTORE to authorize replacement of OCI database and n8n data'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OCI_HOST: ${{ secrets.OCI_HOST }}
+      OCI_USER: ${{ secrets.OCI_USER }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      OCI_KNOWN_HOSTS: ${{ vars.OCI_KNOWN_HOSTS }}
+      AWS_EC2_METADATA_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate request and prepare protected material
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          BACKUP_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          NAME: ${{ inputs.backup_name }}
+          CONFIRM: ${{ inputs.confirmation }}
+        run: |
+          set -Eeuo pipefail; umask 077
+          [[ "$CONFIRM" == RESTORE ]] || { echo 'Confirmation must be RESTORE.' >&2; exit 2; }
+          [[ "$NAME" =~ ^ecopredict-[A-Za-z0-9._-]+\.tar\.gz\.gpg$ ]] || { echo 'Invalid backup name.' >&2; exit 2; }
+          test -n "$OCI_HOST" && test -n "$OCI_USER" && test -n "$OCI_KNOWN_HOSTS"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$RUNNER_TEMP/oci_key"; printf '%s\n' "$BACKUP_KEY" > "$RUNNER_TEMP/backup_key"; printf '%s\n' "$OCI_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          chmod 600 "$RUNNER_TEMP/oci_key" "$RUNNER_TEMP/backup_key" "$RUNNER_TEMP/known_hosts"; echo "BACKUP_NAME=$NAME" >> "$GITHUB_ENV"
+      - name: Download and verify encrypted backup from R2
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "s3://$R2_BUCKET/$BACKUP_NAME" "$RUNNER_TEMP/$BACKUP_NAME" --only-show-errors
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "s3://$R2_BUCKET/$BACKUP_NAME.sha256" "$RUNNER_TEMP/$BACKUP_NAME.sha256" --only-show-errors
+          (cd "$RUNNER_TEMP" && sha256sum -c "$BACKUP_NAME.sha256")
+      - name: Run explicitly confirmed restore on OCI
+        shell: bash
+        run: |
+          set -Eeuo pipefail; umask 077
+          OPTS=(-i "$RUNNER_TEMP/oci_key" -o "UserKnownHostsFile=$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes); REMOTE_DIR="/tmp/ecopredict-restore-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"; echo "REMOTE_DIR=$REMOTE_DIR" >> "$GITHUB_ENV"
+          ssh "${OPTS[@]}" "$OCI_USER@$OCI_HOST" "mkdir -m 700 '$REMOTE_DIR'"
+          scp "${OPTS[@]}" "$RUNNER_TEMP/backup_key" "$RUNNER_TEMP/$BACKUP_NAME" "$RUNNER_TEMP/$BACKUP_NAME.sha256" "$OCI_USER@$OCI_HOST:$REMOTE_DIR/"
+          ssh "${OPTS[@]}" "$OCI_USER@$OCI_HOST" "chmod 600 '$REMOTE_DIR/backup_key'; cd /home/ubuntu/Grupo1_EcoPredict-NLQ && bash scripts/restore.sh --backup-file '$REMOTE_DIR/$BACKUP_NAME' --key-file '$REMOTE_DIR/backup_key' --confirm RESTORE"
+      - name: Remove transient material from OCI
+        if: always()
+        shell: bash
+        run: |
+          set +e; test -n "${REMOTE_DIR:-}" || exit 0
+          ssh -i "$RUNNER_TEMP/oci_key" -o "UserKnownHostsFile=$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes "$OCI_USER@$OCI_HOST" "rm -rf -- '$REMOTE_DIR'"

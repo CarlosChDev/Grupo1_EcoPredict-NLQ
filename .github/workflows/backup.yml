@@ -1,0 +1,77 @@
+name: Backup OCI to Cloudflare R2
+
+on:
+  schedule:
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      OCI_HOST: ${{ secrets.OCI_HOST }}
+      OCI_USER: ${{ secrets.OCI_USER }}
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      OCI_KNOWN_HOSTS: ${{ vars.OCI_KNOWN_HOSTS }}
+      AWS_EC2_METADATA_DISABLED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare protected SSH and encryption material
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          BACKUP_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          set -Eeuo pipefail; umask 077
+          test -n "$OCI_HOST" && test -n "$OCI_USER" && test -n "$OCI_KNOWN_HOSTS"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$RUNNER_TEMP/oci_key"
+          printf '%s\n' "$BACKUP_KEY" > "$RUNNER_TEMP/backup_key"
+          printf '%s\n' "$OCI_KNOWN_HOSTS" > "$RUNNER_TEMP/known_hosts"
+          chmod 600 "$RUNNER_TEMP/oci_key" "$RUNNER_TEMP/backup_key" "$RUNNER_TEMP/known_hosts"
+      - name: Create encrypted backup on OCI
+        shell: bash
+        run: |
+          set -Eeuo pipefail; umask 077
+          OPTS=(-i "$RUNNER_TEMP/oci_key" -o "UserKnownHostsFile=$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes)
+          REMOTE_DIR="/tmp/ecopredict-backup-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "REMOTE_DIR=$REMOTE_DIR" >> "$GITHUB_ENV"
+          ssh "${OPTS[@]}" "$OCI_USER@$OCI_HOST" "mkdir -m 700 '$REMOTE_DIR'"
+          scp "${OPTS[@]}" "$RUNNER_TEMP/backup_key" "$OCI_USER@$OCI_HOST:$REMOTE_DIR/key"
+          ssh "${OPTS[@]}" "$OCI_USER@$OCI_HOST" "chmod 600 '$REMOTE_DIR/key'; cd /home/ubuntu/Grupo1_EcoPredict-NLQ && bash scripts/backup.sh --key-file '$REMOTE_DIR/key' --output-dir '$REMOTE_DIR'"
+          name="$(ssh "${OPTS[@]}" "$OCI_USER@$OCI_HOST" "find '$REMOTE_DIR' -maxdepth 1 -name 'ecopredict-*.tar.gz.gpg' -printf '%f\\n'" | tail -n1)"
+          test -n "$name"; echo "BACKUP_NAME=$name" >> "$GITHUB_ENV"
+          scp "${OPTS[@]}" "$OCI_USER@$OCI_HOST:$REMOTE_DIR/$name" "$OCI_USER@$OCI_HOST:$REMOTE_DIR/$name.sha256" "$RUNNER_TEMP/"
+          (cd "$RUNNER_TEMP" && sha256sum -c "$name.sha256")
+      - name: Enforce R2 capacity and upload
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY" && test -n "$R2_ENDPOINT" && test -n "$R2_BUCKET"
+          current="$(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 --bucket "$R2_BUCKET" --query 'sum(Contents[].Size)' --output text)"; current="${current/None/0}"
+          new_size="$(stat -c%s "$RUNNER_TEMP/$BACKUP_NAME")"; limit=9663676416
+          (( current + new_size <= limit )) || { echo 'R2 preventive 9 GiB limit would be exceeded.' >&2; exit 1; }
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "$RUNNER_TEMP/$BACKUP_NAME" "s3://$R2_BUCKET/$BACKUP_NAME" --only-show-errors
+          aws --endpoint-url "$R2_ENDPOINT" s3 cp "$RUNNER_TEMP/$BACKUP_NAME.sha256" "s3://$R2_BUCKET/$BACKUP_NAME.sha256" --only-show-errors
+          rm -f "$RUNNER_TEMP/verify"; aws --endpoint-url "$R2_ENDPOINT" s3 cp "s3://$R2_BUCKET/$BACKUP_NAME" "$RUNNER_TEMP/verify" --only-show-errors
+          test "$(sha256sum "$RUNNER_TEMP/$BACKUP_NAME" | cut -d' ' -f1)" = "$(sha256sum "$RUNNER_TEMP/verify" | cut -d' ' -f1)"
+      - name: Retain four newest encrypted backups
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mapfile -t old < <(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 --bucket "$R2_BUCKET" --query "reverse(sort_by(Contents[?ends_with(Key, '.tar.gz.gpg')],&LastModified))[4:].Key" --output text | tr '\t' '\n')
+          for object in "${old[@]}"; do [[ -z "$object" || "$object" == None ]] && continue; aws --endpoint-url "$R2_ENDPOINT" s3 rm "s3://$R2_BUCKET/$object" --only-show-errors; aws --endpoint-url "$R2_ENDPOINT" s3 rm "s3://$R2_BUCKET/$object.sha256" --only-show-errors; done
+      - name: Remove transient material from OCI
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          test -n "${REMOTE_DIR:-}" || exit 0
+          ssh -i "$RUNNER_TEMP/oci_key" -o "UserKnownHostsFile=$RUNNER_TEMP/known_hosts" -o StrictHostKeyChecking=yes "$OCI_USER@$OCI_HOST" "rm -rf -- '$REMOTE_DIR'"

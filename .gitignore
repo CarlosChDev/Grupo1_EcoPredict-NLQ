@@ -128,3 +128,15 @@ obj/
 # ==========================================
 
 *.local
+
+# RESPALDOS LOCALES
+backups/
+.backup-tmp/
+*.partial
+*.enc
+*.gpg
+*.sha256
+*.dump
+*.sql
+*.sql.gz
+!src/database/migrations/*.sql
