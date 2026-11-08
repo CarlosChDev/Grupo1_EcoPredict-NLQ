@@ -101,6 +101,21 @@ La clave local se almacena fuera del repositorio:
 
 `C:\Secure\ecopredict-backup.key`
 
+
+**Generación de clave universal en PowerShell (compatible con Windows PowerShell 5.1 y 7):**
+
+`powershell
+New-Item -ItemType Directory -Force -Path C:\Secure | Out-Null
+ = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+ = New-Object byte[] 32; .GetBytes()
+[IO.File]::WriteAllText('C:\Secure\ecopredict-backup.key', [Convert]::ToBase64String())
+`
+
+**Imagen auxiliar de empaquetado Docker:**
+Los scripts de respaldo y recuperación utilizan \lpine:3.20\ para empaquetado consistente de volúmenes persistentes. Los scripts verifican su existencia y la descargan automáticamente si es necesario:
+`powershell
+docker pull alpine:3.20
+`
 Las credenciales cloud se configuran mediante GitHub Secrets.
 
 No subir al repositorio:

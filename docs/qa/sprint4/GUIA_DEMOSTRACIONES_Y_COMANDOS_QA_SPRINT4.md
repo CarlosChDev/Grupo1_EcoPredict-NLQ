@@ -148,6 +148,21 @@ pytest src/ia-ops/tests/
   cd backups/
   sha256sum -c ecopredict-20261107T193835Z.tar.gz.gpg.sha256
   ```
+* **Comandos Oficiales de Backup y Restore Local en PowerShell:**
+  ```powershell
+  # 1. Preparación de clave universal (compatible con PowerShell 5.1 y 7):
+  New-Item -ItemType Directory -Force -Path C:\Secure | Out-Null
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  $b = New-Object byte[] 32; $rng.GetBytes($b)
+  [IO.File]::WriteAllText('C:\Secure\ecopredict-backup.key', [Convert]::ToBase64String($b))
+
+  # 2. Generación del backup local cifrado:
+  powershell.exe -ExecutionPolicy Bypass -File .\scripts\backup-local.ps1 -KeyFile C:\Secure\ecopredict-backup.key
+
+  # 3. Verificación de integridad del archivo y descifrado seguro:
+  $ultimoBackup = (Get-ChildItem .\backups\ecopredict-local-*.zip.enc | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+  powershell.exe -ExecutionPolicy Bypass -File .\scripts\restore-local.ps1 -BackupFile $ultimoBackup -KeyFile C:\Secure\ecopredict-backup.key -ExtractEnvOnly
+  ```
 * 🗣️ **Frase para la Sustentación con la Ing. Norma León:**
   > *"Ingeniera, como solicitó en el audio, auditamos y certificamos paso a paso el proceso de Backup y Restore. En `scripts/README.md` documentamos el 'LÉEME' oficial con la arquitectura de 4 etapas: desde la generación del dump cifrado con AES-256 en OCI, el almacenamiento off-site en Cloudflare R2 con retención de 4 copias, hasta la restauración segura en entorno Docker local con Rollback Recovery preventivo para no comprometer la base de datos de producción."*
 
