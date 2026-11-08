@@ -356,23 +356,6 @@ Siguiendo la prevención indicada por la ingeniera (*"no vaya a ser que ese día
 
 ---
 
-# FIRMAS DE CONFORMIDAD Y CERTIFICACIÓN
-
-<br><br><br>
-
-```text
-       _____________________________________             _____________________________________
-             Johann Romero Contreras                            Ing. Norma León Lescano
-             QA Prompt Engineer & Test                          Docente del Curso / Asesora
-               Automation Engineer                               Taller de Proyectos
-        Facultad de Ingeniería y Arquitectura             Facultad de Ingeniería y Arquitectura
-        Universidad de San Martín de Porres               Universidad de San Martín de Porres
-```
-
-<br><br>
-
----
-
 # REFERENCIAS BIBLIOGRÁFICAS (APA 7)
 
 * Fielding, R. T., & Reschke, J. (2014). *Hypertext Transfer Protocol (HTTP/1.1): Caching* (RFC 7234). Internet Engineering Task Force. https://doi.org/10.17487/RFC7234
