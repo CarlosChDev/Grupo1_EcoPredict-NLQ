@@ -110,6 +110,11 @@ try {
   & docker exec ecopredict_restore_postgres createdb -U n8n_user calidad_aire; Assert-DockerSuccess 'create isolated calidad_aire database'
   & docker exec ecopredict_restore_postgres pg_restore -U n8n_user --exit-on-error -d n8n /tmp/n8n.dump; Assert-DockerSuccess 'restore n8n database'
   & docker exec ecopredict_restore_postgres pg_restore -U n8n_user --exit-on-error -d calidad_aire /tmp/calidad_aire.dump; Assert-DockerSuccess 'restore calidad_aire database'
+  & docker image inspect alpine:3.20 *> $null
+  if ($LASTEXITCODE -ne 0) {
+    Write-Host 'Descargando imagen auxiliar alpine:3.20 requerida para restauracion...'
+    & docker pull alpine:3.20; Assert-DockerSuccess 'docker pull alpine:3.20'
+  }
   & docker run --pull never --rm --mount 'type=volume,src=ecopredict_restore_n8n_data,dst=/target' --mount "type=bind,src=$payload,dst=/backup,readonly" alpine:3.20 sh -ec 'tar -C /target -xzf /backup/n8n-volume.tar.gz --numeric-owner'; Assert-DockerSuccess 'restore isolated n8n volume'
   & docker run --pull never --rm --mount 'type=volume,src=ecopredict_restore_workflows,dst=/target' --mount "type=bind,src=$payload,dst=/backup,readonly" alpine:3.20 sh -ec 'tar -C /target -xzf /backup/workflows.tar.gz --numeric-owner'; Assert-DockerSuccess 'restore isolated workflows volume'
   & docker run --pull never --rm --mount 'type=volume,src=ecopredict_restore_n8n_data,dst=/target,readonly' alpine:3.20 sh -ec 'find /target -mindepth 1 -print -quit | grep -q .'; Assert-DockerSuccess 'validate restored n8n persistent data'

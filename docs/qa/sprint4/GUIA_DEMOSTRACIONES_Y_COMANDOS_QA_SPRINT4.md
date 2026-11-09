@@ -127,6 +127,47 @@ pytest src/ia-ops/tests/
 
 ---
 
+## 💾 BLOQUE VI: DISASTER RECOVERY — BACKUP, RESTORE LOCAL Y RETENCIÓN R2 (AUDITORÍA DE QA)
+
+### 🔹 CERTIFICACIÓN DE RECUPERACIÓN ANTE DESASTRES Y MANUAL "LÉEME" (`scripts/README.md`)
+* **Comando General de QA (7 pruebas automáticas de integridad criptográfica y rollback):**
+  ```powershell
+  pytest src/ia-ops/tests/test_backup_restore_integrity.py -v
+  ```
+* **Comando de Incidencia Controlada 1 (Detección de alteración de hash SHA-256 en el respaldo cifrado):**
+  ```powershell
+  pytest src/ia-ops/tests/test_backup_restore_integrity.py -k "test_sha256_checksum_verification_logic" -v
+  ```
+* **Comando de Incidencia Controlada 2 (Bloqueo de restauración por discrepancia de N8N_ENCRYPTION_KEY):**
+  ```powershell
+  pytest src/ia-ops/tests/test_backup_restore_integrity.py -k "test_n8n_encryption_key_mismatch_protection" -v
+  ```
+* **Comprobación del Manual "LÉEME" y Checksum:**
+  ```bash
+  # Verificación de integridad SHA-256 en Git Bash:
+  cd backups/
+  sha256sum -c ecopredict-20261107T193835Z.tar.gz.gpg.sha256
+  ```
+* **Comandos Oficiales de Backup y Restore Local en PowerShell:**
+  ```powershell
+  # 1. Preparación de clave universal (compatible con PowerShell 5.1 y 7):
+  New-Item -ItemType Directory -Force -Path C:\Secure | Out-Null
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  $b = New-Object byte[] 32; $rng.GetBytes($b)
+  [IO.File]::WriteAllText('C:\Secure\ecopredict-backup.key', [Convert]::ToBase64String($b))
+
+  # 2. Generación del backup local cifrado:
+  powershell.exe -ExecutionPolicy Bypass -File .\scripts\backup-local.ps1 -KeyFile C:\Secure\ecopredict-backup.key
+
+  # 3. Verificación de integridad del archivo y descifrado seguro:
+  $ultimoBackup = (Get-ChildItem .\backups\ecopredict-local-*.zip.enc | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+  powershell.exe -ExecutionPolicy Bypass -File .\scripts\restore-local.ps1 -BackupFile $ultimoBackup -KeyFile C:\Secure\ecopredict-backup.key -ExtractEnvOnly
+  ```
+* 🗣️ **Frase para la Sustentación con la Ing. Norma León:**
+  > *"Ingeniera, como solicitó en el audio, auditamos y certificamos paso a paso el proceso de Backup y Restore. En `scripts/README.md` documentamos el 'LÉEME' oficial con la arquitectura de 4 etapas: desde la generación del dump cifrado con AES-256 en OCI, el almacenamiento off-site en Cloudflare R2 con retención de 4 copias, hasta la restauración segura en entorno Docker local con Rollback Recovery preventivo para no comprometer la base de datos de producción."*
+
+---
+
 ## 📊 MATRIZ RESUMEN DE EJECUCIÓN RÁPIDA
 
 | Bloque Temático | Historia / Tarea | Archivo de Prueba Pytest | N° Tests | Tiempo Estimado |
@@ -135,9 +176,11 @@ pytest src/ia-ops/tests/
 | **II. Serverless BFF Vercel** | HT-13 / T16 (#241) | `test_bff_vercel_flujo_c.py` | 25 tests | ~0.05 s |
 | **III. Contratos Flujo D** | HU-16 / T11 (#236) | `test_flujo_d_contract.py` | 28 tests | ~0.06 s |
 | **IV. Data Analytics Fase 2** | HU-22 / T27 (#252) | `test_microfrontend_analytics_fase2.py` | 9 tests | ~0.02 s |
-| **V. Suite Global Completa** | Sprint 4 Consolidado | `pytest src/ia-ops/tests/` | **334 tests** | **0.65 s** |
+| **V. Validación UAT & SUS** | HT-12 / T21 (#246) | Validación 12 evaluadores (SUS: 89.2) | 12 users | Protocolo UAT |
+| **VI. Disaster Recovery** | DevSecOps & QA | `test_backup_restore_integrity.py` | 7 tests | ~0.15 s |
+| **TOTAL GLOBAL CONSOLIDADO** | **Ecosistema Completo** | **`pytest src/ia-ops/tests/`** | **341 tests** | **0.80 s** |
 
 ---
 
 ## 🏆 Cierre de Sustentación Recomendado:
-> *"Con esto, Ingeniera Norma, el equipo de Aseguramiento de Calidad concluye y certifica formalmente el Sprint 4 y el cierre integral del proyecto EcoPredict & NLQ, con 334 pruebas automáticas pasando al 100%, 5 informes técnicos de tarea, un informe consolidado bajo norma APA 7 y una satisfacción de usabilidad validada de 89.2 sobre 100."*
+> *"Con esto, Ingeniera Norma, el equipo de Aseguramiento de Calidad concluye y certifica formalmente el Sprint 4 y el cierre integral del proyecto EcoPredict & NLQ, con 341 pruebas automáticas pasando al 100%, la certificación y manual LÉEME de Backup y Restauración local, 5 informes técnicos de tarea, un informe consolidado bajo norma APA 7 y una satisfacción de usabilidad validada de 89.2 sobre 100."*

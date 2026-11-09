@@ -4,7 +4,7 @@ Uso (PowerShell):
 
 La clave debe ser un archivo externo al repositorio con Base64 de 32 bytes aleatorios.
 Ejemplo de creación (una vez):
-  $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Fill($b); [IO.File]::WriteAllText('C:\Secure\ecopredict-backup.key',[Convert]::ToBase64String($b))
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create(); $b = New-Object byte[] 32; $rng.GetBytes($b); [IO.File]::WriteAllText('C:\Secure\ecopredict-backup.key',[Convert]::ToBase64String($b))
 
 El script nunca imprime secretos. Produce backups/*.zip.enc y su SHA-256.
 #>
@@ -61,7 +61,11 @@ function Write-EncryptedFile([string]$InputPath,[string]$OutputPath,[byte[]]$Mas
 & docker info *> $null; Assert-DockerSuccess 'Docker availability'
 foreach ($container in 'aire_postgres','aire_n8n') { $running = & docker inspect -f '{{.State.Running}}' $container; Assert-DockerSuccess "inspect $container"; if ($running.Trim() -ne 'true') { throw "$container is not running." } }
 & docker volume inspect aire_n8n_data *> $null; Assert-DockerSuccess 'inspect aire_n8n_data'
-& docker image inspect alpine:3.20 *> $null; Assert-DockerSuccess 'inspect alpine:3.20 (the script will not pull images)'
+& docker image inspect alpine:3.20 *> $null
+if ($LASTEXITCODE -ne 0) {
+  Write-Host 'Descargando imagen auxiliar alpine:3.20 requerida para empaquetado...'
+  & docker pull alpine:3.20; Assert-DockerSuccess 'docker pull alpine:3.20'
+}
 $pgEnv = Get-ContainerEnv 'aire_postgres'; $n8nEnv = Get-ContainerEnv 'aire_n8n'
 foreach ($name in 'POSTGRES_USER','POSTGRES_PASSWORD','POSTGRES_DB') { if ([string]::IsNullOrWhiteSpace($pgEnv[$name])) { throw "Missing required PostgreSQL configuration: $name" } }
 if ([string]::IsNullOrWhiteSpace($n8nEnv['N8N_ENCRYPTION_KEY'])) { throw 'N8N_ENCRYPTION_KEY is not configured in aire_n8n.' }
